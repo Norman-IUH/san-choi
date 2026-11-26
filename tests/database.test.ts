@@ -21,6 +21,7 @@ test("migration provisions accounts, locks teacher rows and allows one authorita
     `);
     await db.exec(await readFile("supabase/migrations/20261114113207_foundation.sql", "utf8"));
     await db.exec(await readFile("supabase/migrations/20261126104943_attempt_rate_limits.sql", "utf8"));
+    await db.exec(await readFile("supabase/migrations/20261126155849_secure_game_sessions.sql", "utf8"));
     await db.exec(`insert into auth.users values ('${owner}'),('${other}'),('${student}');
       update profiles set role='student' where id='${student}';`);
     await session(owner);
@@ -44,6 +45,7 @@ test("migration provisions accounts, locks teacher rows and allows one authorita
     await expect(db.query("select * from finish_attempt($1,$2,'[]',1,2)", [assignment,attempt])).rejects.toThrow(/permission denied/);
     const scope = "a".repeat(64);
     await expect(db.query("select consume_attempt_limit('start',$1)", [scope])).rejects.toThrow(/permission denied/);
+    await expect(db.query("select hangman_guess($1,$2,0,'A')", [assignment, attempt])).rejects.toThrow(/permission denied/);
     await db.exec("reset role; set role anon;");
     await expect(db.query("select * from activities")).rejects.toThrow(/permission denied/);
     await db.exec("reset role; set role service_role;");
@@ -57,6 +59,10 @@ test("migration provisions accounts, locks teacher rows and allows one authorita
     await db.query("update private.attempt_rate_limits set hits=239 where operation='finish' and scope=$1", [scope]);
     expect((await useLimit("finish")).rows[0].allowed).toBe(true);
     expect((await useLimit("finish")).rows[0].allowed).toBe(false);
+    await useLimit("media");
+    await db.query("update private.attempt_rate_limits set hits=29 where operation='media' and scope=$1", [scope]);
+    expect((await useLimit("media")).rows[0].allowed).toBe(true);
+    expect((await useLimit("media")).rows[0].allowed).toBe(false);
     await db.query("update private.attempt_rate_limits set window_start=now()-interval '2 minutes' where operation='start' and scope=$1", [scope]);
     expect((await useLimit("start")).rows[0].allowed).toBe(true);
     const finish = (score: number) => db.query<{score: number}>("select score from finish_attempt($1,$2,'[]',$3,2)", [assignment,attempt,score]);
@@ -69,6 +75,20 @@ test("migration provisions accounts, locks teacher rows and allows one authorita
     expect((await db.query("select title from assignments")).rows[0]).toEqual({ title: "Snapshot" });
     await db.query("delete from folders where id=$1", [folder]);
     expect((await db.query("select folder_id from activities")).rows[0]).toEqual({ folder_id: null });
+    const puzzleAttempt = "66666666-6666-4666-8666-666666666666";
+    await db.exec(`reset role; update assignments set template='hangman', deadline=null,
+      content='[{"prompt":"Animal","answers":["CAT"]}]' where id='${assignment}';
+      insert into attempts(id,assignment_id,nickname) values ('${puzzleAttempt}','${assignment}','Hangman'); set role service_role;`);
+    const guess = async (letter: string | null) => (await db.query<{ guesses: string | null }>(
+      "select hangman_guess($1,$2,0,$3) as guesses", [assignment, puzzleAttempt, letter])).rows[0].guesses;
+    expect(await guess("ABC")).toBeNull();
+    expect(await guess("B")).toBe("B");
+    expect(await guess("B")).toBe("B");
+    for (const letter of "DEFGH") await guess(letter);
+    expect(await guess("C")).toBe("BDEFGH");
+    expect(await guess(null)).toBe("BDEFGH");
+    await db.query("update assignments set closed=true where id=$1", [assignment]);
+    expect(await guess(null)).toBeNull();
   } finally {
     await db.close();
   }

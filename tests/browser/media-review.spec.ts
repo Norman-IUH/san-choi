@@ -60,6 +60,18 @@ test("quiz options and both pronunciations survive assignment snapshot with opt-
         expect((await response.body()).subarray(0, 4).toString()).toBe("RIFF");
       }
       expect(new Set(tracks).size).toBe(3);
+      if (!showReview) {
+        const picture = option.locator("img");
+        const original = (await picture.getAttribute("src"))!;
+        const expired = new URL(original);
+        expired.searchParams.set("test-expired", "1");
+        await student.route(url => url.searchParams.has("test-expired"), route => route.fulfill({ status: 400, body: "Expired URL" }));
+        await picture.evaluate((image: HTMLImageElement, url) => { image.src = url; }, expired.toString());
+        await expect.poll(async () => {
+          const src = await picture.getAttribute("src");
+          return src !== original && src !== expired.toString() && await picture.evaluate((image: HTMLImageElement) => image.naturalWidth === 20);
+        }, { timeout: 20000 }).toBe(true);
+      }
       await option.click();
       await student.getByRole("button", { name: "Tiếp theo" }).click();
       await expect(student.getByRole("progressbar", { name: "Mục 2 / 2" })).toBeVisible();

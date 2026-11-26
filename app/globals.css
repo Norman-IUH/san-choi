@@ -245,3 +245,48 @@ audio{max-width:100%}
   .game-intro .game-art{width:min(62%,210px);justify-self:center}.wheel-disc{border-width:4px}.pair-board{gap:.65rem}}
 @media(prefers-reduced-motion:reduce){.wheel-disc,.flash-face,.box-lid,.game-scoreboard strong{animation:none!important;transition:none!important}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Language games. Each board keeps its controls in the normal tab order. */
+.game-type-answer{--game-accent:#6944a0;--game-paper:#f4ebff;--game-edge:#c7ade9}
+.game-matching-pairs{--game-accent:#1a695a;--game-paper:#def6ea;--game-edge:#92cbb8}
+.game-spell-word{--game-accent:#8d4929;--game-paper:#fff0d9;--game-edge:#e8ba96}
+.game-wordsearch{--game-accent:#205d75;--game-paper:#e3f7fa;--game-edge:#91c7d7}
+.game-hangman{--game-accent:#59419a;--game-paper:#f0e9ff;--game-edge:#c3b0e5}
+.game-crossword{--game-accent:#1c6250;--game-paper:#e5f5e6;--game-edge:#9cc7ae}
+.game-true-false{--game-accent:#183f7a;--game-paper:#e9f3ff;--game-edge:#aec6e9}
+.game-word-magnets{--game-accent:#81442f;--game-paper:#ffe8db;--game-edge:#eab7a4}
+.word-round,.memory-game,.crossword-game{min-width:0}
+.word-round h2,.memory-game h2,.crossword-game h2{font-size:clamp(1.3rem,3.5vw,2.3rem)}
+.word-entry{width:min(100%,38rem)}
+.game-type-answer .word-entry input{border-radius:.5rem .5rem 0 0;border-bottom:3px solid var(--game-accent);background:var(--game-paper)}
+.spell-cells{display:flex;flex-wrap:wrap;gap:.35rem;margin-block:.3rem 1rem}
+.spell-cells span{display:grid;place-items:center;width:clamp(1.75rem,5vw,3.5rem);height:clamp(2.3rem,7vw,4rem);border-bottom:3px solid var(--game-accent);background:var(--game-paper);border-radius:.45rem .45rem 0 0;font-size:clamp(1rem,3vw,2rem);font-weight:800}
+.wordsearch-board{display:grid;gap:2px;width:min(100%,37rem);background:var(--game-edge);border:2px solid var(--game-edge);border-radius:.5rem;overflow:hidden}
+.wordsearch-board .option{padding:0;border:0;min-width:0;min-height:clamp(1.25rem,6vw,3rem);border-radius:0;text-align:center;font-size:clamp(.72rem,2vw,1.2rem)}
+.wordsearch-board .option[aria-pressed=true]{background:#b9eadd}
+.hangman-board{display:grid;grid-template-columns:minmax(0,1fr);min-width:0;gap:.65rem}
+.hangman-kite{display:block;width:fit-content;color:var(--game-accent);font-size:3.4rem;line-height:1;font-weight:800;transition:rotate .2s ease-out}
+.alphabet{display:grid;grid-template-columns:repeat(auto-fit,minmax(2.75rem,1fr));gap:.35rem;width:min(100%,38rem)}
+.alphabet .option{padding:.45rem 0;text-align:center}
+.truth-balance,.memory-table{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem}
+.truth-balance button{display:grid;place-content:center;text-align:center;gap:.4rem;min-height:clamp(5rem,15vw,9rem);font-size:clamp(1rem,3vw,1.5rem)}
+.truth-balance button b{font-size:1.6em}
+.truth-balance>div:first-child button{background:#e1f3e8}
+.truth-balance>div:nth-child(2) button{background:#fce9e8}
+.memory-table>[role=group]{display:grid;align-content:start;gap:.45rem}
+.memory-card{width:100%;min-height:3rem;text-align:center;overflow-wrap:anywhere}
+.memory-card[aria-expanded=false]{background:repeating-linear-gradient(135deg,var(--game-paper) 0 12px,#fff 12px 24px)}
+.crossword-board{display:grid;gap:2px;width:min(100%,31rem);margin-inline:auto}
+.crossword-board>span{aspect-ratio:1;min-width:0}
+.crossword-cell{position:relative;display:grid;place-items:center;border:1px solid var(--game-edge);border-radius:3px;font-weight:800;font-size:clamp(.7rem,2.2vw,1.35rem)}
+.crossword-cell.active{background:var(--game-paper);border-color:var(--game-accent)}
+.crossword-cell small{position:absolute;inset:1px auto auto 2px;font-size:.6em;line-height:1}
+.crossword-clues{display:flex;flex-wrap:wrap;gap:.35rem}
+.magnet-board,.magnet-pool{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
+.magnet-board{min-height:5rem;padding:.65rem;border:2px dashed var(--game-edge);background:#fdf3dc;border-radius:.7rem}
+.magnet-placed{display:flex;align-items:center;gap:.2rem}
+.magnet-shift{min-height:44px;padding-inline:.45rem;color:var(--game-accent);background:#fff;border:1px solid var(--game-edge);border-radius:.5rem}
+.game-word-magnets .option{cursor:grab;text-align:center;box-shadow:0 3px 0 var(--game-edge)}
+.word-template-picture,.game-art.gameplay-thumbnail{background-size:cover;background-position:center}
+.game-art.gameplay-thumbnail{aspect-ratio:4/3;border:1px solid var(--game-edge)}
+.word-template-picture svg{padding:2px;border-radius:4px;background:#fff;color:var(--ink)}

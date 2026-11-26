@@ -4,6 +4,7 @@ import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { saveActivity } from "@/app/activities/actions";
 import { levels, skills, templates, type Item, type Template } from "@/lib/game";
+import { isWordTemplate, truthOptions, wordTemplates } from "@/lib/games/word-templates";
 import { MediaInput } from "./MediaInput";
 import { importVocabulary } from "@/lib/vocabulary-import";
 
@@ -37,6 +38,10 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
   const { fields, append, remove, move, replace } = useFieldArray({ control, name: "content" });
   const current = useWatch({ control, name: "content" });
   const kind = templates[template].kind;
+  const truth = template === "true-false";
+  const alternatives = kind === "blank" || template === "type-answer";
+  const wordPuzzle = ["spell-word", "wordsearch", "hangman", "crossword"].includes(template);
+  const maxItems = template === "crossword" ? 10 : template === "matching-pairs" ? 12 : 60;
   const answerLabel = template === "group-sort" ? "Nhóm" : kind === "pair" ? "Mặt sau / giá trị ghép" :
     kind === "sequence" ? "Các từ theo thứ tự đúng, mỗi dòng một từ hoặc cụm từ" :
     kind === "choice" ? "Đáp án đúng, mỗi dòng một đáp án có trong phương án" : "Đáp án";
@@ -68,7 +73,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
         level: english.level || undefined, skill: english.skill || undefined, meaning: english.meaning?.trim() || undefined,
         ipa: english.ipa?.trim() || undefined, example: english.example?.trim() || undefined, uk: english.uk, us: english.us,
       };
-      const choices = lines(options);
+      const choices = truth ? [...truthOptions] : lines(options);
       return { version: 2, prompt, answers: lines(answers), options: choices,
         explanation: explanation?.trim() || undefined, alternatives: lines(alternatives ?? ""),
         english: lexical && Object.values(lexical).some(Boolean) ? lexical : undefined,
@@ -93,6 +98,11 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
         <label>Quyền xem<select {...register("visibility")}><option value="private">Riêng tư</option><option value="unlisted">Có link</option><option value="public">Công khai</option></select></label></div>
     </div>
     <h2>Nội dung</h2>
+    {isWordTemplate(template) && <p className="hint">{wordTemplates[template].instruction}
+      {wordPuzzle && " Dùng từ tiếng Anh 2–12 chữ cái."}
+      {template === "crossword" && " Nhập 2–10 từ có chữ cái giao nhau."}
+      {template === "matching-pairs" && " Nhập 2–12 cặp, mỗi mặt sau khác nhau."}
+    </p>}
     {(template === "flash-cards" || template === "match-up" || template === "find-match") && <div className="panel stack">
       <label>Nhập từ vựng CSV hoặc XLSX<input type="file" accept=".csv,.xlsx" disabled={structureBusy} onChange={event => {
         const file = event.target.files?.[0]; event.target.value = ""; if (file) void importFile(file);
@@ -101,13 +111,15 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
     </div>}
     {fields.map((field, i) => {
       const item = current[i];
-      const options = [...new Set(lines(item?.options ?? ""))];
+      const options = truth ? [...truthOptions] : [...new Set(lines(item?.options ?? ""))];
       return <fieldset className="panel stack" key={field.id}><legend>Mục {i + 1}</legend>
       <label>{kind === "blank" ? "Câu có dấu ___ ở chỗ trống" : kind === "pair" ? "Mặt trước / nội dung" : "Câu hỏi hoặc gợi ý"}
         <textarea {...register(`content.${i}.prompt`)} maxLength={400} rows={2}/></label>
-      {kind === "choice" && <label>Phương án, mỗi dòng một phương án<textarea {...register(`content.${i}.options`)} rows={3}/></label>}
-      {kind !== "prompt" && <label>{answerLabel}<textarea {...register(`content.${i}.answers`)} rows={kind === "choice" || kind === "sequence" ? 3 : 1}/></label>}
-      {kind === "blank" && <label>Đáp án thay thế (mỗi dòng một đáp án)<textarea {...register(`content.${i}.alternatives`)} rows={2}/></label>}
+      {kind === "choice" && !truth && <label>Phương án, mỗi dòng một phương án<textarea {...register(`content.${i}.options`)} rows={3}/></label>}
+      {truth ? <label>Đáp án<select {...register(`content.${i}.answers`)}><option value="">Chọn đáp án</option>
+        {truthOptions.map(value => <option key={value}>{value}</option>)}</select></label>
+        : kind !== "prompt" && <label>{answerLabel}<textarea {...register(`content.${i}.answers`)} rows={kind === "choice" || kind === "sequence" ? 3 : 1}/></label>}
+      {alternatives && <label>Đáp án thay thế (mỗi dòng một đáp án)<textarea {...register(`content.${i}.alternatives`)} rows={2}/></label>}
       <details className="lesson-details"><summary>Học liệu tiếng Anh và tệp</summary><div className="stack">
         <div className="form-grid"><label>Cấp độ<select {...register(`content.${i}.english.level`)}><option value="">Chưa chọn</option>
           {levels.map(level => <option key={level}>{level}</option>)}</select></label>
@@ -151,7 +163,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
         <button type="button" className="icon-button" aria-label={`Xóa mục ${i + 1}`} disabled={structureBusy} onClick={() => remove(i)}><Trash2 size={16}/></button>
       </div>
     </fieldset>; })}
-    <button type="button" className="button" disabled={structureBusy || fields.length >= 60} onClick={() => append(blank)}><Plus size={16}/> Thêm mục</button>
+    <button type="button" className="button" disabled={structureBusy || fields.length >= maxItems} onClick={() => append(blank)}><Plus size={16}/> Thêm mục</button>
     {error && <p className="notice error" role="alert">{error}</p>}
     <div className="inline-actions"><button className="button primary" value="publish" disabled={structureBusy}>Xuất bản</button>
       <button className="button" value="draft" disabled={structureBusy}>Lưu nháp</button>{pending && <span role="status">Đang lưu…</span>}</div>

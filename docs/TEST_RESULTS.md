@@ -69,3 +69,33 @@ Advisor báo bảng rate-limit trong schema `private` bật RLS và không có p
 108 ảnh ứng với 12 trò, mỗi trò có ba trạng thái ở ba kích thước. [Ảnh Playwright](../output/playwright/v1.3).
 
 Giới hạn nghiệm thu gồm thiết bị Apple và Android thật, loa và máy chiếu tại lớp, mạng di động và kiểm thử tải đồng thời. Do QuizStudy vẫn mở đăng ký trực tiếp qua Auth API, kết quả preview chưa được dùng để xác nhận toàn bộ cấu hình production.
+
+## Kiểm tra phát hành V1.3 trước V1.4A
+
+| Hạng mục | Kết quả |
+|---|---|
+| Đăng ký và khóa QuizStudy | Auth settings trả `disable_signup: false`. Auth Admin trả HTTP 200 cho khóa development khớp với khóa cũ từng chia sẻ. Hai điều kiện phát hành chưa đạt |
+| Tài khoản giáo viên production | Phiên Edge đã đăng nhập vẫn mở được trang kết quả bài thử và thấy 1/1 sau khi tải lại. Chưa thực hiện đăng nhập mới bằng tài khoản production |
+| Security Advisor | Cảnh báo quyền `EXECUTE` cho `anon` và `authenticated` trên `public.rls_auto_enable()` và bảo vệ mật khẩu rò rỉ đang tắt. `private.attempt_rate_limits` bật RLS, không có policy người dùng vì chỉ backend truy cập. [Database linter](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable) · [Bảo vệ mật khẩu](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection) |
+| GitHub và Vercel | PR #1 vẫn là draft, preview thành công, production hiện tại vẫn tải được. Chưa có deployment V1.3 trên production |
+
+Đối chiếu PostgreSQL catalog xác nhận `public.rls_auto_enable()` trả kiểu `event_trigger`, đang được event trigger sử dụng và hai role trên vẫn có quyền `EXECUTE`.
+
+## Nền tảng và V1.4A
+
+| Hạng mục | Kết quả |
+|---|---|
+| Lint, typecheck, build | Đạt. Production build sinh 20 trang demo |
+| Vitest | 37 đạt, gồm 20 mẫu, cấu trúc ô chữ, dò từ theo hai hướng, Hangman và tương thích khi đổi mẫu |
+| Playwright Chromium | 81 đạt. Kiểm tra 20 demo từ bắt đầu đến kết quả trên desktop, điện thoại và tablet mô phỏng. Sáu lượt yêu cầu chế độ một giáo viên hoặc backend không cấu hình được bỏ qua trong lần chạy này |
+| Playwright với QuizStudy thật | 8/8 mẫu mới đi qua editor, xuất bản, preview, giao bài, nộp và hiển thị điểm cho giáo viên. Truy vấn riêng các bài thử xác nhận đủ tám mẫu có điểm tối đa, và các link giao bài đã đóng |
+| Gia hạn media | Kịch bản riêng với Storage thật đạt. Playwright buộc yêu cầu ảnh đầu tiên trả 400 để mô phỏng URL hết hạn. Player xin URL ký mới và tải thành công tệp thật trong cùng lượt làm bài |
+| Audit npm runtime | Không có advisory tại thời điểm chạy |
+
+Các giới hạn còn lại gồm WebKit và thiết bị thật, máy chiếu lớp học, và kiểm thử nhiều học sinh đồng thời. Hai nhóm V1.4B và V1.4C nằm ngoài đợt này.
+
+## Rà soát bảo mật trước khi phát hành 20 mẫu
+
+- Dashboard và Auth API của QuizStudy xác nhận đăng ký công khai đã tắt (`disable_signup: true`), Google vẫn tắt. Khóa từng được chia sẻ vẫn là rủi ro chưa xử lý. Việc thay hoặc thu hồi khóa cần quyết định riêng của chủ dự án. [Supabase Auth](https://supabase.com/docs/guides/auth/general-configuration).
+- Migration `20261126155849_secure_game_sessions.sql` đã chạy thử và rollback trước khi áp dụng trên QuizStudy. Hangman lưu lượt đoán cho từng mục và lượt làm, dừng ở sáu lỗi. Việc chấm điểm dùng lịch sử từ máy chủ. Cấp lại signed URL có ngân sách riêng 30 lượt/phút và xác minh bài còn mở, chưa hết hạn, lượt làm chưa hoàn thành. URL mới có thời hạn 15 phút.
+- Kiểm thử PostgreSQL nhúng đạt cho tải lại trạng thái lượt đoán, lọc dữ liệu sai, đoán trùng, khóa lượt đoán sau giới hạn hoặc sau khi đóng bài, và giữ điểm gốc khi yêu cầu nộp lặp.

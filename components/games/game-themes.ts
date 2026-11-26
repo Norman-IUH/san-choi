@@ -1,6 +1,8 @@
 import { templateIds, type Template } from "@/lib/game";
 
-const instructions: Record<Template, string> = {
+import { isWordTemplate, wordTemplates } from "@/lib/games/word-templates";
+
+const instructions: Partial<Record<Template, string>> = {
   quiz: "Đọc câu hỏi và chọn đáp án phù hợp.",
   "match-up": "Nối mỗi thẻ với đáp án tương ứng.",
   "flash-cards": "Đọc mặt trước rồi lật thẻ để xem nghĩa và ví dụ.",
@@ -16,6 +18,7 @@ const instructions: Record<Template, string> = {
 };
 
 export function gameTheme(template: Template) {
+  if (isWordTemplate(template)) return { instruction: wordTemplates[template].instruction, artPosition: undefined };
   const position = templateIds.indexOf(template);
   return { instruction: instructions[template], artPosition: (position % 4) * (100 / 3) + "% " + Math.floor(position / 4) * 50 + "%" };
 }

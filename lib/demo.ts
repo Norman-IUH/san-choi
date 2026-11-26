@@ -1,5 +1,35 @@
 import { templateIds, templates, type Item, type Template } from "./game";
 
+import { isWordTemplate, type WordTemplate, truthOptions } from "./games/word-templates";
+
+const word = (prompt: string, answer: string, audio?: string): Item => ({
+  prompt, answers: [answer], options: [],
+  ...(audio && { english: { uk: "/audio/vocabulary/" + audio + "-uk.wav", us: "/audio/vocabulary/" + audio + "-us.wav" } }),
+});
+const wordDemos: Record<WordTemplate, { title: string; items: Item[] }> = {
+  "type-answer": { title: "What’s in your bag?", items: [
+    { ...word("What can you write with?", "pencil", "pencil"), alternatives: ["a pencil"] },
+    word("What do you use to measure a line?", "ruler", "ruler"),
+  ] },
+  "matching-pairs": { title: "Pairs on the farm", items: [
+    word("A bird that likes water", "duck", "duck"),
+    word("An animal you can ride", "horse", "horse"),
+    word("An animal that likes to climb", "goat", "goat"),
+  ] },
+  "spell-word": { title: "Listen and spell", items: [word("Listen to the classroom word.", "book", "book"), word("Spell the word for a writing tool.", "pencil", "pencil")] },
+  wordsearch: { title: "Find the school words", items: [word("You carry your books in this.", "bag", "bag"), word("Use this to measure.", "ruler", "ruler")] },
+  hangman: { title: "Guess the mystery word", items: [word("It swims and says quack.", "duck", "duck"), word("A place where plants grow.", "garden", "garden")] },
+  crossword: { title: "Crossing words", items: [word("A pet that says meow.", "cat"), word("You carry your books in it.", "bag", "bag")] },
+  "true-false": { title: "Classroom fact check", items: [
+    { prompt: "A ruler helps you measure.", options: [...truthOptions], answers: ["True"] },
+    { prompt: "You read a pencil.", options: [...truthOptions], answers: ["False"] },
+  ] },
+  "word-magnets": { title: "Make a sentence", items: [
+    { prompt: "Tell a friend what you can see.", options: [], answers: ["I", "can", "see", "a duck."] },
+    { prompt: "Tell a friend what is in your bag.", options: [], answers: ["There", "is", "a book", "in my bag."] },
+  ] },
+};
+
 const pairs: Item[] = [
   { prompt: "Một đôi", answers: ["2"], options: [] },
   { prompt: "Một tá", answers: ["12"], options: [] },
@@ -18,6 +48,7 @@ export const demoTitles = [
 ];
 
 export function demoContent(template: Template): Item[] {
+  if (isWordTemplate(template)) return wordDemos[template].items;
   switch (templates[template].kind) {
     case "choice": return questions;
     case "pair": return template === "group-sort" ? [
@@ -41,4 +72,4 @@ export function demoContent(template: Template): Item[] {
   }
 }
 
-export const demos = templateIds.map((id, index) => ({ id, ...templates[id], demoTitle: demoTitles[index] }));
+export const demos = templateIds.map((id, index) => ({ id, ...templates[id], demoTitle: isWordTemplate(id) ? wordDemos[id].title : demoTitles[index] }));

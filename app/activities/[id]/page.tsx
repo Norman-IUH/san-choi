@@ -40,7 +40,7 @@ export default async function Activity({ params, searchParams }: {
     : query.edit ? <Editor key={activity.updated_at} id={id} template={template} initial={{ title: activity.title, description: activity.description,
       subject: activity.subject, grade: activity.grade, tags: activity.tags, visibility: activity.visibility }} content={content} assets={assets}/>
     : <div className="stack">
-      {contentSchema(template).safeParse(content).success && <Player key={preview ?? template} title={activity.title} {...localPlay(preview ?? template, content, assets)}/>}
+      {contentSchema(template).safeParse(content).success && <Player key={preview ?? template} title={activity.title} mediaScope={{ source: "activity", id }} {...localPlay(preview ?? template, content, assets)}/>}
       {preview && <form action={changeActivity.bind(null, id, "switch")}><input type="hidden" name="template" value={preview}/><button className="button primary">Lưu bản sao dùng mẫu {templates[preview].title}</button></form>}
       <section className="panel stack"><h2>Quản lý hoạt động</h2>
         <div className="inline-actions">

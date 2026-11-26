@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowDown, ArrowRight, BookOpen, Check, Play, Sparkles } from "lucide-react";
+import { templateIds } from "@/lib/game";
 import { Templates } from "@/components/Templates";
 
 export default function Home() {
@@ -22,5 +23,5 @@ export default function Home() {
       <div className="art-star" aria-hidden="true">✦</div>
     </div>
   </section>
-  <section id="mau" className="template-section"><div className="section-head"><div><h2>Khám phá mẫu hoạt động</h2><p>Chọn một trò để chơi thử ngay trên trình duyệt.</p></div><span>{12} mẫu chơi thử</span></div><Templates/></section></div>;
+  <section id="mau" className="template-section"><div className="section-head"><div><h2>Khám phá mẫu hoạt động</h2><p>Chọn một trò để chơi thử ngay trên trình duyệt.</p></div><span>{templateIds.length} mẫu chơi thử</span></div><Templates/></section></div>;
 }
