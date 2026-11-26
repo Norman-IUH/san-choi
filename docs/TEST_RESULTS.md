@@ -106,7 +106,10 @@ Các giới hạn còn lại gồm WebKit và thiết bị thật, máy chiếu 
 |---|---|
 | Lint, typecheck, Vitest, build, audit | Đạt. 47 Vitest gồm từng mẫu. Production build sinh 27 demo. `npm audit --omit=dev` trả 0 advisory |
 | E2E QuizStudy | 17 lượt đạt, gồm 7 mẫu mới, 8 mẫu V1.4A, kiểm thử media và thử lại khi mất phản hồi nộp. Sáu mẫu mới có điểm lưu `1/2`. Flip Tiles lưu một lượt hoàn thành. Bảy bài giao mới đã đóng |
+| Hồi quy Chromium | 102 lượt đạt trên production build ở kích thước desktop, điện thoại và tablet. Sáu lượt dành riêng cho cấu hình một giáo viên hoặc thiếu Supabase được bỏ qua trong lượt chạy này |
 | Hồi quy WebKit | 56 lượt đạt trên hai cấu hình Desktop Safari và iPhone 13 mô phỏng, gồm các demo cũ, các mẫu từ vựng và bảy câu đố mới |
 | Lỗi mạng, nộp lại và kết quả | Playwright cắt phản hồi sau khi máy chủ nhận bài sai, rồi gửi lại đáp án khác qua UI. Giáo viên vẫn thấy đúng một kết quả `0/1` đã lưu ban đầu |
+| Quyền cấp lại signed URL | Đạt khi kiểm tra trên QuizStudy với bài đã đóng, đã hết hạn và lượt đã nộp. Player từ chối yêu cầu cấp URL mới trong cả ba trường hợp. URL đã cấp trước đó hết hiệu lực theo TTL của Storage |
+| Vercel Preview | Commit `6de8207` lên Preview thành công. Thử Image Quiz có một câu đúng, một câu sai, và xác nhận kết quả `1/2` cùng phần xem lại. [Draft PR #3](https://github.com/Norman-IUH/san-choi/pull/3) · [Vercel Preview](https://san-choi-git-codex-v14b-puzzle-games-norman22.vercel.app/demo/image-quiz) |
 
 Ảnh dùng trong thư viện được tạo từ gameplay Playwright. [Ảnh kiểm thử V1.4B](../output/playwright/v14b-gameplay). Phần WebKit là browser engine và profile mô phỏng. Thiết bị iOS, Android và máy chiếu thật vẫn chờ kiểm tra.
