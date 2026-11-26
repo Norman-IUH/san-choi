@@ -89,6 +89,7 @@ Giới hạn nghiệm thu gồm thiết bị Apple và Android thật, loa và m
 | Vitest | 37 đạt, gồm 20 mẫu, cấu trúc ô chữ, dò từ theo hai hướng, Hangman và tương thích khi đổi mẫu |
 | Playwright Chromium | 81 đạt. Kiểm tra 20 demo từ bắt đầu đến kết quả trên desktop, điện thoại và tablet mô phỏng. Sáu lượt yêu cầu chế độ một giáo viên hoặc backend không cấu hình được bỏ qua trong lần chạy này |
 | Playwright với QuizStudy thật | 8/8 mẫu mới đi qua editor, xuất bản, preview, giao bài, nộp và hiển thị điểm cho giáo viên. Truy vấn riêng các bài thử xác nhận đủ tám mẫu có điểm tối đa, và các link giao bài đã đóng |
+| Gia hạn media | Kịch bản riêng với Storage thật đạt. Playwright buộc yêu cầu ảnh đầu tiên trả 400 để mô phỏng URL hết hạn. Player xin URL ký mới và tải thành công tệp thật trong cùng lượt làm bài |
 | Audit npm runtime | Không có advisory tại thời điểm chạy |
 
 Các giới hạn còn lại gồm WebKit và thiết bị thật, máy chiếu lớp học, và kiểm thử nhiều học sinh đồng thời. Hai nhóm V1.4B và V1.4C nằm ngoài đợt này.
