@@ -162,7 +162,8 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
       {(template !== "wheel" || flipped) && (["uk", "us"] as const).map(accent => {
         const path = item.pronunciation?.[accent];
         const label = accent === "uk" ? "Anh–Anh" : "Anh–Mỹ";
-        return path && assets[path] && <label key={accent}>{label}<audio controls preload="none" src={assets[path]}/></label>;
+        return path && assets[path] && <div key={accent} className="pronunciation"><strong>{label}</strong>
+          <audio aria-label={label} controls preload="none" src={assets[path]}/></div>;
       })}
       {meta.kind === "blank" && <label>Từ cần điền<input value={selected[0] ?? ""} onChange={event => setSelected([event.target.value])}/></label>}
       {sequence && <><div className="sequence-output" aria-live="polite">{tiles.map((tile, position) =>
@@ -173,8 +174,11 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
           const media = item.optionMedia?.find(entry => entry.option === option);
           return <div className="option-with-media" key={option}>
             <button className="option" aria-pressed={selected.includes(option)} onClick={() =>
-              setSelected(selected.includes(option) ? selected.filter(value => value !== option) : item.multiple ? [...selected, option] : [option])}>{option}</button>
-            <LessonMedia media={media} assets={assets} label={option}/>
+              setSelected(selected.includes(option) ? selected.filter(value => value !== option) : item.multiple ? [...selected, option] : [option])}>
+              <LessonMedia media={media?.image ? { image: media.image } : undefined} assets={assets} label=""/>
+              <span>{option}</span>
+            </button>
+            <LessonMedia media={media?.audio ? { audio: media.audio } : undefined} assets={assets} label={`Nghe phương án ${option}`}/>
           </div>;
         })}</div></>}
       <div className="inline-actions">

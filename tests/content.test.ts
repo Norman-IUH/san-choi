@@ -8,7 +8,7 @@ test.each(deckIds)("%s sample preserves vocabulary across pair templates", id =>
   const items = englishDeckContent(id);
   expect(compatible("flash-cards", "match-up", items)).toBe(true);
   expect(contentSchema("match-up").parse(items)).toEqual(items);
-  expect(grade("match-up", items, items.map(item => item.answers)).score).toBe(3);
+  expect(grade("match-up", items, items.map(item => item.answers)).score).toBe(items.length);
 });
 
 test("vocabulary import validates grade and required cells", () => {

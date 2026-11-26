@@ -24,6 +24,7 @@ export const skills = ["Vocabulary", "Phonics", "Listening", "Speaking", "Readin
 export const mediaPath = z.string().regex(/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(png|jpg|webp|mp3|wav|ogg)$/);
 const imagePath = mediaPath.refine(path => /\.(png|jpg|webp)$/.test(path));
 const audioPath = mediaPath.refine(path => /\.(mp3|wav|ogg)$/.test(path));
+export const sampleAudioPath = z.string().regex(/^\/audio\/vocabulary\/[a-z]+-(uk|us)\.wav$/);
 const mediaSchema = z.object({ image: imagePath.optional(), audio: audioPath.optional() });
 const englishSchema = z.object({
   level: z.enum(levels).optional(),
@@ -31,8 +32,8 @@ const englishSchema = z.object({
   meaning: text.optional(),
   ipa: z.string().trim().min(1).max(100).optional(),
   example: text.optional(),
-  uk: audioPath.optional(),
-  us: audioPath.optional(),
+  uk: z.union([audioPath, sampleAudioPath]).optional(),
+  us: z.union([audioPath, sampleAudioPath]).optional(),
 });
 export const itemSchema = z.object({
   version: z.literal(2).optional(),
@@ -101,7 +102,9 @@ export function makePlayItems(template: Template, items: Item[]): PlayItem[] {
   return items.map(item => ({
     prompt: template === "open-box" ? "" : item.prompt,
     media: item.media,
-    optionMedia: item.optionMedia,
+    optionMedia: item.optionMedia?.map(entry => ({
+      ...entry, option: item.options.find(option => normalize(option) === normalize(entry.option)) ?? entry.option,
+    })),
     pronunciation: item.english ? { uk: item.english.uk, us: item.english.us } : undefined,
     vocabulary: template === "flash-cards" && item.english ? { ipa: item.english.ipa, example: item.english.example } : undefined,
     ...(kind === "choice" && { multiple: item.answers.length > 1 }),
