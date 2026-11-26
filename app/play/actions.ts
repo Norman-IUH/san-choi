@@ -4,13 +4,14 @@ import { isIP } from "node:net";
 import { cookies, headers } from "next/headers";
 import { z } from "zod";
 import { contentSchema, grade, makePlayItems, missedReview, templateSchema } from "@/lib/game";
-import { allowedTeacher, privilegedDatabase } from "@/lib/supabase";
+import { allowedTeacher, database, privilegedDatabase, serverConfigured } from "@/lib/supabase";
 import { mediaUrls } from "@/lib/media-server";
+import { hangmanPattern } from "@/lib/games/word-puzzles";
 
-async function attemptLimit(db: ReturnType<typeof privilegedDatabase>, id: string, operation: "start" | "finish") {
+async function attemptLimit(db: ReturnType<typeof privilegedDatabase>, id: string, operation: "start" | "finish", attempt?: string) {
   const ip = process.env.VERCEL === "1" ? (await headers()).get("x-vercel-forwarded-for")?.trim() ?? "" : "";
   // shortcut: non-Vercel hosts share a bucket per assignment until they supply a trusted client address.
-  const identity = isIP(ip) ? `ip:${ip}` : `assignment:${id.toLowerCase()}`;
+  const identity = attempt ? `guess:${attempt}` : isIP(ip) ? `ip:${ip}` : `assignment:${id.toLowerCase()}`;
   const scope = createHmac("sha256", process.env.SUPABASE_SECRET_KEY!).update(identity).digest("hex");
   const { data, error } = await db.rpc("consume_attempt_limit", { p_operation: operation, p_scope: scope });
   if (error) {
@@ -18,6 +19,19 @@ async function attemptLimit(db: ReturnType<typeof privilegedDatabase>, id: strin
     return "Máy chủ đang gián đoạn. Hãy thử lại sau.";
   }
   return data === true ? null : "Có quá nhiều yêu cầu. Hãy thử lại sau một phút.";
+}
+
+export async function guessAssignmentLetters(id: string, index: number, values: string[]) {
+  if (!serverConfigured || !z.uuid().safeParse(id).success || !z.number().int().min(0).max(59).safeParse(index).success) return null;
+  const guesses = z.array(z.string().regex(/^[A-Z]$/)).max(26).safeParse(values);
+  const token = (await cookies()).get(`attempt-${id}`)?.value;
+  if (!guesses.success || !token || !z.uuid().safeParse(token).success) return null;
+  const assignment = await getAssignment(id);
+  if (!assignment || assignment.template !== "hangman" || !assignment.items[index]) return null;
+  const attempt = await assignment.db.from("attempts").select("id").eq("assignment_id", id).eq("id", token).is("completed_at", null).maybeSingle();
+  if (!attempt.data || await attemptLimit(assignment.db, id, "finish", token)) return null;
+  const pattern = hangmanPattern(assignment.items[index].answers[0], [...new Set(guesses.data)]);
+  return pattern.misses <= 6 ? pattern : { pattern: pattern.pattern.map(() => ""), misses: 6 };
 }
 
 async function getAssignment(id: string) {
@@ -31,6 +45,32 @@ async function getAssignment(id: string) {
   const content = contentSchema(template.data).safeParse(data.content);
   if (!content.success) return null;
   return { db, data, template: template.data, items: content.data };
+}
+
+export async function refreshLessonMedia(source: "assignment" | "activity" | "resource", id: string) {
+  if (!serverConfigured || !z.uuid().safeParse(id).success) return null;
+  if (source === "assignment") {
+    const token = (await cookies()).get(`attempt-${id}`)?.value;
+    if (!z.uuid().safeParse(token).success) return null;
+    const assignment = await getAssignment(id);
+    if (!assignment) return null;
+    const { db, data, items } = assignment;
+    const attempt = await db.from("attempts").select("id").eq("assignment_id", id).eq("id", token!).is("completed_at", null).maybeSingle();
+    return attempt.data ? mediaUrls(items, data.owner_id) : null;
+  }
+  if (source !== "activity" && source !== "resource") return null;
+  const db = source === "activity" ? await database() : privilegedDatabase();
+  let query = db.from("activities").select("template,content,owner_id").eq("id", id).is("deleted_at", null);
+  if (source === "resource") query = query.in("visibility", ["public", "unlisted"]).eq("draft", false);
+  const { data } = await query.maybeSingle();
+  if (!data || !allowedTeacher(data.owner_id)) return null;
+  if (source === "activity") {
+    const { data: { user } } = await db.auth.getUser();
+    if (user?.id !== data.owner_id) return null;
+  }
+  const template = templateSchema.safeParse(data.template);
+  const items = template.success && contentSchema(template.data, true).safeParse(data.content);
+  return items && items.success ? mediaUrls(items.data, data.owner_id) : null;
 }
 
 export async function startAttempt(id: string, nickname: string) {

@@ -1,36 +1,21 @@
 "use client";
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
-import { ArrowLeft, Maximize, Minimize, RotateCcw, Volume2, VolumeX } from "lucide-react";
-import { finishAttempt, startAttempt } from "@/app/play/actions";
-import { doubleMarker, grade, missedReview, shuffle, templates, type Media, type Template, type Item, type PlayItem, type ReviewEntry } from "@/lib/game";
-import { PairBoard } from "./games/PairBoard";
-import { Wheel } from "./games/Wheel";
+import { Maximize, Minimize, RotateCcw, Volume2, VolumeX } from "lucide-react";
+import { finishAttempt, guessAssignmentLetters, refreshLessonMedia, startAttempt } from "@/app/play/actions";
+import { grade, missedReview, shuffle, templates, type Template, type Item, type PlayItem, type ReviewEntry } from "@/lib/game";
+import { RefreshLessonMedia } from "./games/LessonMedia";
+import { GameRound } from "./games/GameRound";
+import { hangmanPattern } from "@/lib/games/word-puzzles";
+import { isWordTemplate } from "@/lib/games/word-templates";
 import { gameTheme } from "./games/game-themes";
 
 type Props = { title: string; template: Template; initialItems?: PlayItem[]; reveals?: string[];
-  localContent?: Item[]; assignment?: string; requireName?: boolean; assets?: Record<string, string> };
+  localContent?: Item[]; assignment?: string; requireName?: boolean; assets?: Record<string, string>;
+  mediaScope?: { source: "activity" | "resource"; id: string } };
 
 const subscribeToNothing = () => () => {};
 
-function LessonMedia({ media, assets, label }: { media?: Media; assets: Record<string, string>; label: string }) {
-  const image = media?.image && assets[media.image];
-  const audio = media?.audio && assets[media.audio];
-  return <>{image && (
-    // eslint-disable-next-line @next/next/no-img-element -- Private signed media is served directly by Storage.
-    <img className="lesson-image" src={image} alt={label} />
-  )}{audio && <audio aria-label={label} controls preload="none" src={audio}/>}</>;
-}
-
-function Pronunciation({ item, assets }: { item: PlayItem; assets: Record<string, string> }) {
-  return <>{(["uk", "us"] as const).map(accent => {
-    const path = item.pronunciation?.[accent];
-    const label = accent === "uk" ? "Anh–Anh" : "Anh–Mỹ";
-    return path && assets[path] && <div key={accent} className="pronunciation"><strong>{label}</strong>
-      <audio aria-label={label} controls preload="none" src={assets[path]}/></div>;
-  })}</>;
-}
-
-export function Player({ title, template, initialItems = [], reveals: initialReveals = [], localContent, assignment, requireName, assets: initialAssets = {} }: Props) {
+export function Player({ title, template, initialItems = [], reveals: initialReveals = [], localContent, assignment, requireName, assets: initialAssets = {}, mediaScope }: Props) {
   const ready = useSyncExternalStore(subscribeToNothing, () => true, () => false);
   const [items, setItems] = useState(initialItems);
   const [reveals, setReveals] = useState(initialReveals);
@@ -39,10 +24,6 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
   const [answers, setAnswers] = useState<Record<number, string[]>>({});
   const [turn, setTurn] = useState(0);
   const [order, setOrder] = useState<number[]>([]);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [tiles, setTiles] = useState<number[]>([]);
-  const [doubled, setDoubled] = useState(false);
-  const [flipped, setFlipped] = useState(false);
   const [nickname, setNickname] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -52,25 +33,18 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
   const [fullscreen, setFullscreen] = useState(false);
   const [classroomFallback, setClassroomFallback] = useState(false);
   const draftId = useRef<string | null>(null);
+  const lastMediaRefresh = useRef(0);
   const audioContext = useRef<AudioContext | null>(null);
   const panelRef = useRef<HTMLElement | null>(null);
   const focusTarget = useRef<HTMLElement | null>(null);
   const replayPending = useRef(false);
-  const progressId = useId();
-  const instructionsId = useId();
   const outcomeId = useId();
   const draftKey = assignment ? `san-choi-draft:${assignment}` : null;
   const bindFocus = (node: HTMLElement | null) => { focusTarget.current = node; };
   const meta = templates[template];
   const theme = gameTheme(template);
   const index = order[turn] ?? 0;
-  const item = items[index];
   const rows = template === "match-up" || template === "group-sort";
-  const boxes = template === "open-box";
-  const sequence = meta.kind === "sequence" || meta.kind === "word";
-  const choice = meta.kind === "choice" || template === "find-match";
-  const wheelPage = Math.floor(turn / 8) * 8;
-  const wheelLabels = template === "wheel" ? order.slice(wheelPage, wheelPage + 8).map(i => items[i].prompt) : [];
   const stageScore = template === "gameshow" && active && !result && !assignment && localContent
     ? grade(template, localContent, items.map((_, i) => answers[i] ?? [])).score : null;
 
@@ -168,11 +142,7 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
       setAssets(started.assets ?? {});
       setOrder(draft?.order ?? (template === "wheel" ? shuffle(indexes) : indexes));
       setTurn(draft?.turn ?? 0);
-      setSelected([]);
       setAnswers(draft?.answers ?? {});
-      setTiles([]);
-      setDoubled(false);
-      setFlipped(false);
       setResult(null);
       setFeedback("");
       setActive(true);
@@ -212,13 +182,22 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
     if (turn + 1 === items.length) { void submit(updated); return; }
     setAnswers(updated);
     setTurn(turn + 1);
-    setSelected([]);
-    setTiles([]);
-    setDoubled(false);
-    setFlipped(false);
   }
 
-  return <section ref={panelRef} className={`player game-stage game-${template} ${template === "gameshow" ? "gameshow" : ""} ${classroomFallback ? "classroom-fallback" : ""}`}>
+  async function renewMedia(failedUrl: string) {
+    if (!failedUrl.startsWith("https://") || Date.now() - lastMediaRefresh.current < 60000) return;
+    const scope = assignment ? { source: "assignment" as const, id: assignment } : mediaScope;
+    const path = Object.keys(assets).find(key => assets[key] === failedUrl);
+    if (!scope || !path) return;
+    lastMediaRefresh.current = Date.now();
+    try {
+      const fresh = await refreshLessonMedia(scope.source, scope.id);
+      if (fresh?.[path] && fresh[path] !== failedUrl) { setAssets(previous => ({ ...previous, ...fresh })); return; }
+    } catch { /* Keep the lesson usable while media is unavailable. */ }
+    setError("Tệp học liệu chưa tải được. Em vẫn có thể tiếp tục làm bài.");
+  }
+
+  return <RefreshLessonMedia.Provider value={renewMedia}><section ref={panelRef} className={`player game-stage game-${template} ${template === "gameshow" ? "gameshow" : ""} ${classroomFallback ? "classroom-fallback" : ""}`}>
     <div className="player-top"><span className={`template-tag ${meta.color}`}>{meta.icon} &nbsp;{meta.title}</span>
       <div className="game-tools">
         <button type="button" className="icon-button" aria-label="Âm thanh phản hồi" aria-pressed={sound} onClick={() => void toggleSound()}>
@@ -253,66 +232,15 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
         setFeedback("");
       }}><RotateCcw size={16}/> Chơi lại</button>
     </div> : !active ? <div className="game-intro">
-      <div className="game-art" aria-hidden="true" style={{ backgroundPosition: theme.artPosition }}/>
+      <div className={isWordTemplate(template) ? "game-art gameplay-thumbnail" : "game-art"} aria-hidden="true"
+        style={isWordTemplate(template) ? { backgroundImage: `url(/illustrations/gameplay/${template}.webp)` } : { backgroundPosition: theme.artPosition }}/>
       <form onSubmit={event => { event.preventDefault(); void start(); }}>
       <p>{theme.instruction}</p>
       {assignment && requireName && <label>Biệt danh<input value={nickname} onChange={event => setNickname(event.target.value)} maxLength={80} required /></label>}
       {assignment && <p className="hint">Nếu đã bắt đầu, em có thể tiếp tục sau khi tải lại trong cùng thẻ trình duyệt.</p>}
       <button ref={bindFocus} className="button primary" disabled={!ready || busy}>{busy ? "Đang mở…" : "Bắt đầu"}</button>
-    </form></div> : rows ? <div className="play-stack" tabIndex={-1} ref={bindFocus}>
-      <PairBoard items={items} answers={answers} grouping={template === "group-sort"}
-        onAssign={(row, value) => setAnswers(previous => ({ ...previous, [row]: [value] }))}
-        renderMedia={row => <><LessonMedia media={row.media} assets={assets} label={row.prompt}/><Pronunciation item={row} assets={assets}/></>}/>
-      <button className="button primary" disabled={busy || items.some((_, i) => !answers[i]?.length)} onClick={() => void submit(answers)}>Hoàn thành</button>
-    </div> : boxes ? <div className="play-stack" tabIndex={-1} ref={bindFocus}><div className="options">
-      {items.map((box, i) => <div className="option-with-media" key={i}>
-        <button className="option box" aria-expanded={i in answers} onClick={() => setAnswers({ ...answers, [i]: [] })}>
-          <span className="box-lid" aria-hidden="true">✦</span><span>{i in answers ? reveals[i] : `Hộp ${i + 1}`}</span></button>
-        {i in answers && <><LessonMedia media={box.media} assets={assets} label={reveals[i]}/><Pronunciation item={box} assets={assets}/></>}</div>)}</div>
-      <button className="button primary" disabled={busy || Object.keys(answers).length !== items.length} onClick={() => void submit(answers)}>Hoàn thành</button>
-    </div> : item && <div className="play-stack">
-      <div className="progress-label"><span id={progressId}>Mục {turn + 1} / {items.length}</span><progress aria-labelledby={progressId} value={turn + 1} max={items.length}/></div>
-      {template === "wheel" ? <div className="wheel-prompt" tabIndex={-1} ref={bindFocus}>
-        <Wheel key={turn} labels={wheelLabels} selected={turn - wheelPage} spun={flipped}/>
-        {flipped && <h2>{item.prompt}</h2>}
-      </div> : template === "flash-cards" ? <button ref={bindFocus} className="flash" aria-pressed={flipped} onClick={() => setFlipped(!flipped)}>
-        <span className="flash-face" key={String(flipped)}>{flipped ? reveals[index] : item.prompt}</span><small>Lật thẻ</small>
-      </button>
-        : <h2 className="lesson-text" tabIndex={-1} ref={bindFocus}>{item.prompt}</h2>}
-      {(template !== "wheel" || flipped) && <LessonMedia media={item.media} assets={assets} label={item.prompt}/>}
-      {template === "flash-cards" && flipped && item.vocabulary && <div lang="en" className="lesson-text">
-        {item.vocabulary.ipa && <p>{item.vocabulary.ipa}</p>}
-        {item.vocabulary.example && <p>{item.vocabulary.example}</p>}
-      </div>}
-      {(template !== "wheel" || flipped) && <Pronunciation item={item} assets={assets}/>}
-      {meta.kind === "blank" && <label>Từ cần điền<input value={selected[0] ?? ""} onChange={event => setSelected([event.target.value])}/></label>}
-      {sequence && <><div className="sequence-output" aria-live="polite">{tiles.map((tile, position) =>
-        <button key={tile} className="option" onClick={() => setTiles(tiles.filter((_, i) => i !== position))}>{item.options[tile]} <span aria-hidden="true">×</span></button>)}</div>
-        <div className="options">{item.options.map((option, i) => <button className="option" key={i} disabled={tiles.includes(i)} onClick={() => setTiles([...tiles, i])}>{option}</button>)}</div></>}
-      {choice && <><p id={instructionsId}>{item.multiple ? "Chọn tất cả đáp án đúng." : "Chọn một đáp án."}</p>
-        <div className="options" role="group" aria-labelledby={instructionsId}>{item.options.map((option, position) => {
-          const media = item.optionMedia?.find(entry => entry.option === option);
-          return <div className="option-with-media" key={option}>
-            <button className="option" aria-pressed={selected.includes(option)} onClick={() =>
-              setSelected(selected.includes(option) ? selected.filter(value => value !== option) : item.multiple ? [...selected, option] : [option])}>
-              <LessonMedia media={media?.image ? { image: media.image } : undefined} assets={assets} label=""/>
-              {template === "quiz" && <span className="choice-letter" aria-hidden="true">{"ABCDEFGH"[position]}</span>}
-              <span>{option}</span>
-            </button>
-            <LessonMedia media={media?.audio ? { audio: media.audio } : undefined} assets={assets} label={`Nghe phương án ${option}`}/>
-          </div>;
-        })}</div></>}
-      <div className="inline-actions">
-        {template === "gameshow" && !Object.values(answers).some(answer => answer.at(-1) === doubleMarker) &&
-          <button className="button wager" aria-pressed={doubled} onClick={() => setDoubled(!doubled)}>Nhân đôi điểm câu này</button>}
-        {sequence && tiles.length > 0 && <button className="button" onClick={() => setTiles(tiles.slice(0, -1))}><ArrowLeft size={16}/> Bỏ từ cuối</button>}
-        {template === "wheel" && !flipped ? <button className="button primary" onClick={() => setFlipped(true)}>Quay vòng</button>
-          : <button className="button primary" disabled={busy ||
-            (sequence ? tiles.length !== item.options.length :
-              (meta.kind === "blank" || meta.kind === "choice" || template === "find-match") && !selected[0]?.trim())}
-            onClick={() => next(sequence ? tiles.map(tile => item.options[tile]) : doubled ? [...selected, doubleMarker] : selected)}>
-            {busy ? "Đang nộp…" : turn + 1 === items.length ? "Hoàn thành" : "Tiếp theo"}</button>}
-      </div>
-    </div>}
-  </section>;
+    </form></div> : <GameRound key={turn} {...{ template, items, order, turn, index, answers, setAnswers, assets, reveals, busy, bindFocus, next, submit }}
+      guess={template === "hangman" ? async letters => assignment ? guessAssignmentLetters(assignment, index, letters)
+        : localContent?.[index] ? hangmanPattern(localContent[index].answers[0], letters) : null : undefined}/>}
+  </section></RefreshLessonMedia.Provider>;
 }

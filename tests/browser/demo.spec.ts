@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 import { demoContent } from "../../lib/demo";
-import { templateIds, templates } from "../../lib/game";
+import { legacyIds, templateIds, templates } from "../../lib/game";
 
 test("home displays demos without horizontal page overflow", async ({ page }) => {
   await page.goto("/");
@@ -10,7 +10,7 @@ test("home displays demos without horizontal page overflow", async ({ page }) =>
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
 });
 
-for (const template of templateIds) {
+for (const template of legacyIds) {
   test(`${template} completes with the demo rules`, async ({ page }, info) => {
     const items = demoContent(template);
     const kind = templates[template].kind;

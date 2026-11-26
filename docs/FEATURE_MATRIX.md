@@ -38,7 +38,7 @@ Xem [kết quả kiểm thử](TEST_RESULTS.md) và [các phần còn thiếu](L
 | Auth, PostgREST, RPC, RLS và E2E hai giáo viên trên Supabase | Done | QuizStudy development. Hai giáo viên cách ly, học sinh nộp bài 10/10, chủ bài tải CSV |
 | Tự đăng ký giáo viên và xác minh email | Partial | Đã kiểm tra form, mã lỗi Auth và provision qua Auth Admin. Chờ kiểm tra nhận thư và xác minh bằng hộp thư thực |
 | Mời giáo viên tại trung tâm | Done ở mức thiết kế | Quy trình đóng đăng ký và nghiệm thu lời mời ghi trong roadmap. Chưa bật trên Supabase |
-| V1.4–V2.0 | Backlog | [Lộ trình và cổng nghiệm thu](UPGRADE_ROADMAP.md) |
+| V1.4B–V2.0 | Backlog | [Lộ trình và cổng nghiệm thu](UPGRADE_ROADMAP.md) |
 
 ## Phạm vi cá nhân V1.2
 
@@ -60,3 +60,13 @@ Xem [kết quả kiểm thử](TEST_RESULTS.md) và [các phần còn thiếu](L
 | Thao tác lớp học | Toàn màn hình trình duyệt hoặc phủ khung nhìn, âm báo tùy chọn, hỗ trợ chế độ giảm chuyển động |
 | Bài đã giao | Mặc định ẩn đáp án. Giáo viên có thể bật phần xem lại sau khi học sinh nộp. Bài cũ giữ thiết lập cũ |
 | Tiếp tục bài giao | Lưu các mục đã làm sau khi tải lại cùng tab. Giáo viên và máy chủ vẫn nhận đúng một bài hoàn chỉnh qua quy trình hiện có |
+
+## Nền tảng và mẫu V1.4A
+
+| Phạm vi | Trạng thái trên nhánh review |
+|---|---|
+| Registry, schema, adapter, scoring và rendering | Tách riêng trong `lib/games` và `components/games`. Dữ liệu cũ tiếp tục đi qua schema hiện hữu. Hai cụm renderer mới chỉ tải khi chơi |
+| Thư viện và giao bài | Tám mẫu mới có editor, demo, preview, giao bài, chấm điểm và hiển thị kết quả chung. Tăng tổng số mẫu lên 20 |
+| Media riêng | Player xin URL mới khi tệp ký bị lỗi. Máy chủ kiểm tra quyền với nguồn bài, lượt làm còn hiệu lực và đường dẫn thuộc chủ sở hữu |
+| Sân chơi | Không mặc định đếm giờ. Ảnh gameplay dùng trong thư viện, có toàn màn hình, âm báo, thao tác chạm và bàn phím |
+| Câu đố tương tác và arcade | V1.4B và V1.4C chờ triển khai |

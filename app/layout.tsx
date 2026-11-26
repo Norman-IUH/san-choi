@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <html lang="vi"><body>
+  return <html lang="vi" data-scroll-behavior="smooth"><body>
     <a className="skip" href="#main">Đến nội dung</a>
     <header className="site-header"><div className="header-inner">
       <Link className="brand" href="/"><span><Blocks size={22}/></span>Sân Chơi</Link>
