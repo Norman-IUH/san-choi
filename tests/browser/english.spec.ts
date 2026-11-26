@@ -14,13 +14,23 @@ test("four English decks can be previewed in two templates", async ({ page }, in
     const deck = englishDecks[id];
     await page.goto(`/samples/${id}`);
     await page.getByRole("button", { name: "Bắt đầu" }).click();
+    for (const label of ["Anh–Anh", "Anh–Mỹ"]) {
+      const src = await page.locator(`audio[aria-label="${label}"]`).getAttribute("src");
+      expect(src).toBeTruthy();
+      const response = await page.request.get(new URL(src!, page.url()).href);
+      expect(response.status()).toBe(200);
+      expect((await response.body()).subarray(0, 4).toString()).toBe("RIFF");
+    }
     await page.getByRole("button", { name: new RegExp(deck.entries[0][0], "i") }).click();
     await expect(page.getByText(deck.entries[0][3], { exact: true })).toBeVisible();
     await page.getByRole("link", { name: "Ghép cặp", exact: true }).click();
     await page.getByRole("button", { name: "Bắt đầu" }).click();
-    for (const [word, meaning] of deck.entries) await page.getByRole("combobox", { name: word }).selectOption(meaning);
+    for (const [word, meaning] of deck.entries) {
+      await page.getByRole("group", { name: "Thẻ cần ghép" }).getByRole("button", { name: word, exact: true }).click();
+      await page.getByRole("group", { name: "Đáp án ghép" }).getByRole("button", { name: meaning, exact: true }).click();
+    }
     await page.getByRole("button", { name: "Hoàn thành" }).click();
-    await expect(page.getByText("3/3 điểm")).toBeVisible();
+    await expect(page.getByText(`${deck.entries.length}/${deck.entries.length} điểm`)).toBeVisible();
   }
 });
 

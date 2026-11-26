@@ -5,8 +5,8 @@
 | Phiên bản | Trạng thái | Cổng nghiệm thu và kiểm thử |
 |---|---|---|
 | V1.1 Foundation | Đạt luồng cốt lõi | QuizStudy đã nghiệm thu Auth, PostgREST, RLS, RPC, snapshot, deadline, nộp trùng, giới hạn tần suất và CSV. Xử lý cảnh báo bảo mật khi chuẩn bị production. |
-| V1.2 Một giáo viên và English Content Engine | Partial | Kiểm tra tài khoản duy nhất, schema tương thích với 12 mẫu, CSV/XLSX, tái dùng nội dung, quyền Storage, file sai định dạng và mẫu gốc cho bốn cấp. Cần cấu hình riêng và nghiệm thu trên production. |
-| V1.3 Nâng cấp 12 trò | Not Started | Cải thiện màn hình lớp, ảnh/âm thanh, phản hồi và xem lại đáp án theo chính sách giao bài. Kiểm thử chuột, phím, chạm, giảm chuyển động và resume. |
+| V1.2 Một giáo viên và English Content Engine | Luồng chính đạt trên Vercel | Tạo bài, giao bài, nộp và lưu điểm đã chạy trên production. Preview bổ sung 20 từ, 40 audio UK/US và media phương án. QuizStudy vẫn bật đăng ký trực tiếp qua Auth API. |
+| V1.3 Nâng cấp 12 trò | Triển khai trên nhánh review | 12 sân khấu riêng, toàn màn hình, kéo thả, hiệu ứng và xem lại theo tùy chọn khi giao bài. Kiểm thử trên ba kích thước Chromium và bài giao QuizStudy. Xem kết quả và giới hạn thiết bị bên dưới. |
 | V1.4 Hoàn thành 22 mẫu nâng cao | Not Started | Mỗi trò có luật riêng, editor, preview, demo, input và bài kiểm thử. Phaser dùng cho arcade có game loop. |
 | V1.5 English Practice và Cambridge YLE | Not Started | Đối chiếu tài liệu Cambridge. Kiểm thử từng kỹ năng và từng phần, gồm rubric giáo viên, bài luyện gốc và quyền truy cập bản ghi âm. |
 | V1.6 Teaching Tools và lớp học | Not Started | Vocabulary Bank, Lesson Library, QR, PDF/đáp án, Excel, AI tùy chọn, roster và tiến độ. Kiểm tra phân quyền và cách ly giữa các lớp. |
@@ -14,7 +14,7 @@
 
 ## Khôi phục kết nối Supabase development
 
-Ngày 26/11/2026, connector xác nhận **QuizStudy** (`unarohbxeqzsqcyyxveo`) đang `ACTIVE_HEALTHY`. `.env.local` đã xác thực được bằng cả hai loại khóa. Hai migration đã áp dụng và version khớp các file repo. Các bước dưới đây dùng để cài đặt lại trên máy khác hoặc kết nối development mới. [Kết quả nghiệm thu](TEST_RESULTS.md).
+Ngày 26/11/2026, connector xác nhận **QuizStudy** (`unarohbxeqzsqcyyxveo`) đang `ACTIVE_HEALTHY`. `.env.local` đã xác thực được bằng cả hai loại khóa. Lịch sử migration của các lần nghiệm thu khớp với repo. Các bước dưới đây dùng để cài đặt lại trên máy khác hoặc kết nối development mới. [Kết quả nghiệm thu](TEST_RESULTS.md).
 
 1. Nếu QuizStudy là project development định dùng, mở Project Overview, chọn **Resume project** nếu dashboard có nút và chờ trạng thái hoạt động. Nếu QuizStudy dùng cho mục đích khác, xác định một project development riêng. [Dashboard QuizStudy](https://supabase.com/dashboard/project/unarohbxeqzsqcyyxveo) · [Tài liệu khôi phục project](https://supabase.com/docs/guides/platform/free-project-pausing).
 2. Sao chép `.env.example` sang `.env.local`. Lấy Project URL từ Connect và khóa từ Settings → API Keys. Điền `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` và đặt `APP_URL=http://localhost:3000`. Giữ secret phía server trong `.env.local`. Giữ `GOOGLE_OAUTH_ENABLED=false` khi chưa thiết lập Google.
@@ -33,3 +33,7 @@ delete from private.attempt_rate_limits where window_start < now() - interval '1
 ## Tài khoản production của một giáo viên
 
 Ở project production riêng, chủ hệ thống tạo đúng một giáo viên qua Supabase Auth Dashboard rồi lấy UUID của tài khoản làm `TEACHER_ACCOUNT_ID`. Đặt `TEACHING_MODE=single`, tắt **Allow new users to sign up**, tắt Google provider và giữ `GOOGLE_OAUTH_ENABLED=false`. Đây là hai lớp chặn: server Sân Chơi giới hạn phiên theo UUID, Supabase Auth tắt đăng ký trực tiếp. QuizStudy giữ cấu hình development và tài khoản thử nghiệm. [Cấu hình Supabase Auth](https://supabase.com/docs/guides/auth/general-configuration).
+
+## Cổng phát hành V1.3
+
+Áp dụng `20261126122018_assignment_answer_review.sql` trên đúng project được deployment sử dụng. Cột `show_review` mặc định tắt để bài đã giao giữ chính sách cũ. Đối chiếu `APP_URL` với domain của từng môi trường trước khi kiểm tra link giao bài qua Vercel Preview. Kiểm thử tiếp tục làm bài giữ các mục đã hoàn thành khi tải lại cùng tab, trong cùng phiên đang mở. Kiểm thử phần cứng trên màn hình lớp và thiết bị iOS/Android còn chờ. [Bằng chứng và giới hạn nghiệm thu](TEST_RESULTS.md).

@@ -38,14 +38,25 @@ Xem [kết quả kiểm thử](TEST_RESULTS.md) và [các phần còn thiếu](L
 | Auth, PostgREST, RPC, RLS và E2E hai giáo viên trên Supabase | Done | QuizStudy development. Hai giáo viên cách ly, học sinh nộp bài 10/10, chủ bài tải CSV |
 | Tự đăng ký giáo viên và xác minh email | Partial | Đã kiểm tra form, mã lỗi Auth và provision qua Auth Admin. Chờ kiểm tra nhận thư và xác minh bằng hộp thư thực |
 | Mời giáo viên tại trung tâm | Done ở mức thiết kế | Quy trình đóng đăng ký và nghiệm thu lời mời ghi trong roadmap. Chưa bật trên Supabase |
-| V1.3–V2.0 | Not Started | [Lộ trình và cổng nghiệm thu](UPGRADE_ROADMAP.md) |
+| V1.4–V2.0 | Backlog | [Lộ trình và cổng nghiệm thu](UPGRADE_ROADMAP.md) |
 
 ## Phạm vi cá nhân V1.2
 
 | Phạm vi | Trạng thái | Nghiệm thu |
 |---|---|---|
 | Chế độ một giáo viên | Đạt trên bản build thử | Ẩn đăng ký/OAuth, đúng UUID được vào và tài khoản khác bị chặn. Supabase production cần tắt đăng ký trực tiếp |
-| Học liệu tiếng Anh theo cấp độ và kỹ năng | Đạt bước đầu | Bốn bộ từ gốc dùng chung cho Flashcards và Match Up đã chạy desktop/mobile. Có chức năng lưu bản sao vào thư viện |
+| Học liệu tiếng Anh theo cấp độ và kỹ năng | Đạt | Bốn bộ từ gốc dùng chung cho Flashcards và Match Up. 20 từ và 40 tệp audio tổng hợp UK/US. Có chức năng lưu bản sao vào thư viện |
 | Nhập CSV/XLSX, IPA và ví dụ | Đạt | Playwright nhập cả hai loại tệp, đọc IPA và câu ví dụ, lưu lại nội dung |
-| Ảnh, audio và media theo đáp án | Partial | QuizStudy đã kiểm tra ảnh sai định dạng, ảnh riêng tư có URL hết hạn và nhận ảnh trong bài giao. Còn nghiệm thu toàn bộ biến thể audio Anh–Anh/Anh–Mỹ và media theo phương án |
+| Ảnh, audio và media theo đáp án | Có trong preview | Audio UK/US theo mục, ảnh và audio theo phương án. Tệp giáo viên lưu trong bucket riêng tư và tải qua URL có hạn |
+| Tạo, giao, nộp và lưu điểm trên Vercel | Đạt | Giáo viên thấy điểm 1/1 sau khi tải lại trang và đã đóng bài giao thử |
 | 22 mẫu tiếp theo, Cambridge, lớp học, PDF, Excel và QR | Backlog | [Roadmap](UPGRADE_ROADMAP.md) |
+
+## Trải nghiệm game V1.3
+
+| Phạm vi | Nghiệm thu |
+|---|---|
+| 12 sân khấu, minh họa, lật thẻ, hộp, vòng quay và Gameshow | Từ bắt đầu đến kết quả trên desktop, điện thoại và tablet Chromium. Vòng quay hiển thị nội dung bài. Gameshow demo có điểm trực tiếp và nhân đôi điểm |
+| Ghép cặp và Phân nhóm | Kéo thả chuột và chạm, kèm thao tác chọn hai bước và điều khiển bàn phím |
+| Thao tác lớp học | Toàn màn hình trình duyệt hoặc phủ khung nhìn, âm báo tùy chọn, hỗ trợ chế độ giảm chuyển động |
+| Bài đã giao | Mặc định ẩn đáp án. Giáo viên có thể bật phần xem lại sau khi học sinh nộp. Bài cũ giữ thiết lập cũ |
+| Tiếp tục bài giao | Lưu các mục đã làm sau khi tải lại cùng tab. Giáo viên và máy chủ vẫn nhận đúng một bài hoàn chỉnh qua quy trình hiện có |
