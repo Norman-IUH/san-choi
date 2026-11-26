@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { normalize } from "@/lib/games/model";
+import { reorderRank } from "@/lib/games/puzzle-templates";
 import { LessonMedia, Pronunciation } from "./LessonMedia";
 import { Progress } from "./Progress";
 import type { RoundProps } from "./LegacyRound";
@@ -25,9 +26,8 @@ export default function PuzzleRound({ template, items, index, turn, answers, set
     <button className="button primary" disabled={busy || !enabled} onClick={() => next(response)}>{finishText}</button>;
 
   function move(current: number, destination: number) {
-    if (current === destination || !order.includes(current) || destination < 0 || destination >= order.length) return;
-    const updated = order.filter(tile => tile !== current);
-    updated.splice(destination, 0, current);
+    const updated = reorderRank(order, current, destination);
+    if (updated === order) return;
     setOrder(updated);
     setAnnouncement(item.options[current] + " ở vị trí " + (destination + 1));
   }

@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { demoContent } from "../lib/demo";
 import { compatible, contentSchema, grade, makePlayItems, missedReview } from "../lib/game";
-import { mathProblem } from "../lib/games/puzzle-templates";
+import { mathProblem, reorderRank } from "../lib/games/puzzle-templates";
 
 test("diagram and picture questions reject incomplete media and carry no answer field", () => {
   const diagram = demoContent("labelled-diagram");
@@ -12,6 +12,7 @@ test("diagram and picture questions reject incomplete media and carry no answer 
 });
 
 test("memory and ranking score only the original order and memory projections retain teacher sequence", () => {
+  expect(reorderRank([0, 2, 1], 1, 1)).toEqual([0, 1, 2]);
   for (const template of ["watch-memorize", "rank-order"] as const) {
     const original = demoContent(template);
     expect(grade(template, original, original.map(i => [...i.answers].reverse())).score).toBe(0);

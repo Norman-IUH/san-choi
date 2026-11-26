@@ -14,6 +14,15 @@ export const pairOptions = ["Pair", "No Pair"] as const;
 export const mathOperations = ["add", "subtract", "multiply", "divide"] as const;
 export const mathSymbols = { add: "+", subtract: "−", multiply: "×", divide: "÷" } as const;
 
+export function reorderRank(order: number[], tile: number, destination: number) {
+  const position = order.indexOf(tile);
+  if (position === -1 || position === destination || destination < 0 || destination >= order.length) return order;
+  const updated = [...order];
+  updated.splice(position, 1);
+  updated.splice(destination, 0, tile);
+  return updated;
+}
+
 export function mathProblem(config: { operation: typeof mathOperations[number]; min: number; max: number }, index: number) {
   const { operation, min, max } = config;
   const width = max - min + 1;
