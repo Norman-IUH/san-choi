@@ -7,6 +7,7 @@ import { RefreshLessonMedia } from "./games/LessonMedia";
 import { GameRound } from "./games/GameRound";
 import { hangmanPattern } from "@/lib/games/word-puzzles";
 import { isWordTemplate } from "@/lib/games/word-templates";
+import { isPuzzleTemplate } from "@/lib/games/puzzle-templates";
 import { gameTheme } from "./games/game-themes";
 
 type Props = { title: string; template: Template; initialItems?: PlayItem[]; reveals?: string[];
@@ -43,6 +44,7 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
   const bindFocus = (node: HTMLElement | null) => { focusTarget.current = node; };
   const meta = templates[template];
   const theme = gameTheme(template);
+  const gameplayThumbnail = isWordTemplate(template) || isPuzzleTemplate(template);
   const index = order[turn] ?? 0;
   const rows = template === "match-up" || template === "group-sort";
   const stageScore = template === "gameshow" && active && !result && !assignment && localContent
@@ -172,7 +174,7 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
   function next(answer: string[]) {
     const updated = { ...answers, [index]: answer };
     if (!assignment && localContent) {
-      const { correct } = grade(template, [localContent[index]], [answer]);
+      const { correct } = grade(template, [localContent[index]], [answer], index);
       if (correct[0] !== null) {
         chime(correct[0]);
         const explanation = localContent[index].explanation;
@@ -232,8 +234,8 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
         setFeedback("");
       }}><RotateCcw size={16}/> Chơi lại</button>
     </div> : !active ? <div className="game-intro">
-      <div className={isWordTemplate(template) ? "game-art gameplay-thumbnail" : "game-art"} aria-hidden="true"
-        style={isWordTemplate(template) ? { backgroundImage: `url(/illustrations/gameplay/${template}.webp)` } : { backgroundPosition: theme.artPosition }}/>
+      <div className={gameplayThumbnail ? "game-art gameplay-thumbnail" : "game-art"} aria-hidden="true"
+        style={gameplayThumbnail ? { backgroundImage: `url(/illustrations/gameplay/${template}.webp)` } : { backgroundPosition: theme.artPosition }}/>
       <form onSubmit={event => { event.preventDefault(); void start(); }}>
       <p>{theme.instruction}</p>
       {assignment && requireName && <label>Biệt danh<input value={nickname} onChange={event => setNickname(event.target.value)} maxLength={80} required /></label>}

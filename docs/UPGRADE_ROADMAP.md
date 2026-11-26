@@ -8,7 +8,7 @@
 | V1.2 Một giáo viên và English Content Engine | Luồng chính đạt trên Vercel | Tạo bài, giao bài, nộp và lưu điểm đã chạy trên production. Preview bổ sung 20 từ, 40 audio UK/US và media phương án. QuizStudy vẫn bật đăng ký trực tiếp qua Auth API. |
 | V1.3 Nâng cấp 12 trò | Triển khai trên nhánh review | 12 sân khấu riêng, toàn màn hình, kéo thả, hiệu ứng và xem lại theo tùy chọn khi giao bài. Kiểm thử trên ba kích thước Chromium và bài giao QuizStudy. Xem kết quả và giới hạn thiết bị bên dưới. |
 | V1.4A Nền tảng và 8 trò từ vựng | Nhánh review, 20 mẫu tổng cộng | Registry, tải renderer theo nhu cầu, URL media ký lại theo quyền và tám trải nghiệm có editor, demo, giao bài và kiểm thử. |
-| V1.4B 7 câu đố tương tác | Backlog | Labelled Diagram, Flip Tiles, Rank Order, Pair or No Pair, Image Quiz, Watch and Memorize, Maths Generator. |
+| V1.4B 7 câu đố tương tác | Nhánh review, 27 mẫu tổng cộng | Labelled Diagram, Flip Tiles, Rank Order, Pair or No Pair, Image Quiz, Watch and Memorize, Maths Generator. |
 | V1.4C 7 trò arcade | Backlog | Maze Chase, Flying Fruit, Balloon Pop, Whack-a-Mole, Airplane, Speed Sorting, Win or Lose Quiz. Dùng Phaser cho trò cần vòng lặp thời gian thực. |
 | V1.5 English Practice và Cambridge YLE | Not Started | Đối chiếu tài liệu Cambridge. Kiểm thử từng kỹ năng và từng phần, gồm rubric giáo viên, bài luyện gốc và quyền truy cập bản ghi âm. |
 | V1.6 Teaching Tools và lớp học | Not Started | Vocabulary Bank, Lesson Library, QR, PDF/đáp án, Excel, AI tùy chọn, roster và tiến độ. Kiểm tra phân quyền và cách ly giữa các lớp. |
@@ -40,4 +40,6 @@ delete from private.attempt_rate_limits where window_start < now() - interval '1
 
 Áp dụng `20261126122018_assignment_answer_review.sql` trên đúng project được deployment sử dụng. Cột `show_review` mặc định tắt để bài đã giao giữ chính sách cũ. Đối chiếu `APP_URL` với domain của từng môi trường trước khi kiểm tra link giao bài qua Vercel Preview. Kiểm thử tiếp tục làm bài giữ các mục đã hoàn thành khi tải lại cùng tab, trong cùng phiên đang mở. Kiểm thử phần cứng trên màn hình lớp và thiết bị iOS/Android còn chờ. [Bằng chứng và giới hạn nghiệm thu](TEST_RESULTS.md).
 
-Kiểm tra lại trước V1.4A cho thấy QuizStudy vẫn bật signup và khóa bí mật từng chia sẻ vẫn xác thực được. Xoay khóa ở Supabase, cập nhật môi trường Vercel và development, xác minh khóa mới hoạt động rồi thu hồi khóa cũ. Tắt signup, đăng nhập mới bằng tài khoản giáo viên và chỉ merge PR #1 sau khi chủ dự án cho phép. [Quy trình xoay khóa Supabase](https://supabase.com/docs/guides/getting-started/api-keys).
+QuizStudy đã tắt signup theo dashboard và Auth API. Chủ dự án chọn giữ cấu hình API hiện tại. Khóa bí mật từng chia sẻ vẫn là rủi ro chưa giải quyết, nên bản hiện tại chưa đạt cổng bảo mật production. [Tài liệu khóa Supabase](https://supabase.com/docs/guides/getting-started/api-keys).
+
+Sau khi xử lý cổng bảo mật và có phê duyệt, merge PR #1 trước và giữ nhánh nguồn. Cập nhật PR #2 với `master`, đổi base và đối chiếu diff để giữ đúng phần V1.4A, rồi chạy lại hồi quy trước khi merge. Xác minh deployment production mới, chạy đủ 20 demo, và kiểm tra giáo viên tạo bài, giao link, học sinh nộp và lưu điểm. V1.4B tiếp tục review trên nhánh phụ thuộc PR #2.

@@ -99,3 +99,14 @@ Các giới hạn còn lại gồm WebKit và thiết bị thật, máy chiếu 
 - Dashboard và Auth API của QuizStudy xác nhận đăng ký công khai đã tắt (`disable_signup: true`), Google vẫn tắt. Khóa từng được chia sẻ vẫn là rủi ro chưa xử lý. Việc thay hoặc thu hồi khóa cần quyết định riêng của chủ dự án. [Supabase Auth](https://supabase.com/docs/guides/auth/general-configuration).
 - Migration `20261126155849_secure_game_sessions.sql` đã chạy thử và rollback trước khi áp dụng trên QuizStudy. Hangman lưu lượt đoán cho từng mục và lượt làm, dừng ở sáu lỗi. Việc chấm điểm dùng lịch sử từ máy chủ. Cấp lại signed URL có ngân sách riêng 30 lượt/phút và xác minh bài còn mở, chưa hết hạn, lượt làm chưa hoàn thành. URL mới có thời hạn 15 phút.
 - Kiểm thử PostgreSQL nhúng đạt cho tải lại trạng thái lượt đoán, lọc dữ liệu sai, đoán trùng, khóa lượt đoán sau giới hạn hoặc sau khi đóng bài, và giữ điểm gốc khi yêu cầu nộp lặp.
+
+## V1.4B — 27 mẫu trên nhánh review
+
+| Hạng mục | Kết quả |
+|---|---|
+| Lint, typecheck, Vitest, build, audit | Đạt. 47 Vitest gồm từng mẫu. Production build sinh 27 demo. `npm audit --omit=dev` trả 0 advisory |
+| E2E QuizStudy | 17 lượt đạt, gồm 7 mẫu mới, 8 mẫu V1.4A, kiểm thử media và thử lại khi mất phản hồi nộp. Sáu mẫu mới có điểm lưu `1/2`. Flip Tiles lưu một lượt hoàn thành. Bảy bài giao mới đã đóng |
+| Hồi quy WebKit | 56 lượt đạt trên hai cấu hình Desktop Safari và iPhone 13 mô phỏng, gồm các demo cũ, các mẫu từ vựng và bảy câu đố mới |
+| Lỗi mạng, nộp lại và kết quả | Playwright cắt phản hồi sau khi máy chủ nhận bài sai, rồi gửi lại đáp án khác qua UI. Giáo viên vẫn thấy đúng một kết quả `0/1` đã lưu ban đầu |
+
+Ảnh dùng trong thư viện được tạo từ gameplay Playwright. [Ảnh kiểm thử V1.4B](../output/playwright/v14b-gameplay). Phần WebKit là browser engine và profile mô phỏng. Thiết bị iOS, Android và máy chiếu thật vẫn chờ kiểm tra.
