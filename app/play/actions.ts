@@ -24,7 +24,7 @@ async function attemptLimit(db: ReturnType<typeof privilegedDatabase>, id: strin
 export async function guessAssignmentLetter(id: string, index: number, letter: string | null) {
   if (!serverConfigured || !z.uuid().safeParse(id).success ||
     !z.number().int().min(0).max(59).safeParse(index).success ||
-    !z.string().regex(/^[A-Z]$/).nullable().safeParse(letter).success) return null;
+    !z.string().length(1).regex(/^[A-Z]$/).nullable().safeParse(letter).success) return null;
   const token = (await cookies()).get(`attempt-${id}`)?.value;
   if (!token || !z.uuid().safeParse(token).success) return null;
   const assignment = await getAssignment(id);

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { mathOperations } from "./puzzle-templates";
 import type { WordSlot } from "./word-puzzles";
 
 const text = z.string().trim().min(1).max(400);
@@ -8,7 +9,8 @@ export const mediaPath = z.string().regex(/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(png|j
 const imagePath = mediaPath.refine(path => /\.(png|jpg|webp)$/.test(path));
 const audioPath = mediaPath.refine(path => /\.(mp3|wav|ogg)$/.test(path));
 export const sampleAudioPath = z.string().regex(/^\/audio\/vocabulary\/[a-z]+-(uk|us)\.wav$/);
-const mediaSchema = z.object({ image: imagePath.optional(), audio: audioPath.optional() });
+export const sampleImagePath = z.string().regex(/^\/illustrations\/puzzles\/(classroom|book|pencil|bag)\.webp$/);
+const mediaSchema = z.object({ image: z.union([imagePath, sampleImagePath]).optional(), audio: audioPath.optional() });
 const englishSchema = z.object({
   level: z.enum(levels).optional(),
   skill: z.enum(skills).optional(),
@@ -28,11 +30,17 @@ export const itemSchema = z.object({
   optionMedia: z.array(z.object({ option: text, ...mediaSchema.shape })).max(8).optional(),
   explanation: z.string().trim().min(1).max(800).optional(),
   alternatives: z.array(text).max(8).optional(),
+  secondary: text.optional(),
+  pin: z.object({ x: z.number().min(0).max(100), y: z.number().min(0).max(100) }).optional(),
+  math: z.object({ operation: z.enum(mathOperations), min: z.number().int().min(0).max(30),
+    max: z.number().int().min(0).max(30) }).optional(),
 });
 export type Item = z.infer<typeof itemSchema>;
 export type Media = z.infer<typeof mediaSchema>;
 export type PlayItem = {
   prompt: string; options: string[]; multiple?: boolean;
+  secondary?: string; pin?: Item["pin"]; memory?: string[]; reveal?: string;
+  equation?: { left: number; right: number; symbol: string };
   hangman?: { pattern: string[]; misses: number; guesses: string[] };
   letters?: number; grid?: { size: number; letters: string[] }; slot?: WordSlot;
   media?: Media; optionMedia?: Item["optionMedia"]; pronunciation?: Pick<NonNullable<Item["english"]>, "uk" | "us">;

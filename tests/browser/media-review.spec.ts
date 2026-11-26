@@ -7,7 +7,7 @@ test("quiz options and both pronunciations survive assignment snapshot with opt-
   const email = process.env.E2E_TEACHER_EMAIL;
   const password = process.env.E2E_TEACHER_PASSWORD;
   test.skip(!email || !password || info.project.name !== "desktop", "Requires the development teacher");
-  test.setTimeout(240000);
+  test.setTimeout(360000);
   await page.goto("/login", { waitUntil: "networkidle" });
   await page.getByLabel("Email").fill(email!);
   await page.getByLabel("Mật khẩu").fill(password!);
@@ -94,5 +94,52 @@ test("quiz options and both pronunciations survive assignment snapshot with opt-
     await expect(page.getByRole("row").filter({ hasText: "Kiểm thử media" })).toContainText("1/2");
     await page.getByRole("button", { name: "Đóng bài tập", exact: true }).click();
     await expect(page.getByRole("button", { name: "Mở lại bài tập" })).toBeVisible({ timeout: 45000 });
+  }
+
+  for (const state of ["completed", "closed", "expired"] as const) {
+    await page.goto(activityUrl, { waitUntil: "networkidle" });
+    let deadline = 0;
+    if (state === "expired") {
+      deadline = (Math.floor(Date.now() / 60000) + 2) * 60000;
+      const parts = Object.fromEntries(new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric",
+        month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
+        .formatToParts(deadline).map(part => [part.type, part.value]));
+      await page.getByLabel(/Hạn nộp/).fill(`${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`);
+    }
+    await page.getByRole("button", { name: "Tạo link giao bài" }).click();
+    const share = page.getByLabel("Link chia sẻ");
+    await expect(share).toBeVisible({ timeout: 45000 });
+    const url = await share.inputValue();
+    const context = await browser.newContext();
+    const student = await context.newPage();
+    const openStudent = async (tab: typeof student) => {
+      await tab.goto(url, { waitUntil: "networkidle" });
+      await tab.getByLabel("Biệt danh").fill("Kiểm thử quyền media");
+      await tab.getByRole("button", { name: "Bắt đầu" }).click();
+    };
+    try {
+      await openStudent(student);
+      const picture = student.getByRole("button", { name: "Eraser", exact: true }).locator("img");
+      await expect(picture).toBeVisible({ timeout: 30000 });
+      if (state === "completed") {
+        const otherTab = await context.newPage();
+        await openStudent(otherTab);
+        await otherTab.getByRole("button", { name: "Pencil", exact: true }).click();
+        await otherTab.getByRole("button", { name: "Tiếp theo" }).click();
+        await otherTab.getByRole("button", { name: "Ruler", exact: true }).click();
+        await otherTab.getByRole("button", { name: "Hoàn thành" }).click();
+        await expect(otherTab.getByText("2/2 điểm", { exact: true })).toBeVisible({ timeout: 30000 });
+        await otherTab.close();
+      } else if (state === "closed") {
+        await page.getByRole("button", { name: "Đóng bài tập" }).click();
+        await expect(page.getByText("Đã đóng", { exact: true })).toBeVisible({ timeout: 30000 });
+      } else await expect.poll(() => Date.now(), { timeout: 125000, intervals: [1000] }).toBeGreaterThan(deadline);
+      await picture.dispatchEvent("error");
+      await expect(student.getByText("Tệp học liệu chưa tải được. Em vẫn có thể tiếp tục làm bài.", { exact: true })).toBeVisible({ timeout: 25000 });
+    } finally {
+      await context.close();
+      const close = page.getByRole("button", { name: "Đóng bài tập" });
+      if (await close.isVisible()) await close.click();
+    }
   }
 });

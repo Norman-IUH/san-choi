@@ -2,6 +2,9 @@ import { templateIds, templates, type Item, type Template } from "./game";
 
 import { isWordTemplate, type WordTemplate, truthOptions } from "./games/word-templates";
 
+import { isPuzzleTemplate } from "./games/puzzle-templates";
+import { puzzleDemos } from "./games/puzzle-demos";
+
 const word = (prompt: string, answer: string, audio?: string): Item => ({
   prompt, answers: [answer], options: [],
   ...(audio && { english: { uk: "/audio/vocabulary/" + audio + "-uk.wav", us: "/audio/vocabulary/" + audio + "-us.wav" } }),
@@ -48,6 +51,7 @@ export const demoTitles = [
 ];
 
 export function demoContent(template: Template): Item[] {
+  if (isPuzzleTemplate(template)) return puzzleDemos[template].items;
   if (isWordTemplate(template)) return wordDemos[template].items;
   switch (templates[template].kind) {
     case "choice": return questions;
@@ -72,4 +76,4 @@ export function demoContent(template: Template): Item[] {
   }
 }
 
-export const demos = templateIds.map((id, index) => ({ id, ...templates[id], demoTitle: isWordTemplate(id) ? wordDemos[id].title : demoTitles[index] }));
+export const demos = templateIds.map((id, index) => ({ id, ...templates[id], demoTitle: isPuzzleTemplate(id) ? puzzleDemos[id].title : isWordTemplate(id) ? wordDemos[id].title : demoTitles[index] }));

@@ -3,6 +3,7 @@ import { templates, type Template } from "./registry";
 import { itemSchema, normalize, type Item } from "./model";
 import { englishPuzzleWord, truthOptions } from "./word-templates";
 import { buildCrossword } from "./word-puzzles";
+import { pairOptions } from "./puzzle-templates";
 import { doubleMarker } from "./scoring";
 
 export function contentSchema(template: Template, draft = false) {
@@ -17,9 +18,11 @@ export function contentSchema(template: Template, draft = false) {
       new Set(items.map(item => normalize(item.answers[0] ?? ""))).size !== items.length)) {
       context.addIssue({ code: "custom", message: "Cần 2–12 cặp có mặt sau khác nhau." });
     }
-    items.forEach(({ answers, options, prompt, alternatives, optionMedia }, index) => {
+    items.forEach(({ answers, options, prompt, alternatives, optionMedia, media, pin, secondary, math }, index) => {
       const unique = new Set(options.map(normalize));
-      const valid = kind === "choice"
+      const valid = template === "maths-generator"
+        ? Boolean(math && math.min <= math.max && (math.operation !== "divide" || math.min >= 1) && !answers.length && !options.length)
+        : kind === "choice"
         ? options.length >= 2 && unique.size === options.length && (template !== "gameshow" || !unique.has(doubleMarker)) && answers.length >= 1 &&
           new Set(answers.map(normalize)).size === answers.length && answers.every(answer => unique.has(normalize(answer))
           ) && answers.length < options.length
@@ -27,7 +30,15 @@ export function contentSchema(template: Template, draft = false) {
           : kind === "sequence" ? answers.length >= 2
           : answers.length === 1 && (kind !== "word" || /^[\p{L}\p{M}]{2,20}$/u.test(answers[0]))
             && (kind !== "blank" || prompt.includes("___")));
-      if (!valid || (englishPuzzle && !englishPuzzleWord.safeParse(answers[0]).success) ||
+      const requiresPicture = template === "image-quiz" && options.some(option =>
+        !optionMedia?.some(entry => entry.image && normalize(entry.option) === normalize(option)));
+      const invalidDiagram = template === "labelled-diagram" && (!pin || !media?.image || answers.length !== 1);
+      const invalidPair = template === "pair-or-no-pair" && (!secondary || answers.length !== 1 || options.length !== 2 ||
+        !pairOptions.every(option => unique.has(normalize(option))));
+      if (!valid || requiresPicture || invalidDiagram || invalidPair ||
+        (pin && template !== "labelled-diagram") || (secondary && template !== "pair-or-no-pair") ||
+        (math && template !== "maths-generator") || (englishPuzzle && !englishPuzzleWord.safeParse(answers[0]).success) ||
+        (template === "image-quiz" && answers.length !== 1) ||
         (template === "true-false" && (answers.length !== 1 || !truthOptions.every(option => unique.has(normalize(option))) || options.length !== 2))) context.addIssue({ code: "custom", path: [index], message: `Kiểm tra nội dung mục ${index + 1} theo yêu cầu của mẫu.` });
       if ((alternatives?.length && kind !== "blank" && template !== "type-answer") ||
           (optionMedia?.length && (kind !== "choice" || optionMedia.some(entry => !unique.has(normalize(entry.option)))))) {

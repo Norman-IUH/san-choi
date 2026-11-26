@@ -38,7 +38,7 @@ Xem [kết quả kiểm thử](TEST_RESULTS.md) và [các phần còn thiếu](L
 | Auth, PostgREST, RPC, RLS và E2E hai giáo viên trên Supabase | Done | QuizStudy development. Hai giáo viên cách ly, học sinh nộp bài 10/10, chủ bài tải CSV |
 | Tự đăng ký giáo viên và xác minh email | Partial | Đã kiểm tra form, mã lỗi Auth và provision qua Auth Admin. Chờ kiểm tra nhận thư và xác minh bằng hộp thư thực |
 | Mời giáo viên tại trung tâm | Done ở mức thiết kế | Quy trình đóng đăng ký và nghiệm thu lời mời ghi trong roadmap. Chưa bật trên Supabase |
-| V1.4B–V2.0 | Backlog | [Lộ trình và cổng nghiệm thu](UPGRADE_ROADMAP.md) |
+| V1.4C–V2.0 | Backlog | [Lộ trình và cổng nghiệm thu](UPGRADE_ROADMAP.md) |
 
 ## Phạm vi cá nhân V1.2
 
@@ -69,4 +69,6 @@ Xem [kết quả kiểm thử](TEST_RESULTS.md) và [các phần còn thiếu](L
 | Thư viện và giao bài | Tám mẫu mới có editor, demo, preview, giao bài, chấm điểm và hiển thị kết quả chung. Tăng tổng số mẫu lên 20 |
 | Media riêng | Player xin URL mới khi tệp ký bị lỗi. Máy chủ kiểm tra quyền với nguồn bài, lượt làm còn hiệu lực và đường dẫn thuộc chủ sở hữu |
 | Sân chơi | Không mặc định đếm giờ. Ảnh gameplay dùng trong thư viện, có toàn màn hình, âm báo, thao tác chạm và bàn phím |
-| Câu đố tương tác và arcade | V1.4B và V1.4C chờ triển khai |
+| Câu đố tương tác V1.4B | Bảy mẫu có editor, demo, preview, gameplay, kết quả và giao bài. Tổng 27 mẫu trên nhánh review |
+| Phiên an toàn | Hangman dùng lịch sử server, cấp lại media giới hạn theo phiên/IP và kiểm tra tình trạng bài giao |
+| Arcade | V1.4C chờ triển khai |

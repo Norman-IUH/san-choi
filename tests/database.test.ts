@@ -82,6 +82,7 @@ test("migration provisions accounts, locks teacher rows and allows one authorita
     const guess = async (letter: string | null) => (await db.query<{ guesses: string | null }>(
       "select hangman_guess($1,$2,0,$3) as guesses", [assignment, puzzleAttempt, letter])).rows[0].guesses;
     expect(await guess("ABC")).toBeNull();
+    expect(await guess("B\n")).toBeNull();
     expect(await guess("B")).toBe("B");
     expect(await guess("B")).toBe("B");
     for (const letter of "DEFGH") await guess(letter);

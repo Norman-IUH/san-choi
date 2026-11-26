@@ -1,5 +1,6 @@
 import { templates, type Template } from "./registry";
 import { buildCrossword, makeWordsearch } from "./word-puzzles";
+import { mathProblem } from "./puzzle-templates";
 import { normalize, type Item, type PlayItem } from "./model";
 
 export function shuffle<T>(items: T[]) {
@@ -22,6 +23,14 @@ export function makePlayItems(template: Template, items: Item[]): PlayItem[] {
     ...(template === "wordsearch" && (() => {
       const { grid, size } = makeWordsearch(item.answers[0], index);
       return { grid: { size, letters: grid } };
+    })()),
+    ...(template === "flip-tiles" && { reveal: item.answers[0] }),
+    ...(template === "watch-memorize" && { memory: item.answers }),
+    ...(item.pin && { pin: item.pin }),
+    ...(item.secondary && { secondary: item.secondary }),
+    ...(item.math && (() => {
+      const { left, right, symbol } = mathProblem(item.math, index);
+      return { equation: { left, right, symbol } };
     })()),
     prompt: template === "open-box" ? "" : item.prompt,
     media: item.media,

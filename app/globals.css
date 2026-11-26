@@ -290,3 +290,41 @@ audio{max-width:100%}
 .word-template-picture,.game-art.gameplay-thumbnail{background-size:cover;background-position:center}
 .game-art.gameplay-thumbnail{aspect-ratio:4/3;border:1px solid var(--game-edge)}
 .word-template-picture svg{padding:2px;border-radius:4px;background:#fff;color:var(--ink)}
+
+/* Interactive puzzles */
+.game-labelled-diagram{--game-accent:#1c6758;--game-paper:#e5f5ee;--game-edge:#a1cdb8}
+.game-flip-tiles{--game-accent:#633a96;--game-paper:#f2e8ff;--game-edge:#c7afe7}
+.game-rank-order{--game-accent:#934621;--game-paper:#fff1d9;--game-edge:#ebbf8e}
+.game-pair-or-no-pair{--game-accent:#1e615b;--game-paper:#e3f4ed;--game-edge:#97c9bb}
+.game-image-quiz{--game-accent:#204f88;--game-paper:#e8f1ff;--game-edge:#a8c5e8}
+.game-watch-memorize{--game-accent:#573e9c;--game-paper:#f2ebfb;--game-edge:#beaada}
+.game-maths-generator{--game-accent:#1e5782;--game-paper:#e9f4ff;--game-edge:#a5c9e4}
+.puzzle-round,.flip-tiles-board{min-width:0;grid-template-columns:minmax(0,1fr)}
+.flip-grid,.picture-answers{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr));gap:.6rem}
+.flip-tile{display:grid;gap:.4rem;align-content:start;min-width:0}
+.flip-tile>.option{display:grid;place-content:center;text-align:center;gap:.5rem;min-height:clamp(5rem,18vw,10rem);box-shadow:0 4px 0 var(--game-edge);font-size:clamp(1rem,3vw,1.5rem)}
+.flip-tile small{font-size:.73rem}
+.flip-tile .lesson-image{width:100%;max-height:130px}
+.diagram-picture{position:relative;width:min(100%,42rem);background:var(--game-paper);border-radius:.7rem}
+.diagram-picture .lesson-image{width:100%;max-height:none}
+.pin-editor{display:block;padding:0;border:0;overflow:hidden;cursor:crosshair}
+.diagram-pin{position:absolute;transform:translate(-50%,-50%);min-width:44px;min-height:44px;border:2px solid #fff;border-radius:2rem;background:var(--game-accent);color:white;padding:.3rem .6rem;font-weight:800;box-shadow:0 2px 5px #18312d60}
+.diagram-options,.memory-strip{display:flex;flex-wrap:wrap;gap:.55rem;align-items:center}
+.ranking-board{display:grid;gap:.55rem;max-width:42rem;padding-left:1.9rem}
+.ranking-board li{min-height:3.75rem;padding:.35rem .45rem .35rem .7rem;border:1px solid var(--game-edge);border-radius:.65rem;background:var(--game-paper);cursor:grab}
+.ranking-board li::marker{font-weight:800;color:var(--game-accent)}
+.rank-row{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.rank-row>span{min-width:0;padding-block:.65rem;overflow-wrap:anywhere}
+.rank-row>.inline-actions{flex:none}
+.comparison-board{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:.6rem}
+.comparison-board>div{display:grid;place-content:center;min-height:8rem;border-radius:.65rem;padding:.7rem;background:var(--game-paper);text-align:center;overflow-wrap:anywhere}
+.comparison-board img{width:min(100%,8rem);margin-inline:auto}
+.picture-answers button{display:grid;gap:.4rem;text-align:center;overflow-wrap:anywhere}
+.picture-answers .lesson-image{margin:0;height:clamp(90px,20vw,170px)}
+.memory-strip{padding:.75rem;background:var(--game-paper);min-height:4.5rem;border:1px solid var(--game-edge);border-radius:.7rem}
+ol.memory-strip{padding-left:1.8rem;gap:1.5rem}
+.memory-strip li{font-weight:750}
+.math-pad{max-width:30rem}
+.math-equation{font-weight:850;font-size:clamp(2rem,7vw,4rem);font-variant-numeric:tabular-nums;background:var(--game-paper);padding:.8rem;border-radius:.65rem}
+.math-equation span{color:var(--game-accent)}
+@media(max-width:530px){.flip-grid,.picture-answers{grid-template-columns:repeat(2,minmax(0,1fr))}.ranking-board .inline-actions{gap:.25rem}}

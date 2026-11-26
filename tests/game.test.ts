@@ -2,15 +2,17 @@ import { describe, expect, test } from "vitest";
 import { compatible, contentSchema, doubleMarker, grade, makePlayItems, templateIds, templates } from "../lib/game";
 import { demoContent } from "../lib/demo";
 import { csv } from "../lib/csv";
+import { mathProblem } from "../lib/games/puzzle-templates";
 
 describe("demo laws", () => {
   test.each(templateIds)("%s validates and grades its main interaction", id => {
     const sample = demoContent(id);
     expect(contentSchema(id).safeParse(sample).success).toBe(true);
     expect(makePlayItems(id, sample)).toHaveLength(sample.length);
-    const correct = sample.map(item => templates[id].kind === "word" ? Array.from(item.answers[0]) : [...item.answers]);
+    const correct = sample.map((item, index) => item.math ? [mathProblem(item.math, index).answer] :
+      templates[id].kind === "word" ? Array.from(item.answers[0]) : [...item.answers]);
     const result = grade(id, sample, correct);
-    const exploration = templates[id].kind === "prompt" || id === "flash-cards";
+    const exploration = templates[id].kind === "prompt" || id === "flash-cards" || id === "flip-tiles";
     expect(result.score).toBe(exploration ? null : sample.length);
     expect(grade(id, sample, sample.map(() => ["sai"])).score).toBe(exploration ? null : 0);
   });

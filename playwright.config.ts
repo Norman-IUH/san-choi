@@ -8,6 +8,10 @@ export default defineConfig({
     { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1920, height: 1080 } } },
     { name: "mobile", use: { ...devices["Pixel 7"], viewport: { width: 390, height: 844 } } },
     { name: "tablet", use: { ...devices["Pixel 7"], viewport: { width: 820, height: 1180 } } },
+    ...(process.env.E2E_WEBKIT === "1" ? [
+      { name: "safari", use: devices["Desktop Safari"] },
+      { name: "ios", use: devices["iPhone 13"] },
+    ] : []),
   ],
   webServer: externalUrl ? undefined : { command: "npm run dev -- --hostname localhost", url: "http://localhost:3000", reuseExistingServer: !process.env.CI, timeout: 90000 },
 });

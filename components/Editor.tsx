@@ -5,6 +5,7 @@ import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { saveActivity } from "@/app/activities/actions";
 import { levels, skills, templates, type Item, type Template } from "@/lib/game";
 import { isWordTemplate, truthOptions, wordTemplates } from "@/lib/games/word-templates";
+import { isPuzzleTemplate, mathOperations, mathSymbols, pairOptions, puzzleTemplates } from "@/lib/games/puzzle-templates";
 import { MediaInput } from "./MediaInput";
 import { importVocabulary } from "@/lib/vocabulary-import";
 
@@ -26,6 +27,12 @@ function hasEntry(item: Entry) {
 export function Editor({ id, template, initial, content = [], assets: initialAssets = {} }: {
   id: string | null; template: Template; initial?: ActivityFields; content?: Item[]; assets?: Record<string, string>;
 }) {
+  const diagram = template === "labelled-diagram";
+  const compare = template === "pair-or-no-pair";
+  const maths = template === "maths-generator";
+  const fixedChoices = template === "true-false" ? truthOptions : compare ? pairOptions : null;
+  const defaultEntry: Entry = diagram ? { ...blank, pin: { x: 50, y: 50 } } : maths ?
+    { ...blank, prompt: "Tính kết quả.", math: { operation: "add", min: 1, max: 10 } } : blank;
   const [error, setError] = useState("");
   const [assets, setAssets] = useState(initialAssets);
   const [uploads, setUploads] = useState(0);
@@ -33,12 +40,11 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
   const [pending, start] = useTransition();
   const { register, control, handleSubmit, setValue, getValues } = useForm<FormFields>({
     defaultValues: { title: "", description: "", subject: "", grade: "", tags: "", visibility: "private", ...initial,
-      content: content.length ? content.map(entryFromItem) : [blank] },
+      content: content.length ? content.map(entryFromItem) : [defaultEntry] },
   });
   const { fields, append, remove, move, replace } = useFieldArray({ control, name: "content" });
   const current = useWatch({ control, name: "content" });
   const kind = templates[template].kind;
-  const truth = template === "true-false";
   const alternatives = kind === "blank" || template === "type-answer";
   const wordPuzzle = ["spell-word", "wordsearch", "hangman", "crossword"].includes(template);
   const maxItems = template === "crossword" ? 10 : template === "matching-pairs" ? 12 : 60;
@@ -68,13 +74,13 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
   return <form className="stack editor" onSubmit={handleSubmit((data, event) => {
     if (structureBusy) return;
     const draft = (event?.nativeEvent as SubmitEvent)?.submitter?.getAttribute("value") !== "publish";
-    const entries = data.content.map(({ prompt, answers, options, alternatives, explanation, english, media, optionMedia }) => {
+    const entries = data.content.map(({ prompt, answers, options, alternatives, explanation, english, media, optionMedia, secondary, pin, math }) => {
       const lexical = english && {
         level: english.level || undefined, skill: english.skill || undefined, meaning: english.meaning?.trim() || undefined,
         ipa: english.ipa?.trim() || undefined, example: english.example?.trim() || undefined, uk: english.uk, us: english.us,
       };
-      const choices = truth ? [...truthOptions] : lines(options);
-      return { version: 2, prompt, answers: lines(answers), options: choices,
+      const choices = fixedChoices ? [...fixedChoices] : lines(options);
+      return { version: 2, prompt, answers: lines(answers), options: choices, secondary: secondary?.trim() || undefined, pin, math,
         explanation: explanation?.trim() || undefined, alternatives: lines(alternatives ?? ""),
         english: lexical && Object.values(lexical).some(Boolean) ? lexical : undefined,
         media: media?.image || media?.audio ? media : undefined,
@@ -98,6 +104,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
         <label>Quyền xem<select {...register("visibility")}><option value="private">Riêng tư</option><option value="unlisted">Có link</option><option value="public">Công khai</option></select></label></div>
     </div>
     <h2>Nội dung</h2>
+    {isPuzzleTemplate(template) && <p className="hint">{puzzleTemplates[template].instruction}</p>}
     {isWordTemplate(template) && <p className="hint">{wordTemplates[template].instruction}
       {wordPuzzle && " Dùng từ tiếng Anh 2–12 chữ cái."}
       {template === "crossword" && " Nhập 2–10 từ có chữ cái giao nhau."}
@@ -111,14 +118,34 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
     </div>}
     {fields.map((field, i) => {
       const item = current[i];
-      const options = truth ? [...truthOptions] : [...new Set(lines(item?.options ?? ""))];
+      const options = fixedChoices ? [...fixedChoices] : [...new Set(lines(item?.options ?? ""))];
       return <fieldset className="panel stack" key={field.id}><legend>Mục {i + 1}</legend>
       <label>{kind === "blank" ? "Câu có dấu ___ ở chỗ trống" : kind === "pair" ? "Mặt trước / nội dung" : "Câu hỏi hoặc gợi ý"}
         <textarea {...register(`content.${i}.prompt`)} maxLength={400} rows={2}/></label>
-      {kind === "choice" && !truth && <label>Phương án, mỗi dòng một phương án<textarea {...register(`content.${i}.options`)} rows={3}/></label>}
-      {truth ? <label>Đáp án<select {...register(`content.${i}.answers`)}><option value="">Chọn đáp án</option>
-        {truthOptions.map(value => <option key={value}>{value}</option>)}</select></label>
-        : kind !== "prompt" && <label>{answerLabel}<textarea {...register(`content.${i}.answers`)} rows={kind === "choice" || kind === "sequence" ? 3 : 1}/></label>}
+      {compare && <label>Nội dung thẻ thứ hai<textarea {...register(`content.${i}.secondary`)} maxLength={400}/></label>}
+      {diagram && <><div className="form-grid"><label>Vị trí ngang của ghim (%)<input type="number" min="0" max="100" step="any" {...register(`content.${i}.pin.x`, { valueAsNumber: true })}/></label>
+        <label>Vị trí dọc của ghim (%)<input type="number" min="0" max="100" step="any" {...register(`content.${i}.pin.y`, { valueAsNumber: true })}/></label></div>
+        {item?.media?.image && assets[item.media.image] && <button className="diagram-picture pin-editor" type="button"
+          aria-label="Đặt vị trí ghim trên ảnh. Có thể nhập tọa độ bằng bàn phím."
+          onClick={event => {
+            if (!event.detail) return;
+            const box = event.currentTarget.getBoundingClientRect();
+            const coordinate = (position: number, start: number, size: number) => Math.min(100, Math.max(0, Math.round((position - start) * 100 / size)));
+            setValue(`content.${i}.pin`, { x: coordinate(event.clientX, box.left, box.width), y: coordinate(event.clientY, box.top, box.height) });
+          }}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- Uploaded media is already signed by Storage. */}
+          <img className="lesson-image" src={assets[item.media.image]} alt="Xem trước sơ đồ"/>
+          <span className="diagram-pin" aria-hidden="true" style={{ left: (item.pin?.x ?? 50) + "%", top: (item.pin?.y ?? 50) + "%" }}>+</span>
+        </button>}
+      </>}
+      {maths && <div className="form-grid"><label>Phép tính<select {...register(`content.${i}.math.operation`)}>
+        {mathOperations.map(operation => <option value={operation} key={operation}>{mathSymbols[operation]}</option>)}</select></label>
+        <label>Số nhỏ nhất<input type="number" min="0" max="30" {...register(`content.${i}.math.min`, { valueAsNumber: true })}/></label>
+        <label>Số lớn nhất<input type="number" min="0" max="30" {...register(`content.${i}.math.max`, { valueAsNumber: true })}/></label></div>}
+      {kind === "choice" && !fixedChoices && <label>Phương án, mỗi dòng một phương án<textarea {...register(`content.${i}.options`)} rows={3}/></label>}
+      {fixedChoices ? <label>Đáp án<select {...register(`content.${i}.answers`)}><option value="">Chọn đáp án</option>
+        {fixedChoices.map(value => <option key={value}>{value}</option>)}</select></label>
+        : kind !== "prompt" && !maths && <label>{answerLabel}<textarea {...register(`content.${i}.answers`)} rows={kind === "choice" || kind === "sequence" ? 3 : 1}/></label>}
       {alternatives && <label>Đáp án thay thế (mỗi dòng một đáp án)<textarea {...register(`content.${i}.alternatives`)} rows={2}/></label>}
       <details className="lesson-details"><summary>Học liệu tiếng Anh và tệp</summary><div className="stack">
         <div className="form-grid"><label>Cấp độ<select {...register(`content.${i}.english.level`)}><option value="">Chưa chọn</option>
@@ -163,7 +190,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
         <button type="button" className="icon-button" aria-label={`Xóa mục ${i + 1}`} disabled={structureBusy} onClick={() => remove(i)}><Trash2 size={16}/></button>
       </div>
     </fieldset>; })}
-    <button type="button" className="button" disabled={structureBusy || fields.length >= maxItems} onClick={() => append(blank)}><Plus size={16}/> Thêm mục</button>
+    <button type="button" className="button" disabled={structureBusy || fields.length >= maxItems} onClick={() => append(defaultEntry)}><Plus size={16}/> Thêm mục</button>
     {error && <p className="notice error" role="alert">{error}</p>}
     <div className="inline-actions"><button className="button primary" value="publish" disabled={structureBusy}>Xuất bản</button>
       <button className="button" value="draft" disabled={structureBusy}>Lưu nháp</button>{pending && <span role="status">Đang lưu…</span>}</div>
