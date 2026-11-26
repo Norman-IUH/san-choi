@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { difficultyLevels } from "./arcade-templates";
 import { mathOperations } from "./puzzle-templates";
 import type { WordSlot } from "./word-puzzles";
 
@@ -32,6 +33,7 @@ export const itemSchema = z.object({
   alternatives: z.array(text).max(8).optional(),
   secondary: text.optional(),
   pin: z.object({ x: z.number().min(0).max(100), y: z.number().min(0).max(100) }).optional(),
+  arcade: z.object({ difficulty: z.enum(difficultyLevels), timed: z.boolean() }).optional(),
   math: z.object({ operation: z.enum(mathOperations), min: z.number().int().min(0).max(30),
     max: z.number().int().min(0).max(30) }).optional(),
 });
@@ -41,6 +43,7 @@ export type PlayItem = {
   prompt: string; options: string[]; multiple?: boolean;
   secondary?: string; pin?: Item["pin"]; memory?: string[]; reveal?: string;
   equation?: { left: number; right: number; symbol: string };
+  arcade?: Item["arcade"];
   hangman?: { pattern: string[]; misses: number; guesses: string[] };
   letters?: number; grid?: { size: number; letters: string[] }; slot?: WordSlot;
   media?: Media; optionMedia?: Item["optionMedia"]; pronunciation?: Pick<NonNullable<Item["english"]>, "uk" | "us">;

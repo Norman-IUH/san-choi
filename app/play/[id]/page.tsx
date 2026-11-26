@@ -3,6 +3,7 @@ import { cache } from "react";
 import { z } from "zod";
 import { Player } from "@/components/Player";
 import { isTemplate } from "@/lib/game";
+import { isArcadeTemplate } from "@/lib/games/arcade-templates";
 import { allowedTeacher, check, serverConfigured, privilegedDatabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +30,7 @@ export default async function AssignmentPlayer({ params }: Props) {
   const data = await getPageAssignment(id);
   if (!data || !isTemplate(data.template)) notFound();
   const expired = Boolean(data.deadline && Date.parse(data.deadline) <= new Date().getTime());
-  return <div className="narrow">
+  return <div className={isArcadeTemplate(data.template) ? "narrow arcade-page" : "narrow"}>
     {data.closed || expired ? <section className="panel"><h1>{data.title}</h1><p>Bài tập đã đóng hoặc hết hạn.</p></section>
       : <Player title={data.title} template={data.template} assignment={id} requireName={data.require_name}/>}
   </div>;

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { arcadeTemplates } from "./arcade-templates";
 import { puzzleTemplates } from "./puzzle-templates";
 import { wordTemplates } from "./word-templates";
 
@@ -16,7 +17,7 @@ export const legacyTemplates = {
   anagram: { title: "Xếp chữ", kind: "word", icon: "Aa", color: "peach" },
   "open-box": { title: "Mở hộp bí mật", kind: "prompt", icon: "◇", color: "blue" },
 } as const;
-export const templates = { ...legacyTemplates, ...wordTemplates, ...puzzleTemplates };
+export const templates = { ...legacyTemplates, ...wordTemplates, ...puzzleTemplates, ...arcadeTemplates };
 export const legacyIds = Object.keys(legacyTemplates) as (keyof typeof legacyTemplates)[];
 export type Template = keyof typeof templates;
 export const templateIds = Object.keys(templates) as Template[];

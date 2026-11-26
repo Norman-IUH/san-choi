@@ -8,6 +8,7 @@ import { GameRound } from "./games/GameRound";
 import { hangmanPattern } from "@/lib/games/word-puzzles";
 import { isWordTemplate } from "@/lib/games/word-templates";
 import { isPuzzleTemplate } from "@/lib/games/puzzle-templates";
+import { isArcadeTemplate } from "@/lib/games/arcade-templates";
 import { gameTheme } from "./games/game-themes";
 
 type Props = { title: string; template: Template; initialItems?: PlayItem[]; reveals?: string[];
@@ -44,10 +45,11 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
   const bindFocus = (node: HTMLElement | null) => { focusTarget.current = node; };
   const meta = templates[template];
   const theme = gameTheme(template);
-  const gameplayThumbnail = isWordTemplate(template) || isPuzzleTemplate(template);
+  const arcade = isArcadeTemplate(template);
+  const gameplayThumbnail = arcade || isWordTemplate(template) || isPuzzleTemplate(template);
   const index = order[turn] ?? 0;
   const rows = template === "match-up" || template === "group-sort";
-  const stageScore = template === "gameshow" && active && !result && !assignment && localContent
+  const stageScore = (arcade || template === "gameshow") && active && !result && !assignment && localContent
     ? grade(template, localContent, items.map((_, i) => answers[i] ?? [])).score : null;
 
   useEffect(() => {
@@ -199,7 +201,7 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
     setError("Tệp học liệu chưa tải được. Em vẫn có thể tiếp tục làm bài.");
   }
 
-  return <RefreshLessonMedia.Provider value={renewMedia}><section ref={panelRef} className={`player game-stage game-${template} ${template === "gameshow" ? "gameshow" : ""} ${classroomFallback ? "classroom-fallback" : ""}`}>
+  return <RefreshLessonMedia.Provider value={renewMedia}><section ref={panelRef} className={`player game-stage game-${template} ${arcade ? "arcade-stage" : ""} ${template === "gameshow" ? "gameshow" : ""} ${classroomFallback ? "classroom-fallback" : ""}`}>
     <div className="player-top"><span className={`template-tag ${meta.color}`}>{meta.icon} &nbsp;{meta.title}</span>
       <div className="game-tools">
         <button type="button" className="icon-button" aria-label="Âm thanh phản hồi" aria-pressed={sound} onClick={() => void toggleSound()}>
@@ -212,7 +214,7 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
       </div>
     </div>
     <h1>{title}</h1>
-    {stageScore !== null && <div className="game-scoreboard"><span>Điểm sân khấu</span><strong key={stageScore} aria-live="polite">{stageScore}</strong></div>}
+    {stageScore !== null && <div className="game-scoreboard"><span>{arcade ? "Điểm luyện tập" : "Điểm sân khấu"}</span><strong key={stageScore} aria-live="polite">{stageScore}</strong></div>}
     {error && <p role="alert" className="notice error">{error}</p>}
     <p role="status" aria-atomic="true" className={feedback ? "notice" : "sr-only"}>
       {feedback}
@@ -235,7 +237,7 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
       }}><RotateCcw size={16}/> Chơi lại</button>
     </div> : !active ? <div className="game-intro">
       <div className={gameplayThumbnail ? "game-art gameplay-thumbnail" : "game-art"} aria-hidden="true"
-        style={gameplayThumbnail ? { backgroundImage: `url(/illustrations/gameplay/${template}.webp)` } : { backgroundPosition: theme.artPosition }}/>
+        style={gameplayThumbnail ? { backgroundImage: `url(/illustrations/${arcade ? "arcade" : "gameplay"}/${template}.webp)` } : { backgroundPosition: theme.artPosition }}/>
       <form onSubmit={event => { event.preventDefault(); void start(); }}>
       <p>{theme.instruction}</p>
       {assignment && requireName && <label>Biệt danh<input value={nickname} onChange={event => setNickname(event.target.value)} maxLength={80} required /></label>}

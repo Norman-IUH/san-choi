@@ -4,6 +4,8 @@ import { isWordTemplate, wordTemplates } from "@/lib/games/word-templates";
 
 import { isPuzzleTemplate, puzzleTemplates } from "@/lib/games/puzzle-templates";
 
+import { arcadeTemplates, isArcadeTemplate } from "@/lib/games/arcade-templates";
+
 const instructions: Partial<Record<Template, string>> = {
   quiz: "Đọc câu hỏi và chọn đáp án phù hợp.",
   "match-up": "Nối mỗi thẻ với đáp án tương ứng.",
@@ -20,6 +22,7 @@ const instructions: Partial<Record<Template, string>> = {
 };
 
 export function gameTheme(template: Template) {
+  if (isArcadeTemplate(template)) return { instruction: arcadeTemplates[template].instruction, artPosition: undefined };
   if (isPuzzleTemplate(template)) return { instruction: puzzleTemplates[template].instruction, artPosition: undefined };
   if (isWordTemplate(template)) return { instruction: wordTemplates[template].instruction, artPosition: undefined };
   const position = templateIds.indexOf(template);

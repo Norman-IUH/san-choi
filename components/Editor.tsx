@@ -6,6 +6,7 @@ import { saveActivity } from "@/app/activities/actions";
 import { levels, skills, templates, type Item, type Template } from "@/lib/game";
 import { isWordTemplate, truthOptions, wordTemplates } from "@/lib/games/word-templates";
 import { isPuzzleTemplate, mathOperations, mathSymbols, pairOptions, puzzleTemplates } from "@/lib/games/puzzle-templates";
+import { arcadeTemplates, defaultArcade, isArcadeTemplate } from "@/lib/games/arcade-templates";
 import { MediaInput } from "./MediaInput";
 import { importVocabulary } from "@/lib/vocabulary-import";
 
@@ -27,11 +28,12 @@ function hasEntry(item: Entry) {
 export function Editor({ id, template, initial, content = [], assets: initialAssets = {} }: {
   id: string | null; template: Template; initial?: ActivityFields; content?: Item[]; assets?: Record<string, string>;
 }) {
+  const arcade = isArcadeTemplate(template);
   const diagram = template === "labelled-diagram";
   const compare = template === "pair-or-no-pair";
   const maths = template === "maths-generator";
   const fixedChoices = template === "true-false" ? truthOptions : compare ? pairOptions : null;
-  const defaultEntry: Entry = diagram ? { ...blank, pin: { x: 50, y: 50 } } : maths ?
+  const defaultEntry: Entry = diagram ? { ...blank, pin: { x: 50, y: 50 } } : arcade ? { ...blank, arcade: defaultArcade } : maths ?
     { ...blank, prompt: "Tính kết quả.", math: { operation: "add", min: 1, max: 10 } } : blank;
   const [error, setError] = useState("");
   const [assets, setAssets] = useState(initialAssets);
@@ -74,13 +76,13 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
   return <form className="stack editor" onSubmit={handleSubmit((data, event) => {
     if (structureBusy) return;
     const draft = (event?.nativeEvent as SubmitEvent)?.submitter?.getAttribute("value") !== "publish";
-    const entries = data.content.map(({ prompt, answers, options, alternatives, explanation, english, media, optionMedia, secondary, pin, math }) => {
+    const entries = data.content.map(({ prompt, answers, options, alternatives, explanation, english, media, optionMedia, secondary, pin, math, arcade: settings }) => {
       const lexical = english && {
         level: english.level || undefined, skill: english.skill || undefined, meaning: english.meaning?.trim() || undefined,
         ipa: english.ipa?.trim() || undefined, example: english.example?.trim() || undefined, uk: english.uk, us: english.us,
       };
       const choices = fixedChoices ? [...fixedChoices] : lines(options);
-      return { version: 2, prompt, answers: lines(answers), options: choices, secondary: secondary?.trim() || undefined, pin, math,
+      return { version: 2, prompt, answers: lines(answers), options: choices, secondary: secondary?.trim() || undefined, pin, math, arcade: settings && (settings.timed || settings.difficulty !== defaultArcade.difficulty) ? settings : undefined,
         explanation: explanation?.trim() || undefined, alternatives: lines(alternatives ?? ""),
         english: lexical && Object.values(lexical).some(Boolean) ? lexical : undefined,
         media: media?.image || media?.audio ? media : undefined,
@@ -104,6 +106,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
         <label>Quyền xem<select {...register("visibility")}><option value="private">Riêng tư</option><option value="unlisted">Có link</option><option value="public">Công khai</option></select></label></div>
     </div>
     <h2>Nội dung</h2>
+    {isArcadeTemplate(template) && <p className="hint">{arcadeTemplates[template].instruction} Mỗi mục có một đáp án đúng và ít nhất một phương án nhiễu.</p>}
     {isPuzzleTemplate(template) && <p className="hint">{puzzleTemplates[template].instruction}</p>}
     {isWordTemplate(template) && <p className="hint">{wordTemplates[template].instruction}
       {wordPuzzle && " Dùng từ tiếng Anh 2–12 chữ cái."}
@@ -122,6 +125,12 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
       return <fieldset className="panel stack" key={field.id}><legend>Mục {i + 1}</legend>
       <label>{kind === "blank" ? "Câu có dấu ___ ở chỗ trống" : kind === "pair" ? "Mặt trước / nội dung" : "Câu hỏi hoặc gợi ý"}
         <textarea {...register(`content.${i}.prompt`)} maxLength={400} rows={2}/></label>
+      {arcade && <div className="form-grid">
+        <label>Độ khó<select {...register(`content.${i}.arcade.difficulty`)} defaultValue="gentle">
+          <option value="gentle">Chậm · luyện tập</option><option value="steady">Vừa</option><option value="challenge">Nhanh · thử thách</option>
+        </select></label>
+        <label className="check"><input type="checkbox" {...register(`content.${i}.arcade.timed`)}/> Giới hạn thời gian mục này</label>
+      </div>}
       {compare && <label>Nội dung thẻ thứ hai<textarea {...register(`content.${i}.secondary`)} maxLength={400}/></label>}
       {diagram && <><div className="form-grid"><label>Vị trí ngang của ghim (%)<input type="number" min="0" max="100" step="any" {...register(`content.${i}.pin.x`, { valueAsNumber: true })}/></label>
         <label>Vị trí dọc của ghim (%)<input type="number" min="0" max="100" step="any" {...register(`content.${i}.pin.y`, { valueAsNumber: true })}/></label></div>
