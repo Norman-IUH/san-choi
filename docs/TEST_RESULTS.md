@@ -64,6 +64,7 @@ Advisor báo bảng rate-limit trong schema `private` bật RLS và không có p
 | Playwright công khai | 57 đạt, 6 bỏ qua vì cần máy chủ chế độ một giáo viên hoặc không cấu hình Supabase. Kiểm thử 12 trò đến khi hoàn thành trên cả Chromium desktop 1920 × 1080, điện thoại 390 × 844 và tablet 820 × 1180. Có kiểm tra tràn ngang, phản hồi, bàn phím, kéo thả chuột/chạm, vòng quay, reduced motion và hai chế độ toàn màn hình |
 | Migration QuizStudy | Chạy thử trong transaction và rollback. Sau khi áp dụng `20261126122018_assignment_answer_review.sql`, cả ba bài giao có sẵn giữ `show_review = false` |
 | Playwright với QuizStudy | 1 kịch bản đạt. Tải lên hai âm UK/US, một ảnh và một âm phương án. Trình duyệt học sinh tải đủ ba tệp WAV riêng, thấy ảnh và tiếp tục đúng mục sau khi tải lại tab. Hai bài giao lưu 1/2. Chỉ bài bật tùy chọn cho phép xem đáp án, giáo viên thấy kết quả sau khi tải lại và đóng cả hai bài |
+| Vercel Preview | Commit `0938fe8` báo deployment thành công. Mở bản preview trong phiên Edge có quyền, quay vòng ra chủ đề thật, thấy đủ bốn cấp độ và chạy được cả hai trình phát UK/US của bộ Kids. Phiên ẩn danh được chuyển tới đăng nhập Vercel. [Deployment](https://vercel.com/norman22/san-choi/EitUsuNKoG3DW99noyWQt9ta5DuG) · [PR #1](https://github.com/Norman-IUH/san-choi/pull/1) |
 
 108 ảnh ứng với 12 trò, mỗi trò có ba trạng thái ở ba kích thước. [Ảnh Playwright](../output/playwright/v1.3).
 
