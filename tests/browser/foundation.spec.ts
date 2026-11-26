@@ -12,7 +12,7 @@ test("Quiz maintains focus, labels progress and announces practice feedback", as
   const single = page.getByRole("group", { name: "Chọn một đáp án." });
   await single.getByRole("button", { name: "Sao Hỏa" }).click();
   await single.getByRole("button", { name: "Sao Kim" }).click();
-  await expect(single.getByRole("button", { pressed: true })).toHaveText("Sao Kim");
+  await expect(single.getByRole("button", { pressed: true })).toHaveAccessibleName("Sao Kim");
   await page.getByRole("button", { name: "Tiếp theo" }).press("Enter");
   await expect(page.getByRole("heading", { name: /phát ra ánh sáng/i })).toBeFocused();
   await expect(page.getByRole("status")).toHaveText("Mục 1: Chưa chính xác.");

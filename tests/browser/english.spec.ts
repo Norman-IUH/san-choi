@@ -25,7 +25,10 @@ test("four English decks can be previewed in two templates", async ({ page }, in
     await expect(page.getByText(deck.entries[0][3], { exact: true })).toBeVisible();
     await page.getByRole("link", { name: "Ghép cặp", exact: true }).click();
     await page.getByRole("button", { name: "Bắt đầu" }).click();
-    for (const [index, [, meaning]] of deck.entries.entries()) await page.getByRole("combobox").nth(index).selectOption(meaning);
+    for (const [word, meaning] of deck.entries) {
+      await page.getByRole("group", { name: "Thẻ cần ghép" }).getByRole("button", { name: word, exact: true }).click();
+      await page.getByRole("group", { name: "Đáp án ghép" }).getByRole("button", { name: meaning, exact: true }).click();
+    }
     await page.getByRole("button", { name: "Hoàn thành" }).click();
     await expect(page.getByText(`${deck.entries.length}/${deck.entries.length} điểm`)).toBeVisible();
   }

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { deckIds, englishDeckContent } from "../lib/english-samples";
-import { compatible, contentSchema, grade, makePlayItems } from "../lib/game";
+import { compatible, contentSchema, grade, makePlayItems, missedReview } from "../lib/game";
 import { itemMediaPaths } from "../lib/media";
 import { vocabularyItems } from "../lib/vocabulary-import";
 
@@ -26,6 +26,9 @@ test("alternatives grade fill-in answers without leaking the answer or explanati
   expect(grade("sentence", items, [[" BIRD "]]).score).toBe(1);
   expect(makePlayItems("sentence", items)[0]).not.toHaveProperty("explanation");
   expect(makePlayItems("sentence", items)[0]).not.toHaveProperty("alternatives");
+  expect(missedReview(items, [{ answer: ["fish"], correct: false }])).toEqual([{
+    prompt: "A ___ is in the lake.", selected: ["fish"], expected: ["duck", "bird"], explanation: "Both words fit.",
+  }]);
 });
 
 test("media paths are relative, typed and collected without duplicates", () => {

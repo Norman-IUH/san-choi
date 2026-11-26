@@ -53,3 +53,18 @@ Advisor báo bảng rate-limit trong schema `private` bật RLS và không có p
 - V1.2 trên Vercel: phiên giáo viên tạo và xuất bản Quiz, giao qua link HTTPS. Một trình duyệt riêng, không đăng nhập, nộp bài 1/1. Giáo viên tải lại trang và thấy điểm, sau đó đóng bài giao kiểm thử.
 - QuizStudy: Storage riêng tư, GET không ký trả 400, URL ký ngắn hạn tải được trước khi hết hạn và trả 400 sau khi hết hạn. Cấu hình Auth API ghi nhận Google tắt, đăng ký công khai vẫn bật. Cần tắt signup ở Supabase trước khi nghiệm thu production. HTTP production có HSTS và trang đăng nhập báo cache riêng tư/no-store.
 - Thư viện mở rộng lên 20 từ và 40 clip tổng hợp offline bằng eSpeak NG (`en-gb`/`en-us`), phát trực tiếp từ bộ học liệu. Audio do giáo viên tải lên vẫn đi qua Storage riêng tư.
+- Commit `2bd0671` được GitHub ghi nhận Vercel build thành công. [Vercel Preview V1.2](https://vercel.com/norman22/san-choi/HbvCA8DkvtCw1CiJUMxwPvgw8gk9).
+
+## V1.3 Trải nghiệm trò chơi ngày 26/11/2026
+
+| Kiểm thử | Kết quả |
+|---|---|
+| Lint, typecheck, Vitest, production build | Đạt. 25 bài Vitest, bao gồm các luật chấm điểm cũ và xác định mục sai từ kết quả đã lưu |
+| `npm audit --omit=dev` | Không có advisory runtime tại thời điểm chạy |
+| Playwright công khai | 57 đạt, 6 bỏ qua vì cần máy chủ chế độ một giáo viên hoặc không cấu hình Supabase. Kiểm thử 12 trò đến khi hoàn thành trên cả Chromium desktop 1920 × 1080, điện thoại 390 × 844 và tablet 820 × 1180. Có kiểm tra tràn ngang, phản hồi, bàn phím, kéo thả chuột/chạm, vòng quay, reduced motion và hai chế độ toàn màn hình |
+| Migration QuizStudy | Chạy thử trong transaction và rollback. Sau khi áp dụng `20261126122018_assignment_answer_review.sql`, cả ba bài giao có sẵn giữ `show_review = false` |
+| Playwright với QuizStudy | 1 kịch bản đạt. Tải lên hai âm UK/US, một ảnh và một âm phương án. Trình duyệt học sinh tải đủ ba tệp WAV riêng, thấy ảnh và tiếp tục đúng mục sau khi tải lại tab. Hai bài giao lưu 1/2. Chỉ bài bật tùy chọn cho phép xem đáp án, giáo viên thấy kết quả sau khi tải lại và đóng cả hai bài |
+
+108 ảnh ứng với 12 trò, mỗi trò có ba trạng thái ở ba kích thước. [Ảnh Playwright](../output/playwright/v1.3).
+
+Giới hạn nghiệm thu gồm thiết bị Apple và Android thật, loa và máy chiếu tại lớp, mạng di động và kiểm thử tải đồng thời. Do QuizStudy vẫn mở đăng ký trực tiếp qua Auth API, kết quả preview chưa được dùng để xác nhận toàn bộ cấu hình production.

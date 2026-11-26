@@ -54,6 +54,15 @@ export type PlayItem = {
   vocabulary?: Pick<NonNullable<Item["english"]>, "ipa" | "example">;
 };
 export const doubleMarker = "★ nhân đôi";
+export type ReviewEntry = { prompt: string; selected: string[]; expected: string[]; explanation?: string };
+
+export function missedReview(items: Item[], submitted: { answer: string[]; correct: boolean | null }[]): ReviewEntry[] {
+  return submitted.flatMap(({ answer, correct }, index) => {
+    const item = items[index];
+    return item && correct === false ? [{ prompt: item.prompt, selected: answer.filter(value => value !== doubleMarker),
+      expected: [...item.answers, ...(item.alternatives ?? [])], explanation: item.explanation }] : [];
+  });
+}
 
 export function normalize(value: string) {
   return value.normalize("NFC").trim().replace(/\s+/g, " ").toLocaleLowerCase("vi");

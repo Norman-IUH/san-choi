@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { mkdir } from "node:fs/promises";
 import { demoContent } from "../../lib/demo";
 import { templateIds, templates } from "../../lib/game";
 
@@ -10,13 +11,30 @@ test("home displays demos without horizontal page overflow", async ({ page }) =>
 });
 
 for (const template of templateIds) {
-  test(`${template} completes with the demo rules`, async ({ page }) => {
+  test(`${template} completes with the demo rules`, async ({ page }, info) => {
     const items = demoContent(template);
     const kind = templates[template].kind;
     await page.goto(`/demo/${template}`);
+    const checkWidth = async () => expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
+    const output = process.env.V13_SCREENSHOTS;
+    const capture = async (state: string) => {
+      if (!output) return;
+      const dir = `${output}/${info.project.name}`;
+      await mkdir(dir, { recursive: true });
+      await page.screenshot({ path: `${dir}/${template}-${state}.png`, fullPage: true, animations: "disabled" });
+    };
+    await checkWidth();
+    await capture("start");
     await page.getByRole("button", { name: "Bắt đầu" }).click();
+    await page.locator(".game-stage > .play-stack").waitFor();
+    await checkWidth();
+    await capture("play");
     if (template === "match-up" || template === "group-sort") {
-      for (const [i, item] of items.entries()) await page.getByRole("combobox").nth(i).selectOption(item.answers[0]);
+      for (const item of items) {
+        await page.getByRole("group", { name: "Thẻ cần ghép" }).getByRole("button", { name: item.prompt, exact: true }).click();
+        await page.getByRole("group", { name: template === "group-sort" ? "Nhóm" : "Đáp án ghép" })
+          .getByRole("button", { name: item.answers[0], exact: true }).click();
+      }
       await page.getByRole("button", { name: "Hoàn thành" }).click();
     } else if (template === "open-box") {
       for (const [i, item] of items.entries()) {
@@ -42,6 +60,8 @@ for (const template of templateIds) {
       }
     }
     await expect(page.getByRole("heading", { name: "Hoàn thành!" })).toBeVisible();
+    await checkWidth();
+    await capture("result");
     const maxScore = items.length + Number(template === "gameshow");
     if (kind !== "prompt" && template !== "flash-cards") await expect(page.getByText(`${maxScore}/${maxScore} điểm`)).toBeVisible();
     await page.getByRole("button", { name: "Chơi lại" }).click();

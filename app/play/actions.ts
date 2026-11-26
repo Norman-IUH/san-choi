@@ -1,9 +1,9 @@
 "use server";
-import { createHmac } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 import { isIP } from "node:net";
 import { cookies, headers } from "next/headers";
 import { z } from "zod";
-import { contentSchema, grade, makePlayItems, templateSchema } from "@/lib/game";
+import { contentSchema, grade, makePlayItems, missedReview, templateSchema } from "@/lib/game";
 import { allowedTeacher, privilegedDatabase } from "@/lib/supabase";
 import { mediaUrls } from "@/lib/media-server";
 
@@ -55,7 +55,8 @@ export async function startAttempt(id: string, nickname: string) {
     if (error) return { error: "Chưa bắt đầu được bài làm. Hãy thử lại." } as const;
     jar.set(cookie, token, { httpOnly: true, sameSite: "lax", secure: process.env.APP_URL?.startsWith("https:"), path: "/", maxAge: 86400 });
   }
-  return { items: makePlayItems(template, items), assets: await mediaUrls(items, data.owner_id),
+  return { draftId: createHash("sha256").update(token).digest("hex"),
+    items: makePlayItems(template, items), assets: await mediaUrls(items, data.owner_id),
     reveals: template === "flash-cards" ? items.map(item => item.answers[0]) :
       template === "open-box" ? items.map(item => item.prompt) : [] };
 }
@@ -79,6 +80,7 @@ export async function finishAttempt(id: string, values: string[][]) {
     })), p_score: result.score, p_total: result.total,
   }).maybeSingle();
   if (error || !saved) return { error: "Chưa nộp được bài. Kiểm tra hạn và thử lại." } as const;
-  const record = saved as { score: number | null; total: number };
-  return { score: data.show_score ? record.score : null, total: record.total };
+  const record = saved as { score: number | null; total: number; answers: { answer: string[]; correct: boolean | null }[] };
+  return { score: data.show_score ? record.score : null, total: record.total,
+    ...(data.show_review && { review: missedReview(items, record.answers) }) };
 }

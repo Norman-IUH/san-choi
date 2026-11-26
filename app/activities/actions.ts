@@ -149,7 +149,7 @@ export async function createAssignment(id: string, form: FormData) {
   if (due !== null && (!Number.isFinite(due) || due <= Date.now())) redirect(`/activities/${id}?invalid=1`);
   const { data, error: insertError } = await privilegedDatabase().from("assignments").insert({
     owner_id: user.id, activity_id: id, title: activity.title, template, content, deadline: due === null ? null : new Date(due).toISOString(),
-    require_name: form.has("require_name"), show_score: form.has("show_score"),
+    require_name: form.has("require_name"), show_score: form.has("show_score"), show_review: form.has("show_review"),
   }).select("id").single();
   check(insertError, "create_assignment");
   redirect(`/assignments/${data!.id}`);
