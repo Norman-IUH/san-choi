@@ -1,0 +1,159 @@
+"use client";
+import { useState, useTransition } from "react";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
+import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { saveActivity } from "@/app/activities/actions";
+import { levels, skills, templates, type Item, type Template } from "@/lib/game";
+import { MediaInput } from "./MediaInput";
+import { importVocabulary } from "@/lib/vocabulary-import";
+
+export type ActivityFields = { title: string; description: string; subject: string; grade: string; tags: string;
+  visibility: "private" | "public" | "unlisted" };
+type Entry = Omit<Item, "answers" | "options" | "alternatives"> & { answers: string; options: string; alternatives: string };
+type FormFields = ActivityFields & { content: Entry[] };
+const blank: Entry = { prompt: "", answers: "", options: "", alternatives: "" };
+const lines = (value: string) => value.split("\n").map(line => line.trim()).filter(Boolean);
+function entryFromItem(item: Item): Entry {
+  return { ...item, answers: item.answers.join("\n"), options: item.options.join("\n"), alternatives: item.alternatives?.join("\n") ?? "" };
+}
+function hasEntry(item: Entry) {
+  return [item.prompt, item.answers, item.options, item.alternatives, item.explanation,
+    ...Object.values(item.english ?? {}), ...Object.values(item.media ?? {})].some(value => value?.trim())
+    || Boolean(item.optionMedia?.length);
+}
+
+export function Editor({ id, template, initial, content = [], assets: initialAssets = {} }: {
+  id: string | null; template: Template; initial?: ActivityFields; content?: Item[]; assets?: Record<string, string>;
+}) {
+  const [error, setError] = useState("");
+  const [assets, setAssets] = useState(initialAssets);
+  const [uploads, setUploads] = useState(0);
+  const [importing, setImporting] = useState(false);
+  const [pending, start] = useTransition();
+  const { register, control, handleSubmit, setValue, getValues } = useForm<FormFields>({
+    defaultValues: { title: "", description: "", subject: "", grade: "", tags: "", visibility: "private", ...initial,
+      content: content.length ? content.map(entryFromItem) : [blank] },
+  });
+  const { fields, append, remove, move, replace } = useFieldArray({ control, name: "content" });
+  const current = useWatch({ control, name: "content" });
+  const kind = templates[template].kind;
+  const answerLabel = template === "group-sort" ? "Nhóm" : kind === "pair" ? "Mặt sau / giá trị ghép" :
+    kind === "sequence" ? "Các từ theo thứ tự đúng, mỗi dòng một từ hoặc cụm từ" :
+    kind === "choice" ? "Đáp án đúng, mỗi dòng một đáp án có trong phương án" : "Đáp án";
+  const structureBusy = uploads > 0 || importing || pending;
+  function trackUpload(change: number) { setUploads(total => total + change); }
+  function remember(path?: string, url?: string) {
+    if (path && url) setAssets(previous => ({ ...previous, [path]: url }));
+  }
+
+  async function importFile(file: File) {
+    setError("");
+    setImporting(true);
+    try {
+      const imported = (await importVocabulary(file)).map(entryFromItem);
+      const existing = getValues("content");
+      const hasContent = existing.some(hasEntry);
+      if ((hasContent ? existing.length : 0) + imported.length > 60) throw new Error("Mỗi hoạt động tối đa 60 mục.");
+      if (hasContent) append(imported, { shouldFocus: false }); else replace(imported);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Không đọc được tệp từ vựng.");
+    } finally { setImporting(false); }
+  }
+
+  return <form className="stack editor" onSubmit={handleSubmit((data, event) => {
+    if (structureBusy) return;
+    const draft = (event?.nativeEvent as SubmitEvent)?.submitter?.getAttribute("value") !== "publish";
+    const entries = data.content.map(({ prompt, answers, options, alternatives, explanation, english, media, optionMedia }) => {
+      const lexical = english && {
+        level: english.level || undefined, skill: english.skill || undefined, meaning: english.meaning?.trim() || undefined,
+        ipa: english.ipa?.trim() || undefined, example: english.example?.trim() || undefined, uk: english.uk, us: english.us,
+      };
+      const choices = lines(options);
+      return { version: 2, prompt, answers: lines(answers), options: choices,
+        explanation: explanation?.trim() || undefined, alternatives: lines(alternatives ?? ""),
+        english: lexical && Object.values(lexical).some(Boolean) ? lexical : undefined,
+        media: media?.image || media?.audio ? media : undefined,
+        optionMedia: optionMedia?.filter(item => choices.includes(item.option) && (item.image || item.audio)),
+      };
+    });
+    const payload = draft ? entries.filter(item => item.prompt.trim() || item.answers.length || item.options.length ||
+      item.english || item.media || item.optionMedia?.length || item.alternatives.length || item.explanation) : entries;
+    setError("");
+    start(async () => {
+      const result = await saveActivity(id, { ...data, template, draft, content: payload });
+      if (result?.error) setError(result.error);
+    });
+  })}>
+    <div className="panel stack">
+      <label>Tên hoạt động<input {...register("title")} required maxLength={120}/></label>
+      <label>Mô tả<textarea {...register("description")} maxLength={1000}/></label>
+      <div className="form-grid"><label>Môn học<input {...register("subject")} maxLength={80}/></label>
+        <label>Khối lớp<input {...register("grade")} maxLength={40}/></label>
+        <label>Thẻ<input {...register("tags")} maxLength={250}/></label>
+        <label>Quyền xem<select {...register("visibility")}><option value="private">Riêng tư</option><option value="unlisted">Có link</option><option value="public">Công khai</option></select></label></div>
+    </div>
+    <h2>Nội dung</h2>
+    {(template === "flash-cards" || template === "match-up" || template === "find-match") && <div className="panel stack">
+      <label>Nhập từ vựng CSV hoặc XLSX<input type="file" accept=".csv,.xlsx" disabled={structureBusy} onChange={event => {
+        const file = event.target.files?.[0]; event.target.value = ""; if (file) void importFile(file);
+      }}/></label><p className="muted">Cột bắt buộc: word, meaning. Cột tùy chọn: ipa, example, level.</p>
+      {importing && <p role="status">Đang đọc từ vựng…</p>}
+    </div>}
+    {fields.map((field, i) => {
+      const item = current[i];
+      const options = [...new Set(lines(item?.options ?? ""))];
+      return <fieldset className="panel stack" key={field.id}><legend>Mục {i + 1}</legend>
+      <label>{kind === "blank" ? "Câu có dấu ___ ở chỗ trống" : kind === "pair" ? "Mặt trước / nội dung" : "Câu hỏi hoặc gợi ý"}
+        <textarea {...register(`content.${i}.prompt`)} maxLength={400} rows={2}/></label>
+      {kind === "choice" && <label>Phương án, mỗi dòng một phương án<textarea {...register(`content.${i}.options`)} rows={3}/></label>}
+      {kind !== "prompt" && <label>{answerLabel}<textarea {...register(`content.${i}.answers`)} rows={kind === "choice" || kind === "sequence" ? 3 : 1}/></label>}
+      {kind === "blank" && <label>Đáp án thay thế (mỗi dòng một đáp án)<textarea {...register(`content.${i}.alternatives`)} rows={2}/></label>}
+      <details className="lesson-details"><summary>Học liệu tiếng Anh và tệp</summary><div className="stack">
+        <div className="form-grid"><label>Cấp độ<select {...register(`content.${i}.english.level`)}><option value="">Chưa chọn</option>
+          {levels.map(level => <option key={level}>{level}</option>)}</select></label>
+          <label>Kỹ năng<select {...register(`content.${i}.english.skill`)}><option value="">Chưa chọn</option>
+          {skills.map(skill => <option key={skill}>{skill}</option>)}</select></label>
+          <label>Nghĩa tiếng Việt<input {...register(`content.${i}.english.meaning`)} maxLength={400}/></label>
+          <label>IPA<input {...register(`content.${i}.english.ipa`)} maxLength={100}/></label></div>
+        <label>Câu ví dụ<textarea {...register(`content.${i}.english.example`)} maxLength={400}/></label>
+        <label>Giải thích đáp án<textarea {...register(`content.${i}.explanation`)} maxLength={800}/></label>
+        <div className="form-grid">
+          {(["image", "audio"] as const).map(kind => {
+            const path = item?.media?.[kind];
+            return <MediaInput key={kind} label={kind === "image" ? "Ảnh câu hỏi" : "Âm thanh câu hỏi"} kind={kind}
+              path={path} url={path && assets[path]} onBusy={trackUpload} onChange={(path, url) => {
+                remember(path, url); setValue(`content.${i}.media.${kind}`, path);
+              }}/>;
+          })}
+          {(["uk", "us"] as const).map(accent => {
+            const path = item?.english?.[accent];
+            return <MediaInput key={accent} label={accent === "uk" ? "Phát âm Anh–Anh" : "Phát âm Anh–Mỹ"} kind="audio"
+              path={path} url={path && assets[path]} onBusy={trackUpload} onChange={(path, url) => {
+                remember(path, url); setValue(`content.${i}.english.${accent}`, path);
+              }}/>;
+          })}
+        </div>
+        {kind === "choice" && options.slice(0, 8).map(option => <details key={option} className="lesson-details"><summary>Tệp cho phương án {option}</summary>
+          <div className="form-grid">{(["image", "audio"] as const).map(kind => {
+            const path = item?.optionMedia?.find(media => media.option === option)?.[kind];
+            return <MediaInput key={kind} label={kind === "image" ? "Ảnh phương án" : "Âm thanh phương án"} kind={kind}
+              path={path} url={path && assets[path]} onBusy={trackUpload} onChange={(path, url) => {
+                remember(path, url);
+                const previous = getValues(`content.${i}.optionMedia`) ?? [];
+                const media = { ...previous.find(entry => entry.option === option), option, [kind]: path };
+                setValue(`content.${i}.optionMedia`, [...previous.filter(entry => entry.option !== option), media].filter(entry => entry.image || entry.audio));
+              }}/>;
+          })}</div></details>)}
+      </div></details>
+      <div className="inline-actions">
+        <button type="button" className="icon-button" aria-label={`Đưa mục ${i + 1} lên`} disabled={structureBusy || !i} onClick={() => move(i, i - 1)}><ArrowUp size={16}/></button>
+        <button type="button" className="icon-button" aria-label={`Đưa mục ${i + 1} xuống`} disabled={structureBusy || i === fields.length - 1} onClick={() => move(i, i + 1)}><ArrowDown size={16}/></button>
+        <button type="button" className="icon-button" aria-label={`Xóa mục ${i + 1}`} disabled={structureBusy} onClick={() => remove(i)}><Trash2 size={16}/></button>
+      </div>
+    </fieldset>; })}
+    <button type="button" className="button" disabled={structureBusy || fields.length >= 60} onClick={() => append(blank)}><Plus size={16}/> Thêm mục</button>
+    {error && <p className="notice error" role="alert">{error}</p>}
+    <div className="inline-actions"><button className="button primary" value="publish" disabled={structureBusy}>Xuất bản</button>
+      <button className="button" value="draft" disabled={structureBusy}>Lưu nháp</button>{pending && <span role="status">Đang lưu…</span>}</div>
+  </form>;
+}

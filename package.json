@@ -1,0 +1,42 @@
+{
+  "name": "san-choi",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "vitest run",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "e2e": "playwright test"
+  },
+  "type": "module",
+  "dependencies": {
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.119.0",
+    "csv-parse": "7.0.3",
+    "file-type": "22.3.0",
+    "lucide-react": "1.73.0",
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-hook-form": "7.92.0",
+    "read-excel-file": "9.3.20",
+    "server-only": "0.0.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.16",
+    "@playwright/test": "1.65.1",
+    "@tailwindcss/postcss": "4.3.5",
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.6",
+    "tailwindcss": "4.3.5",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
+  },
+  "private": true
+}

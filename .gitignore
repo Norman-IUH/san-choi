@@ -1,0 +1,11 @@
+node_modules/
+.next/
+.env*
+!.env.example
+playwright-report/
+test-results/
+output/
+.playwright-mcp/
+*.tsbuildinfo
+next-env.d.ts
+supabase/.temp/

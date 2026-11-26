@@ -1,0 +1,2 @@
+-- Dữ liệu công khai dùng khi chơi thử nằm trong lib/demo.ts.
+-- Không tạo tài khoản hoặc cấp vai trò quản trị mặc định trong database.
