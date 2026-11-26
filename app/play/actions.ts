@@ -8,10 +8,10 @@ import { allowedTeacher, database, privilegedDatabase, serverConfigured } from "
 import { mediaUrls } from "@/lib/media-server";
 import { hangmanPattern } from "@/lib/games/word-puzzles";
 
-async function attemptLimit(db: ReturnType<typeof privilegedDatabase>, id: string, operation: "start" | "finish", attempt?: string) {
+async function attemptLimit(db: ReturnType<typeof privilegedDatabase>, id: string, operation: "start" | "finish" | "media", attempt?: string) {
   const ip = process.env.VERCEL === "1" ? (await headers()).get("x-vercel-forwarded-for")?.trim() ?? "" : "";
   // shortcut: non-Vercel hosts share a bucket per assignment until they supply a trusted client address.
-  const identity = attempt ? `guess:${attempt}` : isIP(ip) ? `ip:${ip}` : `assignment:${id.toLowerCase()}`;
+  const identity = attempt ? `session:${attempt}` : isIP(ip) ? `ip:${ip}` : `assignment:${id.toLowerCase()}`;
   const scope = createHmac("sha256", process.env.SUPABASE_SECRET_KEY!).update(identity).digest("hex");
   const { data, error } = await db.rpc("consume_attempt_limit", { p_operation: operation, p_scope: scope });
   if (error) {
@@ -21,17 +21,19 @@ async function attemptLimit(db: ReturnType<typeof privilegedDatabase>, id: strin
   return data === true ? null : "Có quá nhiều yêu cầu. Hãy thử lại sau một phút.";
 }
 
-export async function guessAssignmentLetters(id: string, index: number, values: string[]) {
-  if (!serverConfigured || !z.uuid().safeParse(id).success || !z.number().int().min(0).max(59).safeParse(index).success) return null;
-  const guesses = z.array(z.string().regex(/^[A-Z]$/)).max(26).safeParse(values);
+export async function guessAssignmentLetter(id: string, index: number, letter: string | null) {
+  if (!serverConfigured || !z.uuid().safeParse(id).success ||
+    !z.number().int().min(0).max(59).safeParse(index).success ||
+    !z.string().regex(/^[A-Z]$/).nullable().safeParse(letter).success) return null;
   const token = (await cookies()).get(`attempt-${id}`)?.value;
-  if (!guesses.success || !token || !z.uuid().safeParse(token).success) return null;
+  if (!token || !z.uuid().safeParse(token).success) return null;
   const assignment = await getAssignment(id);
   if (!assignment || assignment.template !== "hangman" || !assignment.items[index]) return null;
-  const attempt = await assignment.db.from("attempts").select("id").eq("assignment_id", id).eq("id", token).is("completed_at", null).maybeSingle();
-  if (!attempt.data || await attemptLimit(assignment.db, id, "finish", token)) return null;
-  const pattern = hangmanPattern(assignment.items[index].answers[0], [...new Set(guesses.data)]);
-  return pattern.misses <= 6 ? pattern : { pattern: pattern.pattern.map(() => ""), misses: 6 };
+  if (await attemptLimit(assignment.db, id, "finish", "hangman:" + token)) return null;
+  const { data } = await assignment.db.rpc("hangman_guess", { p_assignment: id, p_attempt: token, p_index: index, p_letter: letter });
+  if (typeof data !== "string") return null;
+  const guesses = Array.from(data);
+  return { ...hangmanPattern(assignment.items[index].answers[0], guesses), guesses };
 }
 
 async function getAssignment(id: string) {
@@ -56,7 +58,12 @@ export async function refreshLessonMedia(source: "assignment" | "activity" | "re
     if (!assignment) return null;
     const { db, data, items } = assignment;
     const attempt = await db.from("attempts").select("id").eq("assignment_id", id).eq("id", token!).is("completed_at", null).maybeSingle();
-    return attempt.data ? mediaUrls(items, data.owner_id) : null;
+    if (!attempt.data || await attemptLimit(db, id, "media", "assignment:" + token)) return null;
+    const fresh = await mediaUrls(items, data.owner_id, 900);
+    const stillOpen = await getAssignment(id);
+    const stillInProgress = await db.from("attempts").select("id").eq("assignment_id", id)
+      .eq("id", token!).is("completed_at", null).maybeSingle();
+    return stillOpen && stillInProgress.data ? fresh : null;
   }
   if (source !== "activity" && source !== "resource") return null;
   const db = source === "activity" ? await database() : privilegedDatabase();
@@ -70,7 +77,8 @@ export async function refreshLessonMedia(source: "assignment" | "activity" | "re
   }
   const template = templateSchema.safeParse(data.template);
   const items = template.success && contentSchema(template.data, true).safeParse(data.content);
-  return items && items.success ? mediaUrls(items.data, data.owner_id) : null;
+  if (!items || !items.success || await attemptLimit(privilegedDatabase(), id, "media")) return null;
+  return mediaUrls(items.data, data.owner_id, 900);
 }
 
 export async function startAttempt(id: string, nickname: string) {
@@ -95,8 +103,19 @@ export async function startAttempt(id: string, nickname: string) {
     if (error) return { error: "Chưa bắt đầu được bài làm. Hãy thử lại." } as const;
     jar.set(cookie, token, { httpOnly: true, sameSite: "lax", secure: process.env.APP_URL?.startsWith("https:"), path: "/", maxAge: 86400 });
   }
+  const projected = makePlayItems(template, items);
+  if (template === "hangman") {
+    const history = await db.rpc("hangman_history", { p_attempt: token });
+    if (history.error) return { error: "Chưa tải được lượt đoán. Hãy thử lại." } as const;
+    for (const row of history.data as { item_index: number; guesses: string }[]) {
+      const item = items[row.item_index];
+      if (!item) continue;
+      const guesses = Array.from(row.guesses);
+      projected[row.item_index].hangman = { ...hangmanPattern(item.answers[0], guesses), guesses };
+    }
+  }
   return { draftId: createHash("sha256").update(token).digest("hex"),
-    items: makePlayItems(template, items), assets: await mediaUrls(items, data.owner_id),
+    items: projected, assets: await mediaUrls(items, data.owner_id),
     reveals: template === "flash-cards" ? items.map(item => item.answers[0]) :
       template === "open-box" ? items.map(item => item.prompt) : [] };
 }
@@ -113,9 +132,25 @@ export async function finishAttempt(id: string, values: string[][]) {
   const limitError = await attemptLimit(db, id, "finish");
   if (limitError) return { error: limitError } as const;
   if (parsed.data.length !== items.length) return { error: "Hãy hoàn thành tất cả các mục trước khi nộp." } as const;
-  const result = grade(template, items, parsed.data);
+  let answers = parsed.data;
+  if (template === "hangman") {
+    const previous = await db.from("attempts").select("completed_at").eq("assignment_id", id).eq("id", token).maybeSingle();
+    if (!previous.data) return { error: "Phiên đã hết hạn. Hãy tải lại bài tập." } as const;
+    if (!previous.data.completed_at) {
+      const history = await db.rpc("hangman_history", { p_attempt: token });
+      if (history.error) return { error: "Chưa kiểm tra được lượt đoán. Hãy thử lại." } as const;
+      const guesses = new Map<number, string>((history.data as { item_index: number; guesses: string }[])
+        .map(row => [row.item_index, row.guesses]));
+      const rounds = items.map((item, index) => hangmanPattern(item.answers[0], Array.from(guesses.get(index) ?? "")));
+      if (rounds.some(round => round.misses < 6 && !round.pattern.every(Boolean))) {
+        return { error: "Hãy hoàn thành các lượt đoán trước khi nộp." } as const;
+      }
+      answers = rounds.map(round => round.pattern.every(Boolean) ? [round.pattern.join("")] : []);
+    }
+  }
+  const result = grade(template, items, answers);
   const { data: saved, error } = await db.rpc("finish_attempt", {
-    p_assignment: id, p_attempt: token, p_answers: parsed.data.map((answer, index) => ({
+    p_assignment: id, p_attempt: token, p_answers: answers.map((answer, index) => ({
       prompt: items[index].prompt, answer, correct: result.correct[index],
     })), p_score: result.score, p_total: result.total,
   }).maybeSingle();

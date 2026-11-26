@@ -93,3 +93,9 @@ Giới hạn nghiệm thu gồm thiết bị Apple và Android thật, loa và m
 | Audit npm runtime | Không có advisory tại thời điểm chạy |
 
 Các giới hạn còn lại gồm WebKit và thiết bị thật, máy chiếu lớp học, và kiểm thử nhiều học sinh đồng thời. Hai nhóm V1.4B và V1.4C nằm ngoài đợt này.
+
+## Rà soát bảo mật trước khi phát hành 20 mẫu
+
+- Dashboard và Auth API của QuizStudy xác nhận đăng ký công khai đã tắt (`disable_signup: true`), Google vẫn tắt. Khóa từng được chia sẻ vẫn là rủi ro chưa xử lý. Việc thay hoặc thu hồi khóa cần quyết định riêng của chủ dự án. [Supabase Auth](https://supabase.com/docs/guides/auth/general-configuration).
+- Migration `20261126155849_secure_game_sessions.sql` đã chạy thử và rollback trước khi áp dụng trên QuizStudy. Hangman lưu lượt đoán cho từng mục và lượt làm, dừng ở sáu lỗi. Việc chấm điểm dùng lịch sử từ máy chủ. Cấp lại signed URL có ngân sách riêng 30 lượt/phút và xác minh bài còn mở, chưa hết hạn, lượt làm chưa hoàn thành. URL mới có thời hạn 15 phút.
+- Kiểm thử PostgreSQL nhúng đạt cho tải lại trạng thái lượt đoán, lọc dữ liệu sai, đoán trùng, khóa lượt đoán sau giới hạn hoặc sau khi đóng bài, và giữ điểm gốc khi yêu cầu nộp lặp.

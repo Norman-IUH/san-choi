@@ -33,6 +33,7 @@ export type Item = z.infer<typeof itemSchema>;
 export type Media = z.infer<typeof mediaSchema>;
 export type PlayItem = {
   prompt: string; options: string[]; multiple?: boolean;
+  hangman?: { pattern: string[]; misses: number; guesses: string[] };
   letters?: number; grid?: { size: number; letters: string[] }; slot?: WordSlot;
   media?: Media; optionMedia?: Item["optionMedia"]; pronunciation?: Pick<NonNullable<Item["english"]>, "uk" | "us">;
   vocabulary?: Pick<NonNullable<Item["english"]>, "ipa" | "example">;

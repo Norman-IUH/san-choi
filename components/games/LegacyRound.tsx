@@ -21,7 +21,7 @@ export type RoundProps = {
   bindFocus: (node: HTMLElement | null) => void;
   next: (answer: string[]) => void;
   submit: (answers: Record<number, string[]>) => void;
-  guess?: (letters: string[]) => Promise<{ pattern: string[]; misses: number } | null>;
+  guess?: (letter: string, guesses: string[]) => Promise<NonNullable<PlayItem["hangman"]> | null>;
 };
 
 export function LegacyRound({ template, items, order, turn, index, answers, setAnswers, assets, reveals, busy, bindFocus, next, submit }: RoundProps) {

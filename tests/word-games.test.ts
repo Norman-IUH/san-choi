@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { compatible, contentSchema, grade, makePlayItems } from "../lib/game";
 import { demoContent } from "../lib/demo";
-import { hangmanPattern, lineBetween, makeWordsearch } from "../lib/games/word-puzzles";
+import { buildCrossword, hangmanPattern, lineBetween, makeWordsearch } from "../lib/games/word-puzzles";
 
 test("wordsearch draws selectable paths in either direction and scores against the stored word", () => {
   const items = demoContent("wordsearch");
@@ -21,6 +21,7 @@ test("crossword exposes crossing coordinates without returning answers and rejec
   expect(JSON.stringify(items)).not.toContain('"answers"');
   expect(contentSchema("crossword").safeParse([{ ...original[0], answers: ["xyz"] }, original[1]]).success).toBe(false);
   expect(grade("crossword", original, [["CAT"], ["BAT"]]).score).toBe(1);
+  expect(buildCrossword(["CAT", "DOG", "TOAD"])?.slots.map(slot => slot.cells.length)).toEqual([3, 3, 4]);
 });
 
 test("hangman hides unguessed letters and counts only misses", () => {

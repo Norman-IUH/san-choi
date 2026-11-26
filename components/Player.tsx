@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { Maximize, Minimize, RotateCcw, Volume2, VolumeX } from "lucide-react";
-import { finishAttempt, guessAssignmentLetters, refreshLessonMedia, startAttempt } from "@/app/play/actions";
+import { finishAttempt, guessAssignmentLetter, refreshLessonMedia, startAttempt } from "@/app/play/actions";
 import { grade, missedReview, shuffle, templates, type Template, type Item, type PlayItem, type ReviewEntry } from "@/lib/game";
 import { RefreshLessonMedia } from "./games/LessonMedia";
 import { GameRound } from "./games/GameRound";
@@ -240,7 +240,7 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
       {assignment && <p className="hint">Nếu đã bắt đầu, em có thể tiếp tục sau khi tải lại trong cùng thẻ trình duyệt.</p>}
       <button ref={bindFocus} className="button primary" disabled={!ready || busy}>{busy ? "Đang mở…" : "Bắt đầu"}</button>
     </form></div> : <GameRound key={turn} {...{ template, items, order, turn, index, answers, setAnswers, assets, reveals, busy, bindFocus, next, submit }}
-      guess={template === "hangman" ? async letters => assignment ? guessAssignmentLetters(assignment, index, letters)
-        : localContent?.[index] ? hangmanPattern(localContent[index].answers[0], letters) : null : undefined}/>}
+      guess={template === "hangman" ? async (letter, guesses) => assignment ? guessAssignmentLetter(assignment, index, letter)
+        : localContent?.[index] ? { ...hangmanPattern(localContent[index].answers[0], guesses), guesses } : null : undefined}/>}
   </section></RefreshLessonMedia.Provider>;
 }

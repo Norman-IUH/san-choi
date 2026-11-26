@@ -100,7 +100,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
     <h2>Nội dung</h2>
     {isWordTemplate(template) && <p className="hint">{wordTemplates[template].instruction}
       {wordPuzzle && " Dùng từ tiếng Anh 2–12 chữ cái."}
-      {template === "crossword" && " Nhập 2–10 từ theo thứ tự có chữ cái giao nhau."}
+      {template === "crossword" && " Nhập 2–10 từ có chữ cái giao nhau."}
       {template === "matching-pairs" && " Nhập 2–12 cặp, mỗi mặt sau khác nhau."}
     </p>}
     {(template === "flash-cards" || template === "match-up" || template === "find-match") && <div className="panel stack">

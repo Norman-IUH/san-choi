@@ -13,8 +13,8 @@ export default function WordRound({ template, items, index, turn, next, busy, as
   const [endpoint, setEndpoint] = useState<number>();
   const [path, setPath] = useState<number[]>([]);
   const [magnets, setMagnets] = useState<number[]>([]);
-  const [guessed, setGuessed] = useState<string[]>([]);
-  const [hangman, setHangman] = useState({ pattern: Array<string>(item.letters ?? 0).fill(""), misses: 0 });
+  const [guessed, setGuessed] = useState<string[]>(item.hangman?.guesses ?? []);
+  const [hangman, setHangman] = useState(item.hangman ?? { pattern: Array<string>(item.letters ?? 0).fill(""), misses: 0 });
   const [guessing, setGuessing] = useState(false);
   const [guessError, setGuessError] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -83,9 +83,9 @@ export default function WordRound({ template, items, index, turn, next, busy, as
         setGuessError(false);
         const selected = [...guessed, letter];
         try {
-          const result = await guess?.(selected);
+          const result = await guess?.(letter, selected);
           if (!result) { setGuessError(true); return; }
-          setGuessed(selected);
+          setGuessed(result.guesses);
           setHangman(result);
         } catch { setGuessError(true); }
         finally { setGuessing(false); }
