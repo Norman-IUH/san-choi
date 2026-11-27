@@ -18,9 +18,11 @@ for (const paper of ["listening", "reading", "speaking"]) {
     test.skip(info.project.name !== "desktop" || !process.env.E2E_TEACHER_EMAIL || !process.env.E2E_OTHER_EMAIL, "QuizStudy QA teachers required");
     test.setTimeout(150000);
     await signIn(page);
-    await page.goto(`/samples/cambridge-movers/${paper}`);
+    await page.goto(`/samples/cambridge-movers/${paper}`, { waitUntil: "networkidle" });
+    await expect(button(page, "Bắt đầu")).toBeEnabled();
     await button(page, "Lưu vào thư viện giáo viên").click();
-    await expect(button(page, "Tạo link giao bài")).toBeVisible();
+    await expect(button(page, "Tạo link giao bài")).toBeVisible({ timeout: 20000 });
+    await page.waitForLoadState("networkidle");
     const source = page.url();
     if (paper === "speaking") {
       await page.getByText("Hướng dẫn Speaking dành cho giáo viên").click();
@@ -28,7 +30,7 @@ for (const paper of ["listening", "reading", "speaking"]) {
     }
     await page.getByLabel(/Cho học sinh xem câu sai/).check();
     await button(page, "Tạo link giao bài").click();
-    await expect(page.getByLabel("Link chia sẻ")).toBeVisible();
+    await expect(page.getByLabel("Link chia sẻ")).toBeVisible({ timeout: 20000 });
     const url = await page.getByLabel("Link chia sẻ").inputValue();
     const assignment = page.url();
     const student = await browser.newPage();

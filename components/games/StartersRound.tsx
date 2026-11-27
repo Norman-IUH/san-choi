@@ -21,6 +21,7 @@ export default function StartersRound({ items, index, turn, answers, assets, set
   const [target, setTarget] = useState(value.split(":")[0]);
   const [card, setCard] = useState(paint ? value.split(":")[1] ?? "" : "");
   const [word, setWord] = useState("");
+  const [zoom, setZoom] = useState<string>();
   const inputId = useId();
   const palette = ["blue", "red", "green", "yellow", "orange", "pink", "purple", "brown"] as const;
   const section = items.flatMap((row, i) => row.practice?.starters?.part === part && row.practice.starters.paper === paper ? [i] : []);
@@ -48,10 +49,15 @@ export default function StartersRound({ items, index, turn, answers, assets, set
     </details>}
     {speaking && <p className="starter-guide" lang="vi">Làm phần này cùng giáo viên. Em có thể trả lời trực tiếp bằng lời.</p>}
     {visuals && <div className="mover-scenes">
-      {visuals.map((src, i) => <figure key={src}>
-        <LessonMedia media={{ image: src }} assets={assets} label={`Fair scene ${i + 1}`}/>
-        <figcaption>{visuals.length === 2 ? `Picture ${"AB"[i]}` : `Picture ${i + 1}`}</figcaption>
-      </figure>)}
+      {visuals.map((src, i) => {
+        const caption = visuals.length === 2 ? `Picture ${"AB"[i]}` : `Picture ${i + 1}`;
+        return <figure key={src} data-enlarged={zoom === src || undefined}>
+          <button type="button" aria-label={`Enlarge ${caption}`} aria-pressed={zoom === src} onClick={() => setZoom(zoom === src ? undefined : src)}>
+            <LessonMedia media={{ image: src }} assets={assets} label={`Fair scene ${i + 1}`}/>
+          </button>
+          <figcaption>{caption}</figcaption>
+        </figure>;
+      })}
     </div>}
     {groups?.map((group, i) => <fieldset key={i} className="mover-odd">
       <legend>Set {i + 1}</legend>
@@ -79,10 +85,14 @@ export default function StartersRound({ items, index, turn, answers, assets, set
       {targets.map(point => {
         const paintValue = (value.startsWith(point.id + ":") ? value : previous.find(answer => answer.startsWith(point.id + ":")))?.split(":")[1];
         const taken = match ? previous.includes(point.id) : paint && previous.some(answer => answer.startsWith(point.id + ":"));
-        return <button className={movers && colouring ? "starter-pin mover-colour-pin" : "starter-pin"} type="button" key={point.id}
+        const fill = paintValue ? colourPalette[paintValue] : undefined;
+        const mask = point.mask && assets[point.mask];
+        return <div key={point.id}>
+          {mask && fill && <span className="mover-colour-fill" aria-hidden="true" style={{ backgroundColor: fill, maskImage: `url(${mask})` }}/>}
+          <button className={mask ? "starter-pin mover-colour-pin" : "starter-pin"} type="button"
           aria-label={`${colouring ? (movers ? "Object" : "Ball") : "Person"} ${point.id}${paintValue ? " " + paintValue : ""}`}
           aria-pressed={target === point.id} style={{ left: point.x + "%", top: point.y + "%",
-            backgroundColor: paintValue ? colourPalette[paintValue as keyof typeof colourPalette] : undefined }}
+            backgroundColor: mask ? undefined : fill }}
           disabled={taken || sign} onClick={() => {
             setTarget(point.id);
             if (match) pick(point.id);
@@ -91,7 +101,8 @@ export default function StartersRound({ items, index, turn, answers, assets, set
               setAnswers(old => ({ ...old, [index]: [...(old[index] ?? []).filter(entry => entry.split(":")[1] !== card), point.id + ":" + card] }));
               setCard("");
             }
-          }}>{point.id}{speaking && answers[index]?.some(entry => entry.startsWith(point.id + ":")) && <span aria-hidden="true"> ✓</span>}</button>;
+          }}>{point.id}{speaking && answers[index]?.some(entry => entry.startsWith(point.id + ":")) && <span aria-hidden="true"> ✓</span>}</button>
+        </div>;
       })}
     </div> : <div className={!movers && paper === "reading" && [1, 3].includes(part) ? "starter-picture starter-object" : "starter-picture"}><LessonMedia media={{ image: scene }} assets={assets}
       label={paper === "reading" && part === 5 ? "Story picture" : "Question picture"}/></div>)}

@@ -73,7 +73,14 @@ for (const part of [1, 2, 3, 4]) {
   test(`Movers Speaking Part ${part}`, async ({ page }) => {
     await start(page, "speaking?part=" + part);
     await expect(page.getByText("Gợi ý luyện tập")).toBeVisible();
-    if (part === 1 || part === 2) await expect(page.locator(".mover-scenes figure")).toHaveCount(part === 1 ? 2 : 4);
+    if (part === 1 || part === 2) {
+      await expect(page.locator(".mover-scenes figure")).toHaveCount(part === 1 ? 2 : 4);
+      const zoom = button(page, part === 1 ? "Enlarge Picture A" : "Enlarge Picture 1");
+      await zoom.click();
+      await expect(page.locator("figure[data-enlarged]")).toHaveCount(1);
+      await zoom.click();
+      await expect(page.locator("figure[data-enlarged]")).toHaveCount(0);
+    }
     if (part === 3) {
       for (let group = 1; group <= 4; group++) {
         const cards = page.getByRole("group", { name: "Set " + group }).getByRole("button");
@@ -152,6 +159,7 @@ for (const part of [1, 2, 3, 4, 5]) {
     if (part === 5) {
       await button(page, "Object 1").click();
       await button(page, "purple").click();
+      await expect(page.locator(".mover-colour-fill")).toHaveCount(1);
       for (let i = 0; i < 3; i++) await button(page, "Tiếp theo").click();
       await expect(button(page, "Object 1 purple")).toBeDisabled();
       await page.getByLabel("Word on the sign").fill("open");

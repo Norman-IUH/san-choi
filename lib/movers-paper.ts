@@ -11,7 +11,9 @@ const people = points([[12, 75], [26, 81], [43, 73], [60, 81], [76, 75], [89, 82
 const booking = ["Day", "Person in charge", "Number of children", "Room", "What to bring"];
 const objects = cards(["scarf", "map", "camera", "bottle", "torch", "basket", "drum", "helmet"], ["A", "B", "C", "D", "E", "F", "G", "H"]);
 const stall = image("colour-stall");
-const stallTargets = points([[12, 50], [28, 76], [42, 50], [80, 56], [89, 76]]);
+const stallTargets = points([[12, 50], [28, 76], [42, 50], [80, 56], [89, 76]]).map((target, i) => ({
+  ...target, mask: image("colour-" + ["flower-left", "drum", "bag", "helmet", "flower-right"][i]),
+}));
 
 const listening: Question[][] = [
   [["Nora", "2"], ["Jake", "6"], ["Kim", "1"], ["Maya", "5"], ["Louis", "3"]].map(([prompt, answer]) => ({

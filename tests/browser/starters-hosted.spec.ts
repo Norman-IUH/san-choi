@@ -12,8 +12,11 @@ for (const paper of ["listening", "reading", "speaking"]) {
     await page.getByLabel("Mật khẩu").fill(process.env.E2E_TEACHER_PASSWORD!);
     await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Hoạt động của tôi" })).toBeVisible();
-    await page.goto(`/samples/cambridge-starters/${paper}`);
+    await page.goto(`/samples/cambridge-starters/${paper}`, { waitUntil: "networkidle" });
+    await expect(page.getByRole("button", { name: "Bắt đầu", exact: true })).toBeEnabled();
     await page.getByRole("button", { name: "Lưu vào thư viện giáo viên" }).click();
+    await expect(page.getByText("Đã lưu thay đổi.", { exact: true })).toBeVisible({ timeout: 20000 });
+    await page.waitForLoadState("networkidle");
     if (paper === "speaking") {
       await page.getByText("Hướng dẫn Speaking dành cho giáo viên").click();
       await expect(page.getByText(/Put the apple beside the boy/)).toBeVisible();
@@ -21,7 +24,7 @@ for (const paper of ["listening", "reading", "speaking"]) {
     await page.getByLabel(/Cho học sinh xem câu sai/).check();
     await page.getByRole("button", { name: "Tạo link giao bài" }).click();
     const field = page.getByLabel("Link chia sẻ");
-    await expect(field).toBeVisible();
+    await expect(field).toBeVisible({ timeout: 20000 });
     const url = await field.inputValue();
     const assignmentUrl = page.url();
     const student = await browser.newPage();

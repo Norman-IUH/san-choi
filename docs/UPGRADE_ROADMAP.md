@@ -11,7 +11,7 @@
 | V1.4B 7 câu đố tương tác | Nhánh review, 27 mẫu tổng cộng | Labelled Diagram, Flip Tiles, Rank Order, Pair or No Pair, Image Quiz, Watch and Memorize, Maths Generator. |
 | V1.4C 7 trò arcade | Nhánh review, 34 mẫu tổng cộng | Hai nhóm C1 và C2, đủ bảy vòng chơi. Năm trò tải Phaser theo nhu cầu. Hai trò lượt rời rạc giữ HTML. |
 | Visual Polish cho 34 mẫu | Đề xuất sau V1.4C | So sánh ảnh Start, Playing, Result. Ưu tiên màn chơi lớp học, chữ trên di động, phản hồi, độ tương phản và điều khiển chạm. |
-| V1.5 English Practice và Cambridge YLE | B3 và C1 trên nhánh review | V1.5C1 có 13 Part Pre A1 Starters Paper-based. Xem [đặc tả và giới hạn của bộ Starters](STARTERS.md). |
+| V1.5 English Practice và Cambridge YLE | B3, C1 và C2 trên nhánh review | 13 Part Pre A1 Starters và 15 Part A1 Movers Paper-based. [Đặc tả và giới hạn mô phỏng](CAMBRIDGE_SPEC.md). |
 | V1.6 Teaching Tools và lớp học | Not Started | Vocabulary Bank, Lesson Library, QR, PDF/đáp án, Excel, AI tùy chọn, roster và tiến độ. Kiểm tra phân quyền và cách ly giữa các lớp. |
 | V2.0 Production | Not Started | Backup và rollback, audit bảo mật, kiểm thử tải, preview từ mạng di động và triển khai HTTPS với project production riêng. |
 
@@ -95,4 +95,11 @@ B1 tập trung vào luyện nghe và phonics. B2 thêm Reading, Grammar, giáo �
 
 - C1 dùng nhánh phụ thuộc PR #7. Đối chiếu đủ 13 dạng bài, lưu câu hỏi vào snapshot qua luồng giao bài hiện có và chấm phần Speaking bằng Assessment Engine.
 - Nghiệm thu Preview, 13 Part luyện tập, ba bài thi thử và luồng QuizStudy với dữ liệu QA trước khi xem xét phát hành. Milestone dùng schema hiện có.
-- Các milestone Movers và Flyers vẫn trong backlog. Giữ cổng bảo mật và phê duyệt phát hành của các phiên bản trước.
+- Giữ cổng bảo mật và phê duyệt phát hành của các phiên bản trước.
+
+## V1.5C2 Cambridge A1 Movers
+
+- Mở rộng Practice Engine từ C1. Bổ sung phiếu nghe, ghép hai bộ hình, tô màu kèm viết từ, chọn tiêu đề, viết theo tranh, so sánh tranh, kể truyện và chọn hình khác nhóm.
+- Snapshot của bài giao dùng schema QuizStudy hiện có. Reading & Writing Part 6 bổ sung hai câu cần giáo viên chấm; công bố dùng Manual Assessment. Speaking dùng rubric và kịch bản giám khảo riêng cho giáo viên.
+- Tiếp tục review trên draft PR #8. Kiểm tra Vercel Preview, kết quả QuizStudy dùng dữ liệu tổng hợp và hồi quy Starters trước khi xem xét phát hành. [Chi tiết kiểm thử](TEST_RESULTS.md).
+- Flyers và V1.6 còn trong backlog.
