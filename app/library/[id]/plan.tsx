@@ -28,6 +28,7 @@ export async function PlanEdit({ db, owner, id, sample, initial, startingPlan }:
   return <div className="narrow wide stack bank-page">
     <Link className="back" href={id ? `/library/${id}` : "/library"}>← {id ? "Giáo án" : "Thư viện tiếng Anh"}</Link>
     <h1>{id ? "Sửa giáo án" : "Tạo giáo án"}</h1>
+    {id && <div className="inline-actions"><Link className="button" href={`/teaching/print/lesson/${id}`}>In giáo án đã lưu</Link></div>}
     <LessonPlanEditor id={id} sample={sample ?? null} initial={{ title: initialDetails.title, level: initialDetails.level,
       skill: initialDetails.skill, topic: initialDetails.topic, unit: initialDetails.unit }} startingPlan={plan} activities={data ?? []} sampleTitles={sampleTitles}/>
   </div>;
@@ -61,6 +62,7 @@ export async function PlanView({ db, owner, id, plan, lesson, query }: { db: Dat
       {selected && <Link className="button" href={stepHref(selected, false)}>Thoát trình chiếu</Link>}</div> : <>
       <div className="section-head"><h2>Tiến trình giáo án</h2><div className="inline-actions">
         <Link className="button" href={`/library/${id}?mode=edit`}>Sửa giáo án</Link>
+        <Link className="button" href={`/teaching/print/lesson/${id}`}>In giáo án</Link>
         <form action={duplicatePlan.bind(null, id)}><button className="button">Nhân bản giáo án</button></form>
         {selected && <Link className="button primary" href={stepHref(selected, true)}>Trình chiếu</Link>}
       </div></div>

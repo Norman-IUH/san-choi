@@ -42,6 +42,7 @@ export default async function Lesson({ params, searchParams }: {
       <div><p className="muted">{lesson.level} · {lesson.unit}</p><h1>{lesson.title}</h1>
         <p>{lesson.topic} · {lesson.skill} · {difficultyLabels[lesson.difficulty]} · {words.length} từ</p></div>
       <div className="inline-actions"><Link className="button" href={`/library?lesson=${id}#bank-title`}>{plan ? "Chọn từ vựng" : "Sửa bài học"}</Link>
+        {!plan && <Link className="button" href={`/teaching/print/lesson/${id}`}>In học liệu</Link>}
         {!plan && <><Link className="button" href={`/library?copy=${id}#bank-title`}>Sao chép bài học</Link>
           <Link className="button primary" href={`/library/${id}?mode=edit`}>Thêm tiến trình giáo án</Link></>}</div>
     </div>

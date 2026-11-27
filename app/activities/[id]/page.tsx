@@ -10,6 +10,7 @@ import { compatible, contentSchema, isTemplate, templateIds, templates, type Tem
 import { localPlay } from "@/lib/local-play";
 import { account, check, urlFor } from "@/lib/supabase";
 import { mediaUrls } from "@/lib/media-server";
+import { canPrint } from "@/lib/worksheet";
 
 export default async function Activity({ params, searchParams }: {
   params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | undefined>>;
@@ -32,9 +33,13 @@ export default async function Activity({ params, searchParams }: {
   const preview = query.preview && isTemplate(query.preview) && compatible(template, query.preview, content) ? query.preview : null;
   return <div className="narrow wide"><Link className="back" href={activity.deleted_at ? "/activities?view=trash" : "/activities"}>← Hoạt động của tôi</Link>
     <div className="section-head"><div><p className="welcome">{templates[template].title} {activity.draft ? "· Bản nháp" : ""}</p><h1>{activity.title}</h1></div>
-      {!activity.deleted_at && !query.edit && <div className="inline-actions">
-        <Link className="button" href={`/activities/${id}?edit=1`}>Chỉnh sửa</Link>
-        {!activity.draft && <Link className="button primary" href="#giao-bai">Giao bài</Link>}
+      {!activity.deleted_at && <div className="inline-actions">
+        {!query.edit && <Link className="button" href={`/activities/${id}?edit=1`}>Chỉnh sửa</Link>}
+        {query.edit ? <Link className="button" href={`/activities/${id}#activity-play`}>Chơi trực tuyến</Link> :
+          !activity.draft && <Link className="button primary" href="#giao-bai">Giao bài</Link>}
+        {content.length > 0 && canPrint(template, content) && <Link className="button" href={`/teaching/print/activity/${id}`}>
+          {template === "flash-cards" ? "In flashcards" : "In bài tập"}
+        </Link>}
       </div>}</div>
     {query.saved && <p className="notice" role="status">Đã lưu thay đổi.</p>}
     {(query.invalid || query.incompatible) && <p className="notice error" role="alert">{query.incompatible ? "Mẫu đích không thể giữ toàn bộ nội dung." : "Kiểm tra thông tin trước khi lưu."}</p>}
@@ -44,7 +49,9 @@ export default async function Activity({ params, searchParams }: {
     : query.edit ? <Editor key={activity.updated_at} id={id} template={template} initial={{ title: activity.title, description: activity.description,
       subject: activity.subject, grade: activity.grade, tags: activity.tags, visibility: activity.visibility }} content={content} assets={assets}/>
     : <div className="stack">
-      {contentSchema(template).safeParse(content).success && <Player key={preview ?? template} title={activity.title} mediaScope={{ source: "activity", id }} {...localPlay(preview ?? template, content, assets)}/>}
+      {contentSchema(template).safeParse(content).success && <div id="activity-play">
+        <Player key={preview ?? template} title={activity.title} mediaScope={{ source: "activity", id }} {...localPlay(preview ?? template, content, assets)}/>
+      </div>}
       {content.some(item => item.practice?.starters?.teacher) && <details className="panel">
         <summary>Hướng dẫn Speaking dành cho giáo viên</summary>
         <ol>{content.map(item => item.practice?.starters?.teacher && <li key={item.practice.starters.part} lang="en">
