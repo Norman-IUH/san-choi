@@ -190,7 +190,7 @@ Kiểm thử dùng tài khoản và dữ liệu riêng. Giới hạn nghe vận 
 | Giáo án trên QuizStudy | Tạo từ mẫu, thêm/bỏ bước, đổi thứ tự bằng bàn phím và kéo thả Chromium, lưu nháp, reload, nhân bản, trình chiếu, vào/thoát fullscreen và tạo bài giao riêng cho một hoạt động. Kết quả gắn với đúng bước. Giáo viên thứ hai nhận 404. |
 | Hồi quy thư viện trên QuizStudy | Sáu lượt Chromium đạt, gồm bốn cấp độ, dùng lại Vocabulary Lesson để tạo bài giao, CSV/XLSX, lưu trữ, media và bộ lọc. |
 | Migration | `20261127064352_lesson_builder.sql` qua kiểm tra trên PostgreSQL nhúng với schema và dữ liệu fixture cũ. Kiểm tra schema QuizStudy trước khi áp dụng cho thấy không có dòng lesson xung đột. Sau khi áp dụng, xác nhận migration có trong lịch sử, index mới tồn tại và RLS vẫn bật trên lesson và assignments. |
-| Vercel Preview | GitHub checks của PR #7 báo deployment hoàn thành. Đường dẫn giáo án thử chuyển về trang đăng nhập của Sân Chơi trong phiên khách. E2E có đăng nhập chạy trên app cục bộ nối QuizStudy. |
+| Vercel Preview | GitHub checks của PR #7 báo deployment hoàn thành. Khi kiểm tra bằng phiên khách, đường dẫn giáo án yêu cầu đăng nhập Vercel. E2E có đăng nhập chạy trên app cục bộ nối QuizStudy. |
 
 Hai tài khoản QA dùng biệt danh và bài giao tổng hợp. Ảnh Playwright của màn Reading và Presentation nằm trong `output/playwright/v15b2-lesson-final`. Giáo án mẫu kiểm tra đủ năm hoạt động và liên kết từ vựng ở cả bốn cấp độ bằng Vitest.
 
