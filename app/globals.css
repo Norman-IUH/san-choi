@@ -409,3 +409,4 @@ ol.memory-strip{padding-left:1.8rem;gap:1.5rem}
 .productive-pictures .lesson-image { max-height: 300px; object-fit: contain; }
 .productive-round textarea, .assessment-panel textarea { white-space: pre-wrap; }
 .assessment-response { overflow-wrap: anywhere; white-space: pre-wrap; }
+.worksheet-preview{width:100%;height:min(72vh,850px);min-height:360px;border:1px solid var(--line);border-radius:12px;background:#f4f6f7}

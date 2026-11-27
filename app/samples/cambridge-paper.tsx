@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { Player } from "@/components/Player";
 import { importCambridge } from "@/app/activities/actions";
 import { starterPaperSchema, type CambridgeLevel } from "@/lib/games/starters";
@@ -19,8 +20,9 @@ export async function CambridgePaper({ params, searchParams, level }: PaperPageP
   return <div className="immersive-page stack">
     <Player {...localPlay(sample.template, sample.items)} title={sample.title} description={number ? sample.label : undefined} backHref={`/samples/cambridge-${level}`}
       cambridgeDraft={number === undefined ? `${level}/${result.data}` : undefined}/>
-    <form className="starter-import" action={importCambridge.bind(null, level, paper, number)}>
-      <button className="button">Lưu vào thư viện giáo viên</button>
-    </form>
+    <div className="starter-import inline-actions">
+      <form action={importCambridge.bind(null, level, paper, number)}><button className="button">Lưu vào thư viện giáo viên</button></form>
+      <Link className="button" href={`/teaching/print/cambridge/${level}?paper=${paper}${number ? `&part=${number}` : ""}`}>In đề Cambridge</Link>
+    </div>
   </div>;
 }

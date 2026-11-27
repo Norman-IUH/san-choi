@@ -5,12 +5,13 @@ import { setAssignmentClosed } from "@/app/activities/actions";
 import { addClassroomSubmission } from "@/app/results/review-actions";
 import { CopyLink } from "@/components/CopyLink";
 import { account, check, urlFor } from "@/lib/supabase";
+import { printableTemplates } from "@/lib/worksheet";
 
 export default async function Assignment({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{saved?: string; review?: string}> }) {
   const [{ id }, { db }, { saved, review }] = await Promise.all([params, account(true), searchParams]);
   if (!z.uuid().safeParse(id).success) notFound();
   const [assignment, attempts] = await Promise.all([
-    db.from("assignments").select("id,title,deadline,closed,assessment").eq("id", id).maybeSingle(),
+    db.from("assignments").select("id,title,template,deadline,closed,assessment").eq("id", id).maybeSingle(),
     db.from("attempts").select("id,nickname,score,total,started_at,completed_at,manual_reviews(state,total)").eq("assignment_id", id).not("completed_at", "is", null).order("completed_at", { ascending: false }).limit(100)
       .overrideTypes<{ id: string; nickname: string; score: number | null; total: number; started_at: string;
         completed_at: string; manual_reviews: { state: string; total: number | null } | null }[], { merge: false }>(),
@@ -24,6 +25,8 @@ export default async function Assignment({ params, searchParams }: { params: Pro
     <h1>{row.title}</h1>{saved && <p className="notice" role="status">Đã lưu thay đổi.</p>}
     <section className="panel stack"><h2>Link giao bài</h2>
       <CopyLink url={urlFor(`/play/${id}`)}/>
+      {printableTemplates.some(template => template === row.template) &&
+        <div className="inline-actions"><Link className="button" href={`/teaching/print/assignment/${id}`}>In đề đã giao</Link></div>}
       <p>{row.closed ? "Đã đóng" : row.deadline ? `Hạn nộp ${new Date(row.deadline).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}` : "Đang mở · Không giới hạn thời gian"}</p>
       <form action={setAssignmentClosed.bind(null, id, !row.closed)}><button className="button">{row.closed ? "Mở lại bài tập" : "Đóng bài tập"}</button></form>
     </section>
