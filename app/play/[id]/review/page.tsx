@@ -12,16 +12,20 @@ export default async function PublishedReview({ params }: { params: Promise<{ id
   const receipt = (await cookies()).get(`receipt-${id}`)?.value;
   if (!z.uuid().safeParse(receipt).success) notFound();
   const { data } = await privilegedDatabase().from("attempts")
-    .select("assignments!inner(owner_id,title,assessment),manual_reviews!inner(state,scores,total,feedback,published_at)")
+    .select("score,total,assignments!inner(owner_id,title,assessment,show_score),manual_reviews!inner(state,scores,total,feedback,published_at)")
     .eq("id", receipt!).eq("assignment_id", id).not("completed_at", "is", null).maybeSingle()
-    .overrideTypes<{ assignments: { owner_id: string; title: string; assessment: unknown }; manual_reviews: ManualReview }, { merge: false }>();
+    .overrideTypes<{ score: number | null; total: number; assignments: { owner_id: string; title: string; assessment: unknown; show_score: boolean };
+      manual_reviews: ManualReview }, { merge: false }>();
   if (!data || !allowedTeacher(data.assignments?.owner_id)) notFound();
   const snapshot = assessmentSchema.safeParse(data.assignments.assessment);
   if (!snapshot.success) notFound();
   const review = data.manual_reviews;
+  const maximum = snapshot.data.rubric.reduce((sum, row) => sum + row.max, 0);
+  const automatic = data.score !== null && data.assignments.show_score ? { score: data.score, total: data.total } : null;
   return <div className="narrow stack"><h1>Nhận xét bài làm</h1><p>{data.assignments.title}</p>
     {review?.state === "published" ? <section className="panel stack">
-      <h2>{review.total}/{snapshot.data.rubric.reduce((sum, row) => sum + row.max, 0)} điểm</h2>
+      <h2>{(review.total ?? 0) + (automatic?.score ?? 0)}/{maximum + (automatic?.total ?? 0)} điểm</h2>
+      {data.score !== null && <p>{automatic && `Tự động ${automatic.score}/${automatic.total} · `}Câu viết mở {review.total}/{maximum}</p>}
       <ul>{snapshot.data.rubric.map((row, i) => <li key={row.title}>{row.title} · {review.scores[i]}/{row.max}</li>)}</ul>
       {review.feedback && <p className="assessment-response">{review.feedback}</p>}
     </section> : <p role="status" className="notice">Đã nộp bài. Em có thể mở lại trang này sau khi giáo viên công bố.</p>}

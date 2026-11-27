@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { colourPalette } from "@/lib/games/practice";
 import { cambridgeResponseLimit, moverPartNames, starterPartNames } from "@/lib/games/starters";
 import { LessonMedia } from "./LessonMedia";
@@ -20,12 +20,19 @@ export default function StartersRound({ items, index, turn, answers, assets, set
   const value = answers[index]?.[0] ?? "";
   const [target, setTarget] = useState(value.split(":")[0]);
   const [card, setCard] = useState(paint ? value.split(":")[1] ?? "" : "");
+  const [word, setWord] = useState("");
+  const inputId = useId();
   const palette = ["blue", "red", "green", "yellow", "orange", "pink", "purple", "brown"] as const;
   const section = items.flatMap((row, i) => row.practice?.starters?.part === part && row.practice.starters.paper === paper ? [i] : []);
   const previous = section.filter(i => i !== index).map(i => answers[i]?.[0] ?? "");
   const heading = (movers ? moverPartNames : starterPartNames)[paper][part - 1];
   function pick(answer: string) {
     setAnswers(old => ({ ...old, [index]: answer ? [answer] : [] }));
+  }
+  function pickWord(answer: string) {
+    if (!copyWord) return pick(answer);
+    setWord(answer);
+    document.getElementById(inputId)?.focus();
   }
   return <form className="starter-sheet" lang="en" onSubmit={event => {
     event.preventDefault();
@@ -95,10 +102,9 @@ export default function StartersRound({ items, index, turn, answers, assets, set
         const picture = <LessonMedia media={{ image: entry.image }} assets={assets} label={speaking ? entry.value : ""}/>;
         return speaking && part !== 1 ? <div key={entry.value} className="starter-card">{picture}</div> :
           <button key={entry.value} type="button" className="starter-card" aria-label={entry.value}
-            disabled={!!lead && previous.includes(entry.value)} aria-pressed={(speaking ? card : value) === entry.value} onClick={() => {
+            disabled={!!lead && previous.includes(entry.value)} aria-pressed={(speaking ? card : copyWord ? word : value) === entry.value} onClick={() => {
           if (speaking) setCard(entry.value);
-          else if (copyWord) document.getElementById("cambridge-copy")?.focus();
-          else pick(entry.value);
+          else pickWord(entry.value);
         }}>{picture}<span>{entry.value}</span></button>;
       })}
     </div>}
@@ -113,15 +119,14 @@ export default function StartersRound({ items, index, turn, answers, assets, set
       <button type="button" disabled={!value} onClick={() => pick(value.slice(0, -1))}>⌫</button>
     </div>}
     {choices && <div className="starter-buttons" aria-label="Answer choices">
-      {choices.map(choice => <button key={choice} type="button" aria-pressed={value === choice} onClick={() => {
-        if (copyWord) document.getElementById("cambridge-copy")?.focus();
-        else pick(choice);
-      }}>{choice}</button>)}
+      {choices.map((choice, i) => <button key={i} type="button" aria-pressed={(copyWord ? word : value) === choice} onClick={() => pickWord(choice)}>
+        {!copyWord && <span className="starter-choice-letter" aria-hidden="true">{"ABC"[i]}</span>}{choice}
+      </button>)}
     </div>}
     {typed && <label className="starter-answer">Your answer
-      {open ? <textarea id="cambridge-copy" value={value} onChange={event => pick(event.target.value)} rows={3}
+      {open ? <textarea id={inputId} value={value} onChange={event => pick(event.target.value)} rows={3}
         maxLength={cambridgeResponseLimit(config)} spellCheck={false}/> :
-        <input id="cambridge-copy" value={value} onChange={event => pick(event.target.value)} placeholder={letters && "– ".repeat(letters.length).trim()} autoComplete="off" autoCorrect="off"
+        <input id={inputId} value={value} onChange={event => pick(event.target.value)} placeholder={letters && "– ".repeat(letters.length).trim()} autoComplete="off" autoCorrect="off"
           autoCapitalize="off" spellCheck={false} maxLength={cambridgeResponseLimit(config)}/>}
     </label>}
     <button className="button primary" lang="vi" disabled={busy}>{turn + 1 === items.length ? "Nộp bài" : "Tiếp theo"}</button>

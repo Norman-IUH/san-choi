@@ -36,7 +36,8 @@ export default async function Assignment({ params, searchParams }: { params: Pro
     <section className="panel stack"><div className="section-head"><h2>Bài đã nộp gần đây</h2><a className="button" href={`/results/export?assignment=${id}`}>Tải CSV</a></div>
       {!completed.length ? <p>Chưa có bài nộp.</p> : <div className="table-wrap"><table><thead><tr><th>Biệt danh</th><th>Điểm</th><th>Thời gian</th></tr></thead><tbody>
         {completed.map(attempt => <tr key={attempt.id}><td><Link href={`/results/${attempt.id}`}>{attempt.nickname}</Link></td>
-          <td>{attempt.manual_reviews ? (attempt.manual_reviews.total == null ? "Chờ chấm" : `${attempt.manual_reviews.total} · ${attempt.manual_reviews.state === "published" ? "Đã công bố" : "Đã chấm"}`) : attempt.score === null ? "—" : `${attempt.score}/${attempt.total}`}</td>
+          <td>{attempt.manual_reviews && attempt.score !== null && `${attempt.score}/${attempt.total} tự động · `}
+            {attempt.manual_reviews ? (attempt.manual_reviews.total == null ? "Chờ chấm" : `${attempt.manual_reviews.total} · ${attempt.manual_reviews.state === "published" ? "Đã công bố" : "Đã chấm"}`) : attempt.score === null ? "—" : `${attempt.score}/${attempt.total}`}</td>
           <td>{Math.max(0, Math.round((Date.parse(attempt.completed_at) - Date.parse(attempt.started_at)) / 1000))} giây</td></tr>)}</tbody></table></div>}
     </section></div>;
 }

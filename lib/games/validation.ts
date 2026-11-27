@@ -31,6 +31,8 @@ export function contentSchema(template: Template, draft = false) {
           return item.practice?.mode !== "starters" || !config || config.paper !== starters.paper || config.mock !== starters.mock ||
             config.level !== starters.level || config.part !== expected.part || Boolean(config.open) !== open ||
             (index > 0 && Boolean(item.practice.production?.rubric)) || item.answers.length !== (speaking || open ? 0 : 1) ||
+            (config.choices && (new Set(config.choices.map(normalize)).size !== 3 ||
+              !config.choices.some(choice => normalize(choice) === normalize(item.answers[0] ?? "")))) ||
             ((speaking || open) && !!item.alternatives?.length) || (config.paper === "listening" &&
               (!starterAudio.safeParse(item.media?.audio).success || !item.media?.audio?.startsWith(`/audio/${collection}/`)));
         })) context.addIssue({ code: "custom", message: "Kiểm tra cấu trúc đề Cambridge và học liệu từng phần." });

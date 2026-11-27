@@ -15,8 +15,10 @@ function checkPaper(paper: StarterPaper) {
     expect(itemMediaPaths(items)).toEqual([]);
     for (const path of Object.keys(builtInMediaUrls(items))) {
       const media = readFileSync("public" + path);
-      expect(media.toString("ascii", 0, 4)).toBe("RIFF");
-      expect(media.readUInt32LE(4)).toBe(media.length - 8);
+      if (path.endsWith(".wav")) {
+        expect(media.toString("ascii", 0, 4)).toBe("RIFF");
+        expect(media.readUInt32LE(4)).toBe(media.length - 8);
+      } else expect(media.toString("ascii", 8, 12)).toBe("WEBP");
     }
     const projected = JSON.stringify(makePlayItems(template, items));
     expect(projected).not.toMatch(/"answers"|"teacher"|"rubric"/);
@@ -33,4 +35,16 @@ test("Movers Listening has 25 scored questions with local pictures and original 
   checkPaper("listening");
   const book = moverPaper("listening", 2)!;
   expect(grade(book.template, book.items, [["saturday"], ["Hall"], ["sixteen"], ["nine"], ["bottle"]]).score).toBe(5);
+});
+
+test("Movers Reading & Writing holds 33 automatic marks and two open questions for manual review", () => {
+  checkPaper("reading");
+  const paper = moverPaper("reading")!;
+  const responses = paper.items.map(item => item.answers);
+  responses[33] = ["A person is standing next to the table."];
+  expect(grade(paper.template, paper.items, responses).correct.slice(-2)).toEqual([null, null]);
+  expect(paper.items[0].practice?.production?.rubric?.map(row => row.max)).toEqual([1, 1]);
+  const snapshot = structuredClone(paper.items);
+  snapshot[33].answers = ["Any sentence"];
+  expect(contentSchema(paper.template).safeParse(snapshot).success).toBe(false);
 });

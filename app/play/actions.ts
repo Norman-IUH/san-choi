@@ -1,4 +1,5 @@
 "use server";
+import { cambridgeResponseLimit } from "@/lib/games/starters";
 import { createHash } from "node:crypto";
 import { cookies } from "next/headers";
 import { z } from "zod";
@@ -128,7 +129,9 @@ export async function finishAttempt(id: string, values: string[][]) {
   if (parsed.data.length !== items.length) return { error: "Hãy hoàn thành tất cả các mục trước khi nộp." } as const;
   if (parsed.data.some((row, index) => {
     const practice = items[index].practice;
-    if (practice?.starters) return practice.starters.paper === "speaking" ? row.length > 0 : row.length > 1 || row.some(value => value.length > 40);
+    const cambridge = practice?.starters;
+    if (cambridge) return cambridge.paper === "speaking" ? row.length > 0
+      : row.length > 1 || row.some(value => value.length > cambridgeResponseLimit(cambridge));
     if (practice?.production && isProductive(practice.mode)) return row.length > 1 || row.some(value => value.length > practice.production!.limit);
     return row.some(value => value.length > 400);
   })) return { error: "Câu trả lời vượt giới hạn." } as const;

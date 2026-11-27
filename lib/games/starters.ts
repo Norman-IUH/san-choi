@@ -26,7 +26,7 @@ export const starterConfig = z.object({
   targets: z.array(z.object({ id: z.string().max(12), x: z.number().min(0).max(100), y: z.number().min(0).max(100) })).max(8).optional(),
   example: z.string().trim().max(350).optional(), guide: z.string().trim().max(1200).optional(),
   teacher: z.string().trim().max(1200).optional(),
-  lead: cardSchema.optional(), fields: z.array(z.string().max(60)).length(5).optional(), choices: z.array(z.string().max(120)).length(3).optional(),
+  lead: cardSchema.optional(), fields: z.array(z.string().max(60)).length(5).optional(), choices: z.array(z.string().trim().min(1).max(120)).length(3).optional(),
   copyWord: z.boolean().optional(), open: z.boolean().optional(), sign: z.boolean().optional(),
   visuals: z.array(starterImage).min(2).max(4).optional(),
   groups: z.array(z.array(starterImage).length(4)).length(4).optional(),
@@ -37,7 +37,7 @@ export function cambridgeCounts({ level, paper }: Pick<CambridgePart, "level" | 
 }
 export const starterSeconds: Record<StarterPaper, number> = { listening: 1200, reading: 1200, speaking: 300 };
 export const moverSeconds: Record<StarterPaper, number> = { listening: 1500, reading: 1800, speaking: 420 };
-export const cambridgeResponseLimit = (part: CambridgePart) => part.open ? 240 : 40;
+export const cambridgeResponseLimit = (part: CambridgePart) => part.open ? 240 : part.choices ? 120 : 40;
 export function starterProjection(config: CambridgePart) {
   const { paper, part, mock, level, scene, passage, letters, cards, targets, example, guide, lead, fields, choices, copyWord, open, sign, visuals, groups } = config;
   return { paper, part, mock, level, scene, passage, letters, cards, targets, example, guide: mock ? undefined : guide,

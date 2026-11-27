@@ -71,6 +71,7 @@ export function Player({ title, description, backHref, template, initialItems = 
   const practice = items[0]?.practice;
   const starters = practice?.starters;
   const starterAudio = starters && items[index]?.media?.audio;
+  const manualWriting = items.some(item => item.practice?.starters?.open);
   const deadline = mock?.deadline;
   const reading = practice && isReading(practice.mode) ? practice : undefined;
   const rows = template === "match-up" || template === "group-sort";
@@ -291,7 +292,8 @@ export function Player({ title, description, backHref, template, initialItems = 
       <div className={`game-art completion-art${gameplayThumbnail ? " gameplay-thumbnail" : ""}`} aria-hidden="true" style={artStyle}/>
       <h2 tabIndex={-1} ref={bindFocus}
       aria-describedby={result.score !== null || assignment ? outcomeId : undefined}>Hoàn thành!</h2>
-      {result.score !== null && <strong id={outcomeId}>{result.score}/{result.total} điểm</strong>}
+      {result.score !== null && <strong id={outcomeId}>{result.score}/{result.total} điểm{manualWriting && " tự động"}</strong>}
+      {manualWriting && <p>{assignment ? "Hai câu viết mở chờ giáo viên chấm." : "Giáo viên có thể chấm hai câu viết mở khi giao bộ bài."}</p>}
       {assignment && <p id={result.score === null ? outcomeId : undefined}>Bài làm đã được lưu.</p>}
       {assignment && result.pendingReview && <Link className="button" href={`/play/${assignment}/review`}>Xem nhận xét khi giáo viên công bố</Link>}
       <p>{result.score !== null && result.score === result.total ? "Em đã hoàn thành xuất sắc!" : "Giỏi lắm, em đã hoàn thành lượt chơi."}</p>
