@@ -95,6 +95,14 @@ export default function StartersRound({ items, index, turn, answers, assets, set
       </button>)}</div>
     </fieldset>)}
     {passage && <div className="starter-passage">{passage}</div>}
+    {responses && <ol className="flyer-dialogue" aria-label="Dialogue">
+      {section.map(i => {
+        const letter = answers[i]?.[0];
+        return <li key={i} aria-current={i === index ? "step" : undefined}>
+          <p>{items[i].prompt}</p><p>Visitor: {letter ? responses["ABCDEFGH".indexOf(letter)] : "___"}</p>
+        </li>;
+      })}
+    </ol>}
     {fields && <dl className="mover-booking">{fields.map((name, i) => <div key={name} aria-current={section[i] === index ? "step" : undefined}>
       <dt>{name}</dt><dd>{answers[section[i]]?.[0] || "—"}</dd>
     </div>)}</dl>}
@@ -190,6 +198,7 @@ export default function StartersRound({ items, index, turn, answers, assets, set
         <input id={inputId} value={value} onChange={event => pick(event.target.value)} placeholder={letters && "– ".repeat(letters.length).trim()} autoComplete="off" autoCorrect="off"
           autoCapitalize="off" spellCheck={false} maxLength={cambridgeResponseLimit(config)}/>}
     </label>}
+    {open && level === "flyers" && <p className="hint" lang="en">{value.trim() ? value.trim().split(/\s+/).length : 0} words · aim for at least 20</p>}
     <button className="button primary" lang="vi" disabled={busy}>{turn + 1 === items.length ? "Nộp bài" : "Tiếp theo"}</button>
   </form>;
 }

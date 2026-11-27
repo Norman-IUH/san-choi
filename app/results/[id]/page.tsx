@@ -17,7 +17,8 @@ export default async function Result({ params, searchParams }: { params: Promise
   const answers = data.answers as { prompt: string; answer: string[]; correct: boolean | null }[];
   const source = z.array(itemSchema).safeParse(data.assignments?.content);
   const snapshot = assessmentSchema.safeParse(data.assignments?.assessment);
-  const writingScene = source.success ? source.data.find(item => item.practice?.starters?.open)?.practice?.starters?.scene : undefined;
+  const writing = source.success ? source.data.find(item => item.practice?.starters?.open)?.practice?.starters : undefined;
+  const writingScenes = writing?.visuals ?? (writing?.scene ? [writing.scene] : []);
   const voice = snapshot.success && snapshot.data.skill === "Speaking" ? await privilegedDatabase().from("voice_recordings")
     .select("item_index,expires_at,seconds").eq("attempt_id", id) : null;
   check(voice?.error ?? null, "attempt_recordings");
@@ -29,10 +30,12 @@ export default async function Result({ params, searchParams }: { params: Promise
   return <div className="narrow wide stack"><Link className="back" href={`/assignments/${data.assignment_id}`}>← Bài giao</Link>
     <h1>Bài làm của {data.nickname}</h1><p>{snapshot.success ? `Chấm thủ công · ${review?.state === "published" ? "Đã công bố" : review?.state === "reviewed" ? "Đã chấm" : "Chờ chấm"}` : data.score === null ? "Hoạt động không chấm điểm" : `${data.score}/${data.total} điểm`} · {Math.max(0, Math.round((Date.parse(data.completed_at) - Date.parse(data.started_at)) / 1000))} giây</p>
     {query.review === "saved" && <p role="status" className="notice">Đã lưu đánh giá.</p>}
-    {writingScene && <section className="panel starter-picture"><h2>Tranh dùng để chấm câu viết mở</h2>
+    {writingScenes.length > 0 && <section className="panel starter-picture"><h2>Tranh dùng để chấm câu viết mở</h2>
       {data.score !== null && <p>{data.score}/{data.total} điểm tự động</p>}
-      {/* eslint-disable-next-line @next/next/no-img-element -- The rubric uses a fixed built-in picture from the assignment snapshot. */}
-      <img className="lesson-image" src={writingScene} alt="Gian hàng tại hội chợ"/>
+      <div className={writingScenes.length > 1 ? "mover-scenes" : undefined}>{writingScenes.map((scene, i) => (
+        // eslint-disable-next-line @next/next/no-img-element -- These built-in pictures come from the assignment snapshot.
+        <img className="lesson-image" key={scene} src={scene} alt={`Tranh ${i + 1} của đề viết`}/>
+      ))}</div>
     </section>}
     {query.review === "voice-removed" && <p role="status" className="notice">Đã xóa bản ghi.</p>}
     {query.review === "voice-error" && <p role="alert" className="notice error">Chưa xóa được bản ghi. Hãy thử lại.</p>}

@@ -48,8 +48,85 @@ const listening: Question[][] = [
   })),
 ];
 
-const papers: Partial<Record<StarterPaper, Question[][]>> = { listening };
-const rubrics: Partial<Record<StarterPaper, Rubric>> = {};
+const definitions = ["architect", "dictionary", "diary", "passenger", "astronaut", "lighthouse", "envelope", "magazine",
+  "platform", "tent", "compass", "umbrella", "binoculars", "mechanic", "thermometer"];
+const conversation = [
+  "Guide: What are you hoping to see at the coast?",
+  "Guide: Bring your binoculars, then. Have you got some?",
+  "Guide: I can lend you a pair. Have you ever used binoculars before?",
+  "Guide: Don't worry. I'll show you on the way. Where will you wait for us?",
+  "Guide: Good. Shall we meet there at quarter past ten?",
+];
+const replies = [
+  "Only once, and I couldn't see clearly.", "There were five in the box.", "I'd love to see the seabirds.",
+  "No, I forgot to bring mine.", "It was built a long time ago.", "By the ticket office at the harbour.",
+  "Yes, see you there at ten fifteen.", "No, he doesn't live here now.",
+];
+const wordBank = ["worried", "climbed", "rope", "dry", "storm", "noisy", "watched", "torch"];
+const rescue = "A (1) ___ blew across the beach on Saturday. Nia was (2) ___ because her kite had caught in a tree near the path. Her brother (3) ___ onto a low wall so that he could see the kite. They found a (4) ___ and used it to pull the branch down gently. Luckily, the kite was still (5) ___ under the leaves. They carried it home before it began to rain again.";
+const tides = "Tides\n\nTides (1) ___ the regular rise and fall of the sea. They happen because the moon pulls (2) ___ the water. As Earth (3) ___, the level of the sea changes. Many places have two high tides (4) ___ day. Visitors often (5) ___ the beach at low tide. They may find small crabs (6) ___ rocks. Walkers should (7) ___ the beach before the sea covers the path. Check the tide times (8) ___ you go. On windy days, the water may rise (9) ___ than expected. Carrying a map is (10) ___ good idea.";
+const story = "The red notebook\n\nOn Monday, Dara borrowed her neighbour's red notebook to write down the names of seabirds. She put it in the front pocket of her backpack. At the harbour, her class waited under a blue shelter because it was drizzling. When they got on the boat, Dara could not find the notebook. She asked the guide for help. The guide telephoned the ticket office. A passenger had found the notebook beside a wooden bench and had taken it to the office. After the trip, Dara picked it up. She gave the passenger a thank-you card and wrote about the trip when she got home.";
+const letter = "Dear Kit,\n\nThanks (1) ___ your message. I'm sorry I (2) ___ not write yesterday. I was busy helping my uncle, (3) ___ works beside the harbour. The weather was cold, (4) ___ the trip was fun. Would you like (5) ___ come with us next time?\n\nSee you soon,\nDara";
+const reading: Question[][] = [
+  [
+    ["This person plans how buildings will look.", "architect"],
+    ["You can use this book to find out what a word means.", "dictionary"],
+    ["People write about their own day in this book.", "diary"],
+    ["This person travels in a vehicle which someone else is driving.", "passenger"],
+    ["This person travels into space.", "astronaut"],
+    ["Ships see the light from this tower near the sea.", "lighthouse"],
+    ["You put a letter inside this before you post it.", "envelope"],
+    ["You wait here beside the railway tracks before you get on a train.", "platform"],
+    ["You can use this to find north without a phone.", "compass"],
+    ["This measures how hot or cold something is.", "thermometer"],
+  ].map(([prompt, answer]) => ({ prompt, answer, config: { wordBank: definitions, copyWord: true,
+    example: "Ví dụ: ‘This is something you wear on your feet.’ Nếu có từ shoes trong khung, viết shoes vào ô." } })),
+  ["C", "D", "A", "F", "G"].map((answer, i) => ({
+    prompt: conversation[i], answer, config: { responses: replies, example: "Đọc các lượt nói liên tiếp và chọn chữ A–H cho câu đáp phù hợp." },
+  })),
+  [
+    ...["storm", "worried", "climbed", "rope", "dry"].map((answer, i) => ({
+      prompt: `Write the word for gap ${i + 1}.`, answer,
+      config: { passage: rescue, wordBank, copyWord: true, example: "Xem nghĩa của cả câu rồi kiểm tra từ cần điền là danh từ, tính từ hay động từ." },
+    })),
+    { prompt: "Which title fits the whole story best?", answer: "Saving the kite",
+      config: { passage: rescue, choices: ["Buying a new coat", "Saving the kite", "A boat trip in the storm"], example: "Chọn tiêu đề bao quát sự việc chính." } },
+  ],
+  ([
+    [["is", "are", "be"], "are"], [["at", "to", "on"], "on"], [["turn", "turns", "turning"], "turns"],
+    [["each", "all", "everywhere"], "each"], [["visited", "visiting", "visit"], "visit"],
+    [["under", "until", "across"], "under"], [["leaves", "leave", "leaving"], "leave"],
+    [["before", "where", "because"], "before"], [["highest", "higher", "high"], "higher"], [["any", "a", "an"], "a"],
+  ] satisfies [string[], string][]).map(([choices, answer], i) => ({
+    prompt: `Choose and copy the word for gap ${i + 1}.`, answer,
+    config: { passage: tides, choices, copyWord: true, example: "Dùng từ trước và sau chỗ trống để chọn dạng ngữ pháp phù hợp." },
+  })),
+  ([
+    ["Dara borrowed a ___ notebook.", "red"],
+    ["She put it in the ___ of her backpack.", "front pocket"],
+    ["The class waited under a ___ at the harbour.", "blue shelter"],
+    ["Dara asked ___ to help her find it.", "the guide", ["a guide", "guide"]],
+    ["The passenger found it beside a ___.", "wooden bench", ["bench"]],
+    ["Dara gave the passenger a ___.", "thank-you card", ["thank you card"]],
+    ["She wrote about the trip when she ___.", "got home", ["went home", "arrived home"]],
+  ] satisfies [string, string, string[]?][]).map(([prompt, answer, alternatives]) => ({
+    prompt, answer, alternatives, config: { passage: story, example: "Tìm chi tiết trong đoạn truyện rồi điền một đến bốn từ vào câu." },
+  })),
+  ["for", "did", "who", "but", "to"].map((answer, i) => ({
+    prompt: `Write one word for gap ${i + 1}.`, answer,
+    config: { passage: letter, example: "Đọc cả lá thư trước khi tự nghĩ ra một từ cho mỗi ô." },
+  })),
+  [{ prompt: "Write a story of at least 20 words using all three pictures.",
+    config: { open: true, visuals: [1, 2, 3].map(i => picture(`write-${i}`)),
+      example: "Tìm nhân vật, sự cố và cách giải quyết trong ba tranh. Dùng câu nối để kể theo thứ tự." } }],
+];
+const writingRubric: Rubric = [
+  { title: "Ba khung tranh", description: "Câu chuyện dùng các sự kiện nhìn thấy trong ba khung tranh.", max: 2 },
+  { title: "Trình tự và liên kết", description: "Các sự kiện nối tiếp hợp lý. Dùng 0 cho phần bỏ trống.", max: 2 },
+  { title: "Diễn đạt dễ hiểu", description: "Bài viết truyền đạt được ý. Xem cả cách dùng từ, câu và hướng dẫn 20 từ.", max: 1 },
+];
+const papers: Partial<Record<StarterPaper, Question[][]>> = { listening, reading };
+const rubrics: Partial<Record<StarterPaper, Rubric>> = { reading: writingRubric };
 
 export function flyerPaper(paper: StarterPaper, part?: number) {
   const rows = papers[paper];

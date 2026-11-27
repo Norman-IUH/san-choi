@@ -20,6 +20,7 @@ function verifyPaper(paper: StarterPaper) {
       const media = readFileSync("public" + path);
       expect(media.toString("ascii", 0, 4)).toBe("RIFF");
       expect(media.readUInt32LE(4)).toBe(media.length - 8);
+      if (path.endsWith(".webp")) expect(media.toString("ascii", 8, 12)).toBe("WEBP");
     }
     expect(JSON.stringify(makePlayItems(template, items))).not.toMatch(/"answers"|"teacher"|"rubric"/);
     expect(JSON.stringify(localPlay(template, items))).not.toMatch(/"teacher"|"rubric"/);
@@ -38,4 +39,17 @@ test("Flyers Listening has 25 scored questions, including three colour regions a
   const colour = flyerPaper("listening", 5)!.items;
   expect(colour.filter(item => item.practice?.starters?.sign).map(item => item.practice?.starters?.signPosition)).toEqual(["left", "right"]);
   expect(colour[0].practice?.starters?.targets?.every(target => target.mask)).toBe(true);
+});
+
+test("Flyers Reading & Writing holds 43 automatic answers and one rubric-scored three-picture story", () => {
+  const mock = verifyPaper("reading");
+  expect(mock.items).toHaveLength(44);
+  expect(mock.items[43].practice?.starters?.visuals).toHaveLength(3);
+  expect(mock.items[0].practice?.production?.rubric?.map(row => row.max)).toEqual([2, 2, 1]);
+  const free = flyerPaper("reading", 6)!;
+  expect(free.items.every(item => !item.practice?.starters?.wordBank && !item.practice?.starters?.choices)).toBe(true);
+  const withStoryResponse = mock.items.map(item => item.answers);
+  withStoryResponse[43] = ["This is a response that a teacher should mark, even though it has no exact match."];
+  expect(grade(mock.template, mock.items, withStoryResponse)).toMatchObject({ score: 43, total: 43 });
+  expect(grade(mock.template, mock.items, withStoryResponse).correct.at(-1)).toBeNull();
 });
