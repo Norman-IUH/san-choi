@@ -395,3 +395,9 @@ ol.memory-strip{padding-left:1.8rem;gap:1.5rem}
 .practice-region[aria-pressed=true] { outline: 3px solid #254c9a; outline-offset: 2px; }
 .practice-swatch { display: inline-block; width: 1.4rem; height: 1.4rem; border: 1px solid currentColor; border-radius: 50%; margin-inline-end: .5rem; vertical-align: middle; }
 .practice-round .inline-actions label { min-width: 7rem; }
+.game-round-flow { display: contents; }
+.reading-layout { display: grid; gap: 1rem; align-items: start; }
+.reading-source { background: #fffae6; color: #212b43; border: 1px solid #c6ae6c; border-radius: .85rem; padding: 1rem; }
+.reading-source summary { font-weight: 800; cursor: pointer; }
+.reading-source p { font: 1.16rem/1.65 Georgia, serif; white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (min-width: 850px) { .reading-layout { grid-template-columns: minmax(15rem, .8fr) minmax(0, 1.2fr); } }

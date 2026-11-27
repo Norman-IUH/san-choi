@@ -15,6 +15,7 @@ export function itemMediaPaths(items: Item[]) {
   }
   for (const item of items) {
     add(item.media);
+    if (item.practice?.stimulusImage) paths.push(item.practice.stimulusImage);
     item.optionMedia?.forEach(add);
     if (item.english?.uk) paths.push(item.english.uk);
     if (item.english?.us) paths.push(item.english.us);
@@ -23,7 +24,7 @@ export function itemMediaPaths(items: Item[]) {
 }
 
 export function builtInMediaUrls(items: Item[]) {
-  return Object.fromEntries(items.flatMap(item => [item.english?.uk, item.english?.us, item.media?.image, item.media?.audio,
+  return Object.fromEntries(items.flatMap(item => [item.english?.uk, item.english?.us, item.media?.image, item.media?.audio, item.practice?.stimulusImage,
     ...(item.optionMedia?.flatMap(media => [media.image, media.audio]) ?? [])]
     .filter((path): path is string => typeof path === "string" && builtIn(path)).map(path => [path, path])));
 }

@@ -2,12 +2,14 @@ import { existsSync } from "node:fs";
 import { expect, test } from "vitest";
 import { contentSchema, grade, makePlayItems } from "../lib/game";
 import { practiceSample } from "../lib/practice-samples";
-import { isPhonics, pictureToken, practiceModeSchema, practiceTemplate } from "../lib/games/practice";
+import { listeningModes, isPhonics, pictureToken, practiceTemplate } from "../lib/games/practice";
+import { readingSample, readingSamples } from "../lib/reading-samples";
+import type { AudioPracticeMode, ReadingMode } from "../lib/games/practice";
 import { builtInMediaUrls } from "../lib/media";
 import { vocabularyCatalog } from "../lib/vocabulary-catalog";
 
 test("listening modes use real assets and hide keys and transcripts from students", () => {
-  for (const mode of practiceModeSchema.options.filter(mode => !isPhonics(mode))) {
+  for (const mode of (Object.keys(listeningModes) as AudioPracticeMode[]).filter(mode => !isPhonics(mode))) {
     const item = practiceSample(mode).item;
     const template = practiceTemplate(mode);
     expect(contentSchema(template).safeParse([item]).success, mode).toBe(true);
@@ -46,7 +48,7 @@ test("picture responses use neutral tokens and colour needs both the region and 
 });
 
 test("phonics requires a teacher-reviewed clip and the only opt-in transcript is dialogue", () => {
-  for (const mode of practiceModeSchema.options.filter(isPhonics)) {
+  for (const mode of (Object.keys(listeningModes) as AudioPracticeMode[]).filter(isPhonics)) {
     const item = practiceSample(mode).item;
     expect(contentSchema("quiz").safeParse([item]).success).toBe(false);
     item.media = { audio: "11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.wav" };
@@ -56,6 +58,18 @@ test("phonics requires a teacher-reviewed clip and the only opt-in transcript is
   const dialogue = practiceSample("dialogue").item;
   dialogue.practice!.showTranscript = true;
   expect(makePlayItems("quiz", [dialogue])[0].practice?.transcript).toBe(dialogue.practice!.transcript);
+});
+
+test("all six Reading modes score from the server source and project one shared stimulus", () => {
+  for (const mode of Object.keys(readingSamples) as ReadingMode[]) {
+    const { template, items } = readingSample(mode);
+    expect(contentSchema(template).safeParse(items).success, mode).toBe(true);
+    const projected = makePlayItems(template, items);
+    expect(projected.filter(item => item.practice?.stimulus)).toHaveLength(1);
+    expect(projected.every(item => !Object.hasOwn(item, "answers") && !Object.hasOwn(item, "explanation"))).toBe(true);
+    expect(grade(template, items, items.map(item => item.answers)).score).toBe(items.length);
+    expect(grade(template, items, items.map(() => [])).score).toBe(0);
+  }
 });
 
 test("all catalog pronunciation pointers exist and coverage counts are real", () => {

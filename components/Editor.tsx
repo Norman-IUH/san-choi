@@ -9,7 +9,7 @@ import { isPuzzleTemplate, mathOperations, mathSymbols, pairOptions, puzzleTempl
 import { arcadeTemplates, defaultArcade, isArcadeTemplate } from "@/lib/games/arcade-templates";
 import { MediaInput } from "./MediaInput";
 import { importVocabulary } from "@/lib/vocabulary-import";
-import { isPhonics, practiceModes, type PracticeMode } from "@/lib/games/practice";
+import { isPhonics, isReading, practiceModes, type PracticeMode } from "@/lib/games/practice";
 
 export type ActivityFields = { title: string; description: string; subject: string; grade: string; tags: string;
   visibility: "private" | "public" | "unlisted" };
@@ -35,6 +35,11 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
   const maths = template === "maths-generator";
   const fixedChoices = template === "true-false" ? truthOptions : compare ? pairOptions : null;
   const mode = practiceMode ?? content.find(item => item.practice)?.practice?.mode;
+  const reading = mode && isReading(mode);
+  const [stimulus, setStimulus] = useState(() => {
+    const practice = content[0]?.practice;
+    return { stimulus: practice?.stimulus ?? "", stimulusKind: practice?.stimulusKind ?? "passage", stimulusImage: practice?.stimulusImage } as const;
+  });
   const defaultEntry: Entry = mode ? { ...blank, practice: { version: 1, mode, maxPlays: 0, showTranscript: false, reviewedAudio: false } } :
     diagram ? { ...blank, pin: { x: 50, y: 50 } } : arcade ? { ...blank, arcade: defaultArcade } : maths ?
     { ...blank, prompt: "Tính kết quả.", math: { operation: "add", min: 1, max: 10 } } : blank;
@@ -79,7 +84,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
   return <form className="stack editor" onSubmit={handleSubmit((data, event) => {
     if (structureBusy) return;
     const draft = (event?.nativeEvent as SubmitEvent)?.submitter?.getAttribute("value") !== "publish";
-    const entries = data.content.map(({ prompt, answers, options, alternatives, explanation, english, media, optionMedia, secondary, pin, math, practice, arcade: settings }) => {
+    const entries = data.content.map(({ prompt, answers, options, alternatives, explanation, english, media, optionMedia, secondary, pin, math, practice, arcade: settings }, index) => {
       const lexical = english && {
         level: english.level || undefined, skill: english.skill || undefined, meaning: english.meaning?.trim() || undefined,
         ipa: english.ipa?.trim() || undefined, example: english.example?.trim() || undefined, uk: english.uk, us: english.us,
@@ -88,12 +93,14 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
       return { version: 2, prompt, answers: lines(answers), options: choices, secondary: secondary?.trim() || undefined, pin, math, arcade: settings && (settings.timed || settings.difficulty !== defaultArcade.difficulty) ? settings : undefined,
         explanation: explanation?.trim() || undefined, alternatives: lines(alternatives ?? ""),
         english: lexical && Object.values(lexical).some(Boolean) ? lexical : undefined,
-        practice: practice && { ...practice, stimulus: practice.stimulus?.trim() || undefined, transcript: practice.transcript?.trim() || undefined },
+        practice: practice && { ...practice, stimulus: practice.stimulus?.trim() || undefined, transcript: practice.transcript?.trim() || undefined,
+          ...(reading && { stimulus: index === 0 ? stimulus.stimulus.trim() || undefined : undefined,
+            stimulusKind: index === 0 ? stimulus.stimulusKind : undefined, stimulusImage: index === 0 ? stimulus.stimulusImage : undefined }) },
         media: media?.image || media?.audio ? media : undefined,
         optionMedia: optionMedia?.filter(item => choices.includes(item.option) && (item.image || item.audio)),
       };
     });
-    const payload = draft ? entries.filter(item => item.prompt.trim() || item.answers.length || item.options.length ||
+    const payload = draft && !reading ? entries.filter(item => item.prompt.trim() || item.answers.length || item.options.length ||
       item.english || item.media || item.optionMedia?.length || item.alternatives.length || item.explanation) : entries;
     setError("");
     start(async () => {
@@ -107,8 +114,18 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
       <div className="form-grid"><label>Môn học<input {...register("subject")} maxLength={80}/></label>
         <label>Khối lớp<input {...register("grade")} maxLength={40}/></label>
         <label>Thẻ<input {...register("tags")} maxLength={250}/></label>
-        <label>Quyền xem<select {...register("visibility")}><option value="private">Riêng tư</option><option value="unlisted">Có link</option><option value="public">Công khai</option></select></label></div>
+        <label>Quyền xem<select {...register("visibility")}><option value="private">Riêng tư</option>{!mode && <><option value="unlisted">Có link</option><option value="public">Công khai</option></>}</select></label></div>
     </div>
+    {reading && <section className="panel stack"><h2>Ngữ liệu chung</h2>
+      <label>Loại ngữ liệu<select value={stimulus.stimulusKind} onChange={event => {
+        const stimulusKind = event.target.value as NonNullable<NonNullable<Item["practice"]>["stimulusKind"]>;
+        setStimulus({ ...stimulus, stimulusKind });
+      }}><option value="passage">Đoạn văn</option><option value="picture">Hình ảnh</option><option value="story">Câu chuyện</option>
+        <option value="dialogue">Hội thoại</option><option value="instructions">Hướng dẫn</option></select></label>
+      <label>Nội dung đọc<textarea lang="en" value={stimulus.stimulus} onChange={event => setStimulus({ ...stimulus, stimulus: event.target.value })} maxLength={3000} rows={6}/></label>
+      <MediaInput label="Ảnh ngữ liệu" kind="image" path={stimulus.stimulusImage} url={assets[stimulus.stimulusImage ?? ""]}
+        onBusy={trackUpload} onChange={(path, url) => { remember(path, url); setStimulus(previous => ({ ...previous, stimulusImage: path })); }}/>
+    </section>}
     <h2>Nội dung</h2>
     {isArcadeTemplate(template) && <p className="hint">{arcadeTemplates[template].instruction} Mỗi mục có một đáp án đúng và ít nhất một phương án nhiễu.</p>}
     {isPuzzleTemplate(template) && <p className="hint">{puzzleTemplates[template].instruction}</p>}
@@ -129,7 +146,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
       return <fieldset className="panel stack" key={field.id}><legend>Mục {i + 1}</legend>
       <label>{kind === "blank" ? "Câu có dấu ___ ở chỗ trống" : kind === "pair" ? "Mặt trước / nội dung" : "Câu hỏi hoặc gợi ý"}
         <textarea {...register(`content.${i}.prompt`)} maxLength={400} rows={2}/></label>
-      {item?.practice && <section className="stack">
+      {item?.practice && !reading && <section className="stack">
         <strong>{practiceModes[item.practice.mode]}</strong>
         <label>Hướng dẫn hoặc ngữ cảnh hiển thị<textarea {...register(`content.${i}.practice.stimulus`)} maxLength={1000}/></label>
         <label>Số lượt nghe tối đa (0 là không giới hạn)<input type="number" min={0} max={10} {...register(`content.${i}.practice.maxPlays`, { valueAsNumber: true })}/></label>

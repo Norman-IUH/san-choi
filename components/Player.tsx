@@ -4,7 +4,8 @@ import Link from "next/link";
 import { ArrowLeft, Maximize, Minimize, Pause, Play, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { finishAttempt, guessAssignmentLetter, refreshLessonMedia, startAttempt } from "@/app/play/actions";
 import { grade, missedReview, shuffle, templates, type Template, type Item, type PlayItem, type ReviewEntry } from "@/lib/game";
-import { RefreshLessonMedia } from "./games/LessonMedia";
+import { LessonMedia, RefreshLessonMedia } from "./games/LessonMedia";
+import { isReading } from "@/lib/games/practice";
 import { GameRound } from "./games/GameRound";
 import { Progress } from "./games/Progress";
 import { hangmanPattern } from "@/lib/games/word-puzzles";
@@ -55,6 +56,8 @@ export function Player({ title, description, backHref, template, initialItems = 
   const artStyle = gameplayThumbnail ? { backgroundImage: `url(/illustrations/${arcade ? "arcade" : "gameplay"}/${template}.webp)` } : { backgroundPosition: theme.artPosition };
   const defaultArcadePractice = arcade && !assignment && !!localContent && localContent.every(item => !item.arcade?.timed);
   const index = order[turn] ?? 0;
+  const practice = items[0]?.practice;
+  const reading = practice && isReading(practice.mode) ? practice : undefined;
   const rows = template === "match-up" || template === "group-sort";
   const board = rows || template === "open-box" || template === "flip-tiles" || template === "matching-pairs";
   const stageScore = (arcade || template === "gameshow") && active && !result && !assignment && localContent
@@ -267,10 +270,16 @@ export function Player({ title, description, backHref, template, initialItems = 
       {assignment && requireName && <label>Biệt danh<input value={nickname} onChange={event => setNickname(event.target.value)} maxLength={80} required /></label>}
       {assignment && <p className="hint">Nếu đã bắt đầu, em có thể tiếp tục sau khi tải lại trong cùng thẻ trình duyệt.</p>}
       <button ref={bindFocus} className="button primary game-start" disabled={!ready || busy}><Play size={20} aria-hidden="true"/>{busy ? "Đang mở…" : "Bắt đầu"}</button>
-    </form></div> : <GameRound key={turn} {...{ template, items, order, turn, index, answers, setAnswers, assets, reveals, busy, bindFocus, next, submit, hudTools, practiceSession }}
+    </form></div> : <div className={reading ? "reading-layout" : "game-round-flow"}>
+      {reading && <details className="reading-source" open><summary>Ngữ liệu đọc</summary>
+        <LessonMedia media={{ image: reading.stimulusImage }} assets={assets} label="Hình ngữ liệu đọc"/>
+        {reading.stimulus && <p lang="en">{reading.stimulus}</p>}
+      </details>}
+      <GameRound key={turn} {...{ template, items, order, turn, index, answers, setAnswers, assets, reveals, busy, bindFocus, next, submit, hudTools, practiceSession }}
       playHit={arcade ? () => chime(null) : undefined}
       guess={template === "hangman" ? async (letter, guesses) => assignment ? guessAssignmentLetter(assignment, index, letter)
-        : localContent?.[index] ? { ...hangmanPattern(localContent[index].answers[0], guesses), guesses } : null : undefined}/>}
+        : localContent?.[index] ? { ...hangmanPattern(localContent[index].answers[0], guesses), guesses } : null : undefined}/>
+    </div>}
     {active && !result && !arcade && <dialog ref={pauseDialog} className="game-pause-dialog" aria-label="Tạm dừng trò chơi">
       <h2>Đang tạm dừng</h2>
       <form method="dialog"><button className="button primary">Tiếp tục chơi</button></form>

@@ -6,7 +6,7 @@ import { buildCrossword } from "./word-puzzles";
 import { isArcadeTemplate, riskMarker } from "./arcade-templates";
 import { pairOptions } from "./puzzle-templates";
 import { doubleMarker } from "./scoring";
-import { colourPalette, isPhonics, practiceTemplate, samplePracticeAudio } from "./practice";
+import { colourPalette, isPhonics, isReading, practiceTemplate, samplePracticeAudio } from "./practice";
 
 export function contentSchema(template: Template, draft = false) {
   return z.array(itemSchema).min(draft ? 0 : 1).max(60).superRefine((items, context) => {
@@ -21,6 +21,12 @@ export function contentSchema(template: Template, draft = false) {
       context.addIssue({ code: "custom", message: "Cần 2–12 cặp có mặt sau khác nhau." });
     }
     const matching = items.filter(item => item.practice?.mode === "listen-match");
+    const reading = items.find(item => item.practice && isReading(item.practice.mode))?.practice;
+    if (reading && (items.some(item => item.practice?.mode !== reading.mode) || !reading.stimulusKind ||
+      (!reading.stimulus && !reading.stimulusImage) || (reading.mode === "picture-reading" && !reading.stimulusImage) ||
+      items.slice(1).some(item => item.practice?.stimulus || item.practice?.stimulusKind || item.practice?.stimulusImage))) {
+      context.addIssue({ code: "custom", message: "Bài Reading cần một ngữ liệu chung và các câu cùng dạng bài." });
+    }
     if (matching.length > 1 && (matching.length !== items.length || matching.length > 8 ||
       new Set(matching.map(item => normalize(item.answers[0] ?? ""))).size !== matching.length ||
       matching.some(item => item.practice?.pictureChoices || item.options.length !== matching[0].options.length ||
@@ -32,9 +38,9 @@ export function contentSchema(template: Template, draft = false) {
       const unique = new Set(options.map(normalize));
       const exposesDictation = practice?.mode === "dictation" && [...answers, ...(alternatives ?? [])]
         .some(answer => normalize(prompt + " " + (practice.stimulus ?? "")).includes(normalize(answer)));
-      if (practice && (practiceTemplate(practice.mode) !== template || !media?.audio || answers.length !== 1 ||
-        (isPhonics(practice.mode) && (!practice.reviewedAudio || samplePracticeAudio.safeParse(media.audio).success)) ||
-        (practice.mode === "colour" && (!media.image || options.some(option => !Object.hasOwn(colourPalette, normalize(option))))) ||
+      if (practice && (practiceTemplate(practice.mode) !== template || (!isReading(practice.mode) && (!media?.audio || answers.length !== 1)) ||
+        (isPhonics(practice.mode) && (!practice.reviewedAudio || samplePracticeAudio.safeParse(media?.audio).success)) ||
+        (practice.mode === "colour" && (!media?.image || options.some(option => !Object.hasOwn(colourPalette, normalize(option))))) ||
         (practice.showTranscript && (practice.mode !== "dialogue" || !practice.transcript)) ||
         (practice.regions && (practice.mode !== "colour" || !practice.correctRegion || practice.correctRegion > practice.regions.length ||
           new Set(practice.regions.map(({ x, y }) => `${x},${y}`)).size !== practice.regions.length)) ||

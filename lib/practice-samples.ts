@@ -1,8 +1,8 @@
-import { isPhonics, practiceModes, type PracticeMode } from "./games/practice";
+import { isPhonics, practiceModes, type AudioPracticeMode } from "./games/practice";
 import { levels, type Item } from "./game";
 
 type Sample = [prompt: string, answer: string, distractors: string[], clip?: string];
-const examples: Record<PracticeMode, Sample> = {
+const examples: Record<AudioPracticeMode, Sample> = {
   listen: ["Nghe và chọn đồ vật được nói đến.", "apple", ["book", "ruler"], "aa1000000001"],
   "listen-match": ["Nghe rồi ghép clip với thẻ đúng.", "kite", ["ball", "robot"], "aa1000000002"],
   colour: ["Nghe rồi tô màu quyển sách.", "blue", ["red", "green"], "aa1000000003"],
@@ -16,7 +16,7 @@ const examples: Record<PracticeMode, Sample> = {
   discrimination: ["Nghe từ được đọc rồi chọn thẻ em nghe thấy.", "ship", ["sheep", "shop"]],
 };
 
-export function practiceSample(mode: PracticeMode) {
+export function practiceSample(mode: AudioPracticeMode) {
   const [prompt, answer, distractors, clip] = examples[mode];
   const phonics = isPhonics(mode);
   const item: Item = {

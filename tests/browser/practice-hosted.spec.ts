@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { practiceSample } from "../../lib/practice-samples";
-import { isPhonics, practiceModeSchema } from "../../lib/games/practice";
+import { isPhonics, listeningModes, type AudioPracticeMode } from "../../lib/games/practice";
 
 test.use({ trace: "off" });
-for (const mode of practiceModeSchema.options) {
+for (const mode of Object.keys(listeningModes) as AudioPracticeMode[]) {
   test(mode + " audio practice saves a server result on QuizStudy", async ({ page, browser }, info) => {
     const email = process.env.E2E_TEACHER_EMAIL;
     const password = process.env.E2E_TEACHER_PASSWORD;

@@ -4,14 +4,23 @@ import { Templates } from "@/components/Templates";
 import { Editor } from "@/components/Editor";
 import { isTemplate, templates } from "@/lib/game";
 import { importDemo } from "../actions";
-import { isPhonics, practiceModes, practiceModeSchema, practiceTemplate } from "@/lib/games/practice";
+import { isPhonics, isReading, listeningModes, readingModes, practiceModeSchema, practiceTemplate } from "@/lib/games/practice";
 import { practiceSample } from "@/lib/practice-samples";
+import { readingSample } from "@/lib/reading-samples";
 import { builtInMediaUrls } from "@/lib/media";
 export default async function Create({ searchParams }: { searchParams: Promise<{ template?: string; practice?: string }> }) {
   await account(true);
   const { template, practice } = await searchParams;
   const mode = practiceModeSchema.safeParse(practice);
-  if (mode.success) {
+  if (mode.success && isReading(mode.data)) {
+    const sample = readingSample(mode.data);
+    return <div className="narrow wide stack"><Link className="back" href="/activities/new#reading">← Chọn bài đọc</Link>
+      <h1 lang="en">{sample.modeTitle}</h1>
+      <Editor id={null} template={sample.template} practiceMode={mode.data} content={sample.items} assets={builtInMediaUrls(sample.items)}
+        initial={{ title: sample.title, subject: "English", description: "", grade: sample.level, tags: "Reading", visibility: "private" }}/>
+    </div>;
+  }
+  if (mode.success && !isReading(mode.data)) {
     const { title, item, items } = practiceSample(mode.data);
     return <div className="narrow wide stack"><Link className="back" href="/activities/new#english-practice">← Chọn bài luyện</Link>
       <h1 lang="en">{title}</h1>
@@ -26,7 +35,10 @@ export default async function Create({ searchParams }: { searchParams: Promise<{
       <Editor id={null} template={template}/></>
       : <div className="stack"><h1>Chọn mẫu hoạt động</h1>
         <section id="english-practice" className="panel stack"><h2>Luyện nghe và ngữ âm</h2>
-          <div className="inline-actions">{Object.entries(practiceModes).map(([id, name]) =>
+          <div className="inline-actions">{Object.entries(listeningModes).map(([id, name]) =>
+            <Link key={id} className="button" href={`/activities/new?practice=${id}`} lang="en">{name}</Link>)}</div>
+        </section><section id="reading" className="panel stack"><h2>Luyện đọc</h2>
+          <div className="inline-actions">{Object.entries(readingModes).map(([id, name]) =>
             <Link key={id} className="button" href={`/activities/new?practice=${id}`} lang="en">{name}</Link>)}</div>
         </section><Templates creator/></div>}</div>;
 }
