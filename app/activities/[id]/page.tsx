@@ -4,6 +4,7 @@ import { z } from "zod";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { Editor } from "@/components/Editor";
 import { Player } from "@/components/Player";
+import { AssignmentForm } from "@/components/AssignmentForm";
 import { changeActivity, createAssignment } from "../actions";
 import { compatible, contentSchema, isTemplate, templateIds, templates, type Template } from "@/lib/game";
 import { localPlay } from "@/lib/local-play";
@@ -69,13 +70,8 @@ export default async function Activity({ params, searchParams }: {
         <button className="button" disabled={!templateIds.some(id => id !== template && compatible(template, id, content))}>Xem trước mẫu</button></form>
       </section>
       {!activity.draft && activity.visibility !== "private" && <section className="panel stack"><h2>Chia sẻ</h2><label>Link hoạt động<input readOnly value={urlFor(`/resource/${id}`)}/></label></section>}
-        {!activity.draft && <section className="panel stack" id="giao-bai"><h2>Giao bài</h2><form action={createAssignment.bind(null, id)} className="stack">
-        <label>Hạn nộp (giờ Việt Nam)<input name="deadline" type="datetime-local"/></label>
-        <label className="check"><input type="checkbox" name="require_name" defaultChecked/> Yêu cầu biệt danh</label>
-        <label className="check"><input type="checkbox" name="show_score" defaultChecked/> Cho học sinh xem điểm</label>
-        <label className="check"><input type="checkbox" name="show_review"/> Cho học sinh xem câu sai và đáp án sau khi nộp</label>
-        <button className="button primary">Tạo link giao bài</button>
-      </form></section>}
+      {!activity.draft && <section className="panel stack" id="giao-bai"><h2>Giao bài</h2>
+        <AssignmentForm action={createAssignment.bind(null, id)}/></section>}
     </div>}
   </div>;
 }

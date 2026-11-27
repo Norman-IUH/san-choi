@@ -89,7 +89,7 @@ export async function saveVocabularyLesson(id: string | null, form: FormData) {
     entry_keys: form.getAll("entry"),
   });
   const path = id ? `/library/${id}` : "/library";
-  if (!parsed.success) return issue(path, "Nhập thông tin bài học và chọn từ 1 đến 60 từ.");
+  if (!parsed.success || !parsed.data.entry_keys.length) return issue(path, "Nhập thông tin bài học và chọn từ 1 đến 60 từ.");
   const words = await loadWords(db, user.id, parsed.data.entry_keys);
   if (words.length !== parsed.data.entry_keys.length) return issue(path, "Một số từ đã chọn không còn khả dụng.");
   if (words.some(word => word.archived_at)) {

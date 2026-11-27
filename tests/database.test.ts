@@ -124,6 +124,25 @@ test("migration provisions accounts, locks teacher rows and allows one authorita
     expect((await db.query("select entry_keys from vocabulary_lessons where id=$1", [lesson])).rows).toEqual([{ entry_keys: [word] }]);
     await expect(db.query("insert into activities(title,template,content,visibility) values ('Private key','quiz','[{\"practice\":{}}]','public')"))
       .rejects.toThrow(/practice_activities_private/);
+    await db.exec("reset role");
+    const planMigration = migrationFiles.find(file => file.endsWith("_lesson_builder.sql"))!;
+    await db.exec(await readFile("supabase/migrations/" + planMigration, "utf8"));
+    await session(owner);
+    expect((await db.query("select plan,entry_keys from vocabulary_lessons where id=$1", [lesson])).rows)
+      .toEqual([{ plan: null, entry_keys: [word] }]);
+    const plan = { version: 1, notes: "PRIVATE PLAN NOTE", steps: [{ kind: "activity", source: activity }] };
+    const createPlan = () => db.query<{ id: string }>(`insert into vocabulary_lessons(title,level,skill,topic,unit,difficulty,entry_keys,plan)
+      values ('Plan','Kids','Vocabulary','School','Unit 1','gentle','{}',$1) returning id`, [JSON.stringify(plan)]);
+    const planId = (await createPlan()).rows[0].id;
+    await session(other);
+    await expect(createPlan()).rejects.toThrow(/outside owner workspace/);
+    expect((await db.query("select plan from vocabulary_lessons where id=$1", [planId])).rows).toHaveLength(0);
+    await db.exec("reset role; set role anon;");
+    await expect(db.query("select plan from vocabulary_lessons")).rejects.toThrow(/permission denied/);
+    await db.exec("reset role; set role service_role;");
+    await db.query("update assignments set lesson_id=$1, lesson_step=$2 where id=$3", [planId, attempt, assignment]);
+    expect((await db.query("select lesson_id, lesson_step from assignments where id=$1", [assignment])).rows)
+      .toEqual([{ lesson_id: planId, lesson_step: attempt }]);
   } finally {
     await db.close();
   }

@@ -9,16 +9,24 @@ import { account, check } from "@/lib/supabase";
 import { difficultyLabels, lessonSchema, vocabularyGame } from "@/lib/vocabulary-bank";
 import { loadWords } from "@/lib/vocabulary-server";
 import { createLessonGame } from "../actions";
+import { emptyPlan, lessonPlanSchema } from "@/lib/lesson-plan";
+import { PlanEdit, PlanView, type LessonQuery } from "./plan";
 
 export default async function Lesson({ params, searchParams }: {
-  params: Promise<{ id: string }>; searchParams: Promise<{ game?: string; problem?: string }>;
+  params: Promise<{ id: string }>; searchParams: Promise<LessonQuery>;
 }) {
   const [{ id }, query, { db, user }] = await Promise.all([params, searchParams, account(true)]);
+  if (id === "new") return <PlanEdit db={db} owner={user.id} id={null} sample={query.sample}/>;
   if (!z.uuid().safeParse(id).success) notFound();
   const { data, error } = await db.from("vocabulary_lessons").select("*").eq("id", id).eq("owner_id", user.id).maybeSingle();
   check(error, "read_vocabulary_lesson");
   if (!data) notFound();
   const lesson = lessonSchema.parse(data);
+  const plan = data.plan ? lessonPlanSchema.parse(data.plan) : null;
+  if (query.mode === "edit") return <PlanEdit db={db} owner={user.id} id={id} initial={lesson} startingPlan={plan ?? emptyPlan}/>;
+  if (query.mode === "present" && plan) return <div className="page stack lesson-presentation">
+    <PlanView db={db} owner={user.id} id={id} plan={plan} lesson={lesson} query={query}/>
+  </div>;
   const words = await loadWords(db, user.id, lesson.entry_keys);
   const copies = await db.from("activities").select("id,title,template,draft").eq("vocabulary_lesson_id", id)
     .eq("owner_id", user.id).is("deleted_at", null).order("updated_at", { ascending: false });
@@ -33,12 +41,15 @@ export default async function Lesson({ params, searchParams }: {
     <div className="section-head">
       <div><p className="muted">{lesson.level} · {lesson.unit}</p><h1>{lesson.title}</h1>
         <p>{lesson.topic} · {lesson.skill} · {difficultyLabels[lesson.difficulty]} · {words.length} từ</p></div>
-      <div className="inline-actions"><Link className="button" href={`/library?lesson=${id}#bank-title`}>Sửa bài học</Link>
-        <Link className="button" href={`/library?copy=${id}#bank-title`}>Sao chép bài học</Link></div>
+      <div className="inline-actions"><Link className="button" href={`/library?lesson=${id}#bank-title`}>{plan ? "Chọn từ vựng" : "Sửa bài học"}</Link>
+        {!plan && <><Link className="button" href={`/library?copy=${id}#bank-title`}>Sao chép bài học</Link>
+          <Link className="button primary" href={`/library/${id}?mode=edit`}>Thêm tiến trình giáo án</Link></>}</div>
     </div>
-    {query.problem && <p role="alert" className="notice error">{query.problem}</p>}
+    {query.saved === "plan" && <p role="status" className="notice">Đã lưu giáo án.</p>}
+    {query.problem && query.problem !== "deadline" && <p role="alert" className="notice error">{query.problem}</p>}
+    {plan && <PlanView db={db} owner={user.id} id={id} plan={plan} lesson={lesson} query={query}/>}
     {words.length !== lesson.entry_keys.length && <p role="alert" className="notice error">Một số từ không còn khả dụng. Hãy cập nhật bài học.</p>}
-    <section className="panel stack">
+    {!!lesson.entry_keys.length && <><section className="panel stack">
       <h2>Trò chơi từ bài học</h2>
       <form className="inline-actions">
         <label>Mẫu trò chơi<select name="game" defaultValue={active}>{[...games].map(([template, items]) =>
@@ -56,6 +67,6 @@ export default async function Lesson({ params, searchParams }: {
         <Link href={`/activities/${row.id}`}>{row.title}</Link>
         <span>{isTemplate(row.template) ? templates[row.template].title : row.template}{row.draft ? " · Bản nháp" : ""}</span>
       </li>)}</ul> : <p>Chưa có hoạt động đã lưu cho bài học này.</p>}
-    </section>
+    </section></>}
   </div>;
 }

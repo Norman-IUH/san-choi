@@ -19,7 +19,7 @@ export type BankWord = z.infer<typeof bankWordSchema> & { id: string; archived_a
 export const lessonSchema = z.object({
   title: required(100), level: z.enum(levels), skill: z.enum(skills), topic: required(80), unit: required(80),
   difficulty: z.enum(difficultyLevels),
-  entry_keys: z.array(required(160)).min(1).max(60).refine(keys => new Set(keys).size === keys.length),
+  entry_keys: z.array(required(160)).max(60).refine(keys => new Set(keys).size === keys.length),
 });
 export type VocabularyLesson = z.infer<typeof lessonSchema>;
 export const difficultyLabels = { gentle: "Chậm", steady: "Tiêu chuẩn", challenge: "Nâng cao" } as const;

@@ -1,7 +1,8 @@
 "use server";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
-import { account, check, privilegedDatabase } from "@/lib/supabase";
+import { account, check } from "@/lib/supabase";
+import { insertAssignment } from "@/lib/assignment-server";
 import { compatible, contentSchema, templateSchema, type Item } from "@/lib/game";
 import { demoContent, demos } from "@/lib/demo";
 import { itemMediaPaths } from "@/lib/media";
@@ -146,15 +147,9 @@ export async function createAssignment(id: string, form: FormData) {
   if (!activity || activity.draft || activity.deleted_at) notFound();
   const template = templateSchema.parse(activity.template);
   const content = contentSchema(template).parse(activity.content);
-  const deadline = form.get("deadline");
-  const due = typeof deadline === "string" && deadline ? Date.parse(deadline + ":00+07:00") : null;
-  if (due !== null && (!Number.isFinite(due) || due <= Date.now())) redirect(`/activities/${id}?invalid=1`);
-  const { data, error: insertError } = await privilegedDatabase().from("assignments").insert({
-    owner_id: user.id, activity_id: id, title: activity.title, template, content, deadline: due === null ? null : new Date(due).toISOString(),
-    require_name: form.has("require_name"), show_score: form.has("show_score"), show_review: form.has("show_review"),
-  }).select("id").single();
-  check(insertError, "create_assignment");
-  redirect(`/assignments/${data!.id}`);
+  const assignment = await insertAssignment({ owner_id: user.id, activity_id: id, title: activity.title, template, content }, form);
+  if (!assignment) redirect(`/activities/${id}?invalid=1`);
+  redirect(`/assignments/${assignment}`);
 }
 
 export async function setAssignmentClosed(id: string, closed: boolean) {

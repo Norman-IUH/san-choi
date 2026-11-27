@@ -8,6 +8,7 @@ import { starterLessons, vocabularyCatalog } from "@/lib/vocabulary-catalog";
 import { listBankWords } from "@/lib/vocabulary-server";
 import { difficultyLabels, lessonSchema } from "@/lib/vocabulary-bank";
 import { importBank } from "./actions";
+import { samplePlans } from "@/lib/lesson-plan";
 
 export const metadata = { title: "Thư viện tiếng Anh" };
 type Query = { lesson?: string; copy?: string; starter?: string; saved?: string; problem?: string; filter?: string;
@@ -17,7 +18,7 @@ export default async function Library({ searchParams }: { searchParams: Promise<
   const [{ db, user }, query] = await Promise.all([account(true), searchParams]);
   const [privateWords, { data, error }] = await Promise.all([
     listBankWords(db, user.id, true),
-    db.from("vocabulary_lessons").select("id,title,level,skill,topic,unit,difficulty,entry_keys").eq("owner_id", user.id).order("title"),
+    db.from("vocabulary_lessons").select("id,title,level,skill,topic,unit,difficulty,entry_keys,plan_state:plan->>draft").eq("owner_id", user.id).order("title"),
   ]);
   check(error, "list_vocabulary_lessons");
   const lessons = data ?? [];
@@ -43,6 +44,7 @@ export default async function Library({ searchParams }: { searchParams: Promise<
     <header className="section-head">
       <div><Link className="back" href="/activities">← Hoạt động của tôi</Link><h1>Thư viện tiếng Anh</h1></div>
       <div className="inline-actions"><Link className="button primary" href="/library/words/new">Thêm từ</Link>
+        <Link className="button" href="/library/new">Tạo giáo án</Link>
         <Link className="button" href="/library/export" prefetch={false} download>Tải CSV</Link>
         <Link className="button" href="/activities/new#english-practice">Tạo bài luyện</Link></div>
     </header>
@@ -60,6 +62,11 @@ export default async function Library({ searchParams }: { searchParams: Promise<
         <button className="button primary">Nhập từ vựng</button>
       </form>
     </details>
+    <section className="stack" aria-labelledby="sample-plans"><h2 id="sample-plans">Giáo án mẫu</h2>
+      <div className="bank-starters">{Object.entries(samplePlans).map(([id, plan]) => <Link href={`/library/new?sample=${id}`} className="panel" key={id}>
+        <small>{plan.level}</small><strong lang="en">{plan.title}</strong><span>5 hoạt động</span>
+      </Link>)}</div>
+    </section>
     <section className="stack" aria-labelledby="starter-lessons">
       <div><h2 id="starter-lessons">Bài học mở đầu</h2><p className="muted">Học liệu do Sân Chơi biên soạn, phân cấp nội bộ.</p></div>
       <div className="bank-starters">{starterLessons.map(lesson => <Link href={`/library?starter=${lesson.id}#bank-title`} className="panel" key={lesson.id}>
@@ -77,7 +84,8 @@ export default async function Library({ searchParams }: { searchParams: Promise<
             {values.map(value => <option key={value} value={value}>{name === "difficulty" ? difficultyLabels[value as keyof typeof difficultyLabels] : value}</option>)}</select></label>)}
       </div><button className="button">Lọc bài học</button></form>
       {filtered.length ? <ul className="bank-lesson-list">{filtered.map(lesson => <li key={lesson.id}>
-        <Link href={`/library/${lesson.id}`}>{lesson.title}</Link><span>{lesson.level} · {lesson.skill} · {lesson.topic} · {lesson.unit}</span>
+        <Link href={`/library/${lesson.id}`}>{lesson.title}</Link><span>{lesson.level} · {lesson.skill} · {lesson.topic} · {lesson.unit}
+          {lesson.plan_state === "true" ? " · Giáo án nháp" : lesson.plan_state === "false" ? " · Giáo án" : ""}</span>
       </li>)}</ul> : <p>Chưa có bài học phù hợp.</p>}
     </section>
   </div>;
