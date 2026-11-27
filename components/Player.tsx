@@ -18,20 +18,44 @@ import { StartersAudio } from "./games/StartersAudio";
 
 type Props = { title: string; description?: string; backHref?: string; template: Template; initialItems?: PlayItem[]; reveals?: string[];
   localContent?: Item[]; assignment?: string; requireName?: boolean; assets?: Record<string, string>;
-  mediaScope?: { source: "activity" | "resource"; id: string }; voiceEnabled?: boolean };
+  mediaScope?: { source: "activity" | "resource"; id: string }; voiceEnabled?: boolean; cambridgeDraft?: string };
 
 const subscribeToNothing = () => () => {};
+type Answers = Record<number, string[]>;
+type Draft = { id: string; order: number[]; turn: number; answers: Answers; deadline?: number; pending?: boolean; nickname?: string };
 
-export function Player({ title, description, backHref, template, initialItems = [], reveals: initialReveals = [], localContent, assignment, requireName, assets: initialAssets = {}, mediaScope, voiceEnabled }: Props) {
+function readDraft(key: string | null): Draft | null {
+  if (!key) return null;
+  try {
+    const draft = JSON.parse(sessionStorage.getItem(key) ?? "null");
+    if (typeof draft?.id !== "string" || !Array.isArray(draft.order) || !Number.isInteger(draft.turn) ||
+      !draft.answers || typeof draft.answers !== "object" || Array.isArray(draft.answers) ||
+      !Object.values(draft.answers).every(values => Array.isArray(values) && values.every(value => typeof value === "string"))) return null;
+    return draft;
+  } catch { return null; }
+}
+
+function writeDraft(key: string | null, draft: Draft | null) {
+  if (!key) return;
+  try {
+    if (draft) sessionStorage.setItem(key, JSON.stringify(draft));
+    else sessionStorage.removeItem(key);
+  } catch { /* The browser may disable session storage. */ }
+}
+
+export function Player({ title, description, backHref, template, initialItems = [], reveals: initialReveals = [], localContent, assignment, requireName, assets: initialAssets = {}, mediaScope, voiceEnabled, cambridgeDraft }: Props) {
   const ready = useSyncExternalStore(subscribeToNothing, () => true, () => false);
   const [items, setItems] = useState(initialItems);
   const [reveals, setReveals] = useState(initialReveals);
   const [assets, setAssets] = useState(initialAssets);
   const [active, setActive] = useState(false);
-  const [answers, setAnswers] = useState<Record<number, string[]>>({});
+  const [answers, setResponses] = useState<Answers>({});
+  const currentAnswers = useRef<Answers>({});
+  const pendingAnswers = useRef<Answers | null>(null);
+  const submitting = useRef(false);
   const [turn, setTurn] = useState(0);
   const [order, setOrder] = useState<number[]>([]);
-  const [nickname, setNickname] = useState("");
+  const [nickname, setNickname] = useState<string>();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ score: number | null; total: number; review?: ReviewEntry[]; pendingReview?: boolean } | null>(null);
@@ -42,6 +66,7 @@ export function Player({ title, description, backHref, template, initialItems = 
   const [practiceSession, setPracticeSession] = useState<string>();
   const [hudTools, setHudTools] = useState<HTMLDivElement | null>(null);
   const [mock, setMock] = useState<{ deadline: number; seconds: number } | null>(null);
+  const [submissionPending, setSubmissionPending] = useState(false);
   const expired = useRef(false);
   const draftId = useRef<string | null>(null);
   const lastMediaRefresh = useRef(0);
@@ -52,7 +77,10 @@ export function Player({ title, description, backHref, template, initialItems = 
   const pendingFocus = useRef(false);
   const replayPending = useRef(false);
   const outcomeId = useId();
-  const draftKey = assignment ? `san-choi-draft:${assignment}` : null;
+  const draftKey = assignment ? `san-choi-draft:${assignment}` : cambridgeDraft ? `san-choi-cambridge:${cambridgeDraft}` : null;
+  const rememberedName = useSyncExternalStore(subscribeToNothing,
+    () => requireName ? readDraft(draftKey)?.nickname ?? "" : "", () => "");
+  const playerName = nickname ?? rememberedName;
   const bindFocus = useCallback((node: HTMLElement | null) => {
     focusTarget.current = node;
     if (node && pendingFocus.current) {
@@ -110,11 +138,20 @@ export function Player({ title, description, backHref, template, initialItems = 
   useEffect(() => {
     if (!active || !draftKey || !draftId.current) return;
     // shortcut: drafts survive a reload in this tab, cross-device drafts require server storage.
-    try {
-      if (result) sessionStorage.removeItem(draftKey);
-      else sessionStorage.setItem(draftKey, JSON.stringify({ id: draftId.current, order, turn, answers, deadline }));
-    } catch { /* The browser may disable session storage. */ }
-  }, [active, draftKey, result, order, turn, answers, deadline]);
+    writeDraft(draftKey, result ? null : { id: draftId.current, order, turn, answers, deadline,
+      pending: submissionPending, nickname: deadline === undefined ? undefined : playerName });
+  }, [active, draftKey, result, order, turn, answers, deadline, submissionPending, playerName]);
+
+  function setAnswers(next: React.SetStateAction<Answers>) {
+    if (pendingAnswers.current && next !== pendingAnswers.current) return;
+    const updated = typeof next === "function" ? next(currentAnswers.current) : next;
+    currentAnswers.current = updated;
+    if (active && deadline !== undefined && draftId.current) {
+      writeDraft(draftKey, { id: draftId.current, order, turn, answers: updated, deadline,
+        pending: pendingAnswers.current !== null, nickname: playerName });
+    }
+    setResponses(updated);
+  }
 
   async function toggleClassroom() {
     if (classroomFallback) { setClassroomFallback(false); return; }
@@ -156,22 +193,25 @@ export function Player({ title, description, backHref, template, initialItems = 
     setBusy(true);
     setError("");
     try {
-      const started = assignment ? await startAttempt(assignment, nickname) : { items: initialItems, reveals: initialReveals, assets: initialAssets };
+      const cached = readDraft(draftKey);
+      const resumeId = assignment && typeof cached?.deadline === "number" ? cached.id : undefined;
+      const started = assignment ? await startAttempt(assignment, playerName, resumeId) : { items: initialItems, reveals: initialReveals, assets: initialAssets };
       if ("error" in started && started.error) { setError(started.error); return; }
       if (!started.items?.length) { setError("Hoạt động chưa có nội dung."); return; }
-      const indexes = started.items.map((_, i) => i);
-      draftId.current = "draftId" in started ? started.draftId ?? null : null;
-      setPracticeSession(draftId.current ?? (started.items.some(item => item.practice) ? crypto.randomUUID() : undefined));
-      let draft: { id: string; order: number[]; turn: number; answers: Record<number, string[]>; deadline?: number } | null = null;
-      if (draftKey && draftId.current) {
-        try {
-          const saved = JSON.parse(sessionStorage.getItem(draftKey) ?? "null");
-          if (saved?.id === draftId.current && Array.isArray(saved.order) && saved.order.length === indexes.length &&
-            indexes.every(i => saved.order.includes(i)) && indexes.includes(saved.turn) && saved.answers &&
-            Object.entries(saved.answers).every(([i, values]) => indexes.includes(Number(i)) &&
-              Array.isArray(values) && values.every(value => typeof value === "string"))) draft = saved;
-        } catch { /* Ignore a draft that cannot be read. */ }
+      if ("submission" in started && started.submission) {
+        writeDraft(draftKey, null);
+        setItems(started.items);
+        setResult(started.submission);
+        setActive(true);
+        return;
       }
+      const indexes = started.items.map((_, i) => i);
+      draftId.current = "draftId" in started ? started.draftId ?? null
+        : cambridgeDraft ? cached?.id ?? crypto.randomUUID() : null;
+      setPracticeSession(draftId.current ?? (started.items.some(item => item.practice) ? crypto.randomUUID() : undefined));
+      const draft = cached && cached.id === draftId.current && cached.order.length === indexes.length &&
+        indexes.every(i => cached.order.includes(i)) && indexes.includes(cached.turn) &&
+        Object.keys(cached.answers).every(i => indexes.includes(Number(i))) ? cached : null;
       setItems(started.items);
       setReveals(started.reveals ?? []);
       setAssets(started.assets ?? {});
@@ -184,37 +224,49 @@ export function Player({ title, description, backHref, template, initialItems = 
       const seconds = config?.mock ? cambridgeSeconds[config.level ?? "starters"][config.paper] : 0;
       const deadline = Math.min(typeof draft?.deadline === "number" ? draft.deadline : Infinity, Date.now() + seconds * 1000);
       expired.current = false;
+      pendingAnswers.current = seconds && draft?.pending === true ? draft.answers : null;
+      setSubmissionPending(pendingAnswers.current !== null);
       setMock(seconds ? { deadline, seconds: Math.max(0, Math.ceil((deadline - Date.now()) / 1000)) } : null);
       setActive(true);
     } catch { setError("Không kết nối được. Hãy thử lại."); }
     finally { setBusy(false); }
   }
 
-  async function submit(responses: Record<number, string[]>) {
-    setAnswers(responses);
+  async function submit(responses: Answers) {
+    if (submitting.current) return;
+    submitting.current = true;
+    const snapshot = pendingAnswers.current ?? responses;
+    if (mock) {
+      expired.current = true;
+      pendingAnswers.current = snapshot;
+      setSubmissionPending(true);
+    }
+    setAnswers(snapshot);
     setBusy(true);
     setError("");
     try {
-      const ordered = items.map((_, i) => starters?.paper === "speaking" ? [] : responses[i] ?? []);
+      const ordered = items.map((_, i) => starters?.paper === "speaking" ? [] : snapshot[i] ?? []);
       const local = assignment ? null : grade(template, localContent ?? [], ordered);
-      const response = local ?? await finishAttempt(assignment!, ordered);
+      const response = local ?? await finishAttempt(assignment!, ordered, mock ? draftId.current ?? undefined : undefined);
       if ("error" in response && response.error) { setError(response.error); return; }
       if ("score" in response) {
         const review = local && localContent ? missedReview(localContent, ordered.map((answer, i) => ({ answer, correct: local.correct[i] })))
           : "review" in response ? response.review : undefined;
         setResult({ score: response.score, total: response.total, review, pendingReview: "pendingReview" in response && response.pendingReview });
+        pendingAnswers.current = null;
+        setSubmissionPending(false);
+        writeDraft(draftKey, null);
         if (response.score !== null && (assignment || rows)) chime(response.score === response.total);
       }
     } catch { setError("Mất kết nối. Bạn có thể thử nộp lại."); }
-    finally { setBusy(false); }
+    finally { submitting.current = false; setBusy(false); }
   }
 
   const mockTick = useEffectEvent((deadline: number) => {
     const seconds = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
     setMock(previous => previous?.seconds === seconds ? previous : { deadline, seconds });
-    if (seconds === 0 && !busy && !expired.current) {
-      expired.current = true;
-      void submit(answers);
+    if ((seconds === 0 || pendingAnswers.current) && !submitting.current && !expired.current) {
+      void submit(pendingAnswers.current ?? currentAnswers.current);
     }
   });
   useEffect(() => {
@@ -224,7 +276,8 @@ export function Player({ title, description, backHref, template, initialItems = 
   }, [active, result, deadline]);
 
   function next(answer: string[]) {
-    const updated = { ...answers, [index]: answer };
+    if (pendingAnswers.current) return;
+    const updated = { ...currentAnswers.current, [index]: answer };
     if (!assignment && localContent && !starters?.mock) {
       const { correct } = grade(template, [localContent[index]], [answer], index);
       if (correct[0] !== null) {
@@ -318,13 +371,14 @@ export function Player({ title, description, backHref, template, initialItems = 
       <p>{starters ? (starters.mock ? "Thi thử theo phần thi. Em có thể quay lại câu trước trong thời gian quy định." : "Luyện từng Part theo nhịp của em.") : theme.instruction}</p>
       {description && <p className="hint">{description}</p>}
       {defaultArcadePractice && <p className="hint">Luyện tập không giới hạn thời gian</p>}
-      {assignment && requireName && <label>Biệt danh<input value={nickname} onChange={event => setNickname(event.target.value)} maxLength={80} required /></label>}
+      {assignment && requireName && <label>Biệt danh<input value={playerName} onChange={event => setNickname(event.target.value)} maxLength={80} required /></label>}
       {assignment && <p className="hint">Nếu đã bắt đầu, em có thể tiếp tục sau khi tải lại trong cùng thẻ trình duyệt.</p>}
       <button ref={bindFocus} className="button primary game-start" disabled={!ready || busy}><Play size={20} aria-hidden="true"/>{busy ? "Đang mở…" : "Bắt đầu"}</button>
-    </form></div> : mock?.seconds === 0 ? <div className="starter-sheet">
-      <h2>Đã hết thời gian</h2>
+    </form></div> : mock && (mock.seconds === 0 || submissionPending) ? <div className="starter-sheet">
+      <h2>{mock.seconds === 0 ? "Đã hết thời gian" : "Bài đang chờ nộp"}</h2>
+      {error && <p>Câu trả lời vẫn còn trong thẻ này. Kết nối lại để nộp bài.</p>}
       <button className="button primary" type="button" disabled={busy || !error}
-        onClick={() => void submit(answers)}>{busy || !error ? "Đang nộp bài…" : "Nộp lại"}</button>
+        onClick={() => void submit(currentAnswers.current)}>{busy || !error ? "Đang nộp bài…" : "Nộp lại"}</button>
     </div> : reading ? <div className="reading-layout">
       <details className="reading-source" open><summary>Ngữ liệu đọc</summary>
         <LessonMedia media={{ image: reading.stimulusImage }} assets={assets} label="Hình ngữ liệu đọc"/>

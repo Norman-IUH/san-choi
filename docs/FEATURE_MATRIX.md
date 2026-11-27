@@ -13,6 +13,18 @@
 
 [Đối chiếu từng Part và hướng dẫn sử dụng](STARTERS.md).
 
+## Cambridge Practice · V1.5C3
+
+| Phạm vi | Luồng thực hiện | Cách chấm |
+|---|---|---|
+| Dashboard Cambridge | 44 Part và chín bài thi thử cho Starters, Movers, Flyers | Điểm theo từng bài |
+| Flyers Listening · 5 Part, 25 câu | Nối tên, điền phiếu, ghép ảnh, chọn ảnh, tô màu và viết hai từ | 25 câu tự động |
+| Flyers Reading & Writing · 7 Part, 44 câu | Có điền thư không có khung từ và viết truyện ba tranh | 43 câu tự động và một bài viết chấm theo rubric |
+| Flyers Speaking · 4 Part | So sánh tranh, trao đổi thông tin, kể tiếp truyện và trả lời cá nhân | Giáo viên chấm trực tiếp hoặc qua bài giao |
+| Giao bài và khôi phục | Sửa, nhân bản, giao snapshot, lưu bản nộp trong phiên, xuất CSV | Tách điểm tự động và thủ công, nhận lại kết quả đã lưu khi mất phản hồi |
+
+[Đặc tả đủ ba cấp độ](CAMBRIDGE_SPEC.md).
+
 | Tính năng | Màn hình | Vai trò | Ưu tiên | Nguồn xác minh | Độ khó | Phase / nghiệm thu |
 |---|---|---|---|---|---|---|
 | Landing, mẫu chơi | Trang chủ, player | Mọi người | P0 | Quan sát trang công khai | Vừa | 1–3 / browser |

@@ -13,6 +13,44 @@ async function finish(page: Page, count: number) {
   await expect(page.getByRole("heading", { name: "Hoàn thành!" })).toBeVisible();
 }
 
+test("Flyers mock keeps time, answers and audio listens after reload", async ({ page }) => {
+  await page.clock.install();
+  await start(page, "listening");
+  await expect(page.getByRole("timer")).toHaveText(/^(?:25:00|24:59)$/);
+  await button(page, "Person 3").click();
+  for (const play of [1, 2]) {
+    await button(page, "Nghe đoạn hội thoại").click();
+    await expect(page.getByText(`Lượt nghe ${play}/2`)).toBeVisible();
+    await page.locator("audio").evaluate(async element => {
+      const audio = element as HTMLAudioElement;
+      if (!Number.isFinite(audio.duration)) await new Promise(resolve => audio.addEventListener("loadedmetadata", resolve, { once: true }));
+      audio.currentTime = audio.duration - .05;
+    });
+    await expect(button(page, "Nghe đoạn hội thoại")).toBeVisible();
+  }
+  const savedDeadline = () => page.evaluate(() => JSON.parse(sessionStorage.getItem("san-choi-cambridge:flyers/listening") ?? "{}").deadline as number);
+  const originalDeadline = await savedDeadline();
+  await page.clock.fastForward(3 * 60 * 1000);
+  await page.reload();
+  await button(page, "Bắt đầu").click();
+  await expect(page.getByRole("timer")).toHaveText(/^(?:22:00|21:[3-5]\d)$/);
+  expect(await savedDeadline()).toBe(originalDeadline);
+  await expect(button(page, "Person 3")).toHaveAttribute("aria-pressed", "true");
+  await expect(button(page, "Nghe đoạn hội thoại")).toBeDisabled();
+  await page.clock.fastForward(22 * 60 * 1000 + 1000);
+  await expect(page.getByText("1/25 điểm", { exact: true })).toBeVisible();
+  await start(page, "reading");
+  await expect(page.getByRole("timer")).toHaveText(/^(?:40:00|39:59)$/);
+  await expect(page.getByText("Ví dụ mẫu")).toBeVisible();
+  await page.getByLabel("Your answer").fill("architect");
+  await page.clock.fastForward(40 * 60 * 1000 + 1000);
+  await expect(page.getByText("1/43 điểm tự động", { exact: true })).toBeVisible();
+  await start(page, "speaking");
+  await expect(page.getByRole("timer")).toHaveText(/^(?:9:00|8:59)$/);
+  await expect(page.getByText("Gợi ý luyện tập")).toHaveCount(0);
+  await finish(page, 4);
+});
+
 for (const part of [1, 2, 3, 4, 5]) {
   test(`Flyers Listening Part ${part}`, async ({ page }) => {
     await start(page, "listening?part=" + part);
@@ -50,6 +88,43 @@ for (const part of [1, 2, 3, 4, 5]) {
 const reading = [
   [10, "architect"], [5, "C I'd love to see the seabirds."], [6, "storm"], [10, "are"], [7, "red"], [5, "for"], [1, ""],
 ] as const;
+
+test("Cambridge Practice dashboard links all 44 parts and nine full mocks", async ({ page }) => {
+  await page.goto("/samples/cambridge");
+  await expect(page.getByRole("link", { name: /^Thi thử/ })).toHaveCount(9);
+  for (const [label, count] of [["Pre A1 Starters", 13], ["A1 Movers", 15], ["A2 Flyers", 16]] as const) {
+    await page.getByRole("link", { name: "Luyện " + label, exact: true }).click();
+    await expect(page.locator(".starter-paper-grid ol a")).toHaveCount(count);
+    await page.getByRole("link", { name: /Cambridge Practice/ }).click();
+  }
+  expect((await page.goto(root + "/listening?part=6"))?.status()).toBe(404);
+});
+
+for (const part of [1, 2, 3, 4]) {
+  test(`Flyers Speaking Part ${part}`, async ({ page }) => {
+    await start(page, "speaking?part=" + part);
+    await expect(page.getByText("Gợi ý luyện tập")).toBeVisible();
+    if (part === 1 || part === 3) {
+      await expect(page.locator(".mover-scenes figure")).toHaveCount(part === 1 ? 2 : 4);
+      const zoom = button(page, part === 1 ? "Enlarge Picture A" : "Enlarge Picture 1");
+      await zoom.click();
+      await expect(zoom).toHaveAttribute("aria-pressed", "true");
+    }
+    if (part === 2) {
+      await expect(page.getByText("Tuesday", { exact: true })).toBeVisible();
+      await button(page, "Ask the examiner").click();
+      await expect(page.getByText("Harbour boat trip", { exact: true })).toBeVisible();
+      await expect(page.locator(".flyer-exchange dd").filter({ hasText: /^\?$/ })).toHaveCount(5);
+      await expect(page.getByText("Thursday", { exact: true })).toHaveCount(0);
+      await button(page, "Answer the examiner").click();
+      await expect(page.getByText("11:20 a.m.", { exact: true })).toBeVisible();
+    }
+    await expect(page.locator("audio, .starter-sheet textarea")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /microphone|ghi âm/ })).toHaveCount(0);
+    await finish(page, 1);
+    await expect(page.locator(".game-completion strong")).toHaveCount(0);
+  });
+}
 
 for (const [i, [count, answer]] of reading.entries()) {
   const part = i + 1;

@@ -17,7 +17,8 @@ export async function CambridgePaper({ params, searchParams, level }: PaperPageP
   const sample = cambridgePapers[level](result.data, number);
   if (!sample) notFound();
   return <div className="immersive-page stack">
-    <Player {...localPlay(sample.template, sample.items)} title={sample.title} description={number ? sample.label : undefined} backHref={`/samples/cambridge-${level}`}/>
+    <Player {...localPlay(sample.template, sample.items)} title={sample.title} description={number ? sample.label : undefined} backHref={`/samples/cambridge-${level}`}
+      cambridgeDraft={number === undefined ? `${level}/${result.data}` : undefined}/>
     <form className="starter-import" action={importCambridge.bind(null, level, paper, number)}>
       <button className="button">Lưu vào thư viện giáo viên</button>
     </form>
