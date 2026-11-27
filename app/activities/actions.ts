@@ -1,7 +1,8 @@
 "use server";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
-import { account, check, privilegedDatabase } from "@/lib/supabase";
+import { account, check } from "@/lib/supabase";
+import { insertAssignment } from "@/lib/assignment-server";
 import { compatible, contentSchema, templateSchema, type Item } from "@/lib/game";
 import { demoContent, demos } from "@/lib/demo";
 import { itemMediaPaths } from "@/lib/media";
@@ -52,6 +53,7 @@ export async function saveActivity(id: string | null, value: unknown) {
   const fields = parsed.data;
   const content = contentSchema(fields.template, fields.draft).safeParse(fields.content);
   if (!content.success) return { error: content.error.issues[0].message };
+  if (fields.visibility !== "private" && content.data.some(item => item.practice)) return { error: "Bài luyện chấm điểm cần giữ riêng tư. Dùng link giao bài để gửi cho học sinh." };
   if (itemMediaPaths(content.data).some(path => !path.startsWith(user.id + "/"))) return { error: "Tệp phải thuộc thư viện của giáo viên." };
   const row = { ...fields, content: content.data, updated_at: new Date().toISOString() };
   const operation = id ? db.from("activities").update(row).eq("id", id).is("deleted_at", null) : db.from("activities").insert(row);
@@ -140,20 +142,14 @@ export async function changeFolder(id: string | null, command: string, form: For
 export async function createAssignment(id: string, form: FormData) {
   if (!uuid.safeParse(id).success) notFound();
   const { db, user } = await account(true);
-  const { data: activity, error } = await db.from("activities").select("id,title,template,content,draft,deleted_at").eq("id", id).maybeSingle();
+  const { data: activity, error } = await db.from("activities").select("id,title,template,content,draft,deleted_at,grade").eq("id", id).maybeSingle();
   check(error, "assignment_source");
   if (!activity || activity.draft || activity.deleted_at) notFound();
   const template = templateSchema.parse(activity.template);
   const content = contentSchema(template).parse(activity.content);
-  const deadline = form.get("deadline");
-  const due = typeof deadline === "string" && deadline ? Date.parse(deadline + ":00+07:00") : null;
-  if (due !== null && (!Number.isFinite(due) || due <= Date.now())) redirect(`/activities/${id}?invalid=1`);
-  const { data, error: insertError } = await privilegedDatabase().from("assignments").insert({
-    owner_id: user.id, activity_id: id, title: activity.title, template, content, deadline: due === null ? null : new Date(due).toISOString(),
-    require_name: form.has("require_name"), show_score: form.has("show_score"), show_review: form.has("show_review"),
-  }).select("id").single();
-  check(insertError, "create_assignment");
-  redirect(`/assignments/${data!.id}`);
+  const assignment = await insertAssignment({ owner_id: user.id, activity_id: id, title: activity.title, template, content, level: activity.grade }, form);
+  if (!assignment || assignment === "draft") redirect(`/activities/${id}?invalid=1`);
+  redirect(`/assignments/${assignment}`);
 }
 
 export async function setAssignmentClosed(id: string, closed: boolean) {

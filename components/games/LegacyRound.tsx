@@ -21,6 +21,8 @@ export type RoundProps = {
   next: (answer: string[]) => void;
   submit: (answers: Record<number, string[]>) => void;
   hudTools?: HTMLDivElement | null;
+  practiceSession?: string;
+  voiceUrl?: string;
   playHit?: () => void;
   guess?: (letter: string, guesses: string[]) => Promise<NonNullable<PlayItem["hangman"]> | null>;
 };

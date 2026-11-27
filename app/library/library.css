@@ -30,3 +30,16 @@
   .bank-starters a strong { font-size: 1rem; }
 }
 @media (max-width: 460px) { .bank-words { grid-template-columns: minmax(0,1fr); } }
+.lesson-plan { padding-block: 1rem; }
+.lesson-outline { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr)); gap: .65rem; padding: 0; list-style: none; }
+.lesson-outline a { display: grid; gap: .3rem; height: 100%; padding: .75rem; border: 1px solid #b9c6dc; border-radius: .65rem; background: #fff; color: #233354; text-decoration: none; }
+.lesson-outline a[aria-current=step] { background: #eef2ff; box-shadow: inset 0 -3px #5359a2; }
+.lesson-objectives { border-inline-start: 4px solid #bc8e32; padding: .6rem 1rem; background: #fff8e2; color: #283450; }
+.lesson-objectives p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.lesson-navigator { justify-content: space-between; }
+.lesson-timeline { padding-inline-start: 1.65rem; }
+.lesson-timeline li { padding: .7rem; border: 1px solid #bccadf; border-radius: .65rem; }
+.lesson-step-head { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin-bottom: .5rem; }
+.lesson-step-head strong { flex: 1 1 10rem; }
+.lesson-drag { display: inline-grid; place-items: center; width: 2rem; height: 2rem; cursor: grab; color: #4b5680; }
+.lesson-presentation { max-width: 80rem; margin-inline: auto; }

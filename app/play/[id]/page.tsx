@@ -4,6 +4,7 @@ import { z } from "zod";
 import { Player } from "@/components/Player";
 import { isTemplate } from "@/lib/game";
 import { allowedTeacher, check, serverConfigured, privilegedDatabase } from "@/lib/supabase";
+import { voicePolicy } from "@/lib/voice-server";
 
 export const dynamic = "force-dynamic";
 type Props = { params: Promise<{ id: string }> };
@@ -30,5 +31,6 @@ export default async function AssignmentPlayer({ params }: Props) {
   if (!data || !isTemplate(data.template)) notFound();
   const expired = Boolean(data.deadline && Date.parse(data.deadline) <= new Date().getTime());
   if (data.closed || expired) return <div className="narrow"><section className="panel"><h1>{data.title}</h1><p>Bài tập đã đóng hoặc hết hạn.</p></section></div>;
-  return <div className="immersive-page"><Player title={data.title} template={data.template} backHref="/" assignment={id} requireName={data.require_name}/></div>;
+  return <div className="immersive-page"><Player title={data.title} template={data.template} backHref="/" assignment={id}
+    requireName={data.require_name} voiceEnabled={Boolean(voicePolicy())}/></div>;
 }

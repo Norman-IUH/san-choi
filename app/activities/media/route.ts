@@ -1,4 +1,5 @@
 import { fileTypeFromBuffer } from "file-type";
+import sharp from "sharp";
 import { account } from "@/lib/supabase";
 import { mediaBucket, mediaSize } from "@/lib/media";
 
@@ -28,9 +29,13 @@ export async function POST(request: Request) {
   if (!mime || !Object.hasOwn(types, mime) || (kind !== "image" && kind !== "audio") || !mime.startsWith(kind + "/")) {
     return Response.json({ error: "Định dạng tệp không phù hợp." }, { status: 415 });
   }
-  const path = `${user.id}/${crypto.randomUUID()}.${types[mime]}`;
+  // Re-encode images to discard source metadata and orientation tags before sharing.
+  const clean = kind === "image" ? await sharp(bytes, { limitInputPixels: 16_000_000 }).autoOrient()
+    .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true }).webp().toBuffer().catch(() => null) : bytes;
+  if (!clean) return Response.json({ error: "Chưa đọc được ảnh hợp lệ." }, { status: 415 });
+  const path = `${user.id}/${crypto.randomUUID()}.${kind === "image" ? "webp" : types[mime]}`;
   const bucket = db.storage.from(mediaBucket);
-  const { error } = await bucket.upload(path, bytes, { contentType: mime, upsert: false });
+  const { error } = await bucket.upload(path, clean, { contentType: kind === "image" ? "image/webp" : mime, upsert: false });
   if (error) return Response.json({ error: "Chưa tải lên được tệp." }, { status: 502 });
   const { data } = await bucket.createSignedUrl(path, 3600);
   return Response.json({ path, url: data?.signedUrl });

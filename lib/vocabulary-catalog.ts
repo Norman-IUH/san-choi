@@ -1,5 +1,6 @@
 import { deckIds, englishDeckContent, englishDecks, type DeckId } from "./english-samples";
 import type { BankWord } from "./vocabulary-bank";
+import { vocabularyBatchB2 } from "./vocabulary-batch-b2";
 
 type Topic = [name: string, part: string, entries: string];
 const topics: Record<DeckId, Topic[]> = {
@@ -42,13 +43,31 @@ const topics: Record<DeckId, Topic[]> = {
 };
 
 const starterTags = { kids: "Classroom objects", starters: "Animals", movers: "Places", flyers: "Environment" } as const;
+const earlyEntries: Record<string, [ipa: string, example: string]> = {
+  apple: ["/ˈæpəl/", "Put an apple in my lunch box."],
+  ball: ["/bɔːl/", "Roll the ball to me."],
+  cat: ["/kæt/", "The cat is on the blue mat."],
+  dog: ["/dɒɡ/", "My dog has a red toy."],
+  egg: ["/eɡ/", "There is an egg in the bowl."],
+  fish: ["/fɪʃ/", "The fish swims under the rock."],
+  hat: ["/hæt/", "Put on your yellow hat."],
+  ice: ["/aɪs/", "There is ice in my cup."],
+  bread: ["/bred/", "We need bread for our sandwiches."],
+  rice: ["/raɪs/", "Put the rice next to the carrots."],
+  milk: ["/mɪlk/", "I drink milk with my breakfast."],
+  cheese: ["/tʃiːz/", "Add some cheese to my sandwich, please."],
+  banana: ["/bəˈnɑːnə/", "There is one banana in the fruit bowl."],
+  pear: ["/peə/", "Can I have the green pear, please?"],
+  lemon: ["/ˈlemən/", "Cut the lemon into two pieces."],
+  grapes: ["/ɡreɪps/", "I washed the grapes before lunch."],
+};
 
 export const starterLessons = deckIds.map(id => ({
   id, title: englishDecks[id].title, level: englishDecks[id].level, topic: starterTags[id], unit: "Unit 1",
   keys: englishDeckContent(id).map(item => `catalog/${id}/${item.prompt}`),
 }));
 
-export const vocabularyCatalog: BankWord[] = deckIds.flatMap(id => [
+const vocabularyBase: BankWord[] = deckIds.flatMap(id => [
   ...englishDeckContent(id).map((item): BankWord => ({
     id: `catalog/${id}/${item.prompt}`, word: item.prompt, meaning: item.answers[0], level: englishDecks[id].level,
     topic: starterTags[id], part: ["protect", "collect", "improve", "recycle", "cross"].includes(item.prompt) ? "verb"
@@ -59,6 +78,18 @@ export const vocabularyCatalog: BankWord[] = deckIds.flatMap(id => [
   })),
   ...topics[id].flatMap(([topic, part, entries]) => entries.split("|").map((entry): BankWord => {
     const [word, meaning] = entry.split(":");
-    return { id: `catalog/${id}/${word}`, word, meaning, part, level: englishDecks[id].level, topic, ipa: "", example: "", related: "" };
+    const early = (id === "kids" || id === "starters") && earlyEntries[word];
+    return { id: `catalog/${id}/${word}`, word, meaning, part, level: englishDecks[id].level, topic,
+      ipa: early ? early[0] : "", example: early ? early[1] : "", related: "",
+      ...(early && { uk: `/audio/vocabulary/${word}-uk.wav`, us: `/audio/vocabulary/${word}-us.wav` }) };
   })),
 ]);
+
+const enrichment = new Map(vocabularyBatchB2.entries.map(entry => [entry[0], entry] as const));
+export const vocabularyCatalog = vocabularyBase.map((word): BankWord => {
+  const draft = enrichment.get(word.id as typeof vocabularyBatchB2.entries[number][0]);
+  if (!draft) return word;
+  const [, ipa, example, audio] = draft;
+  return { ...word, ipa, example,
+    ...(audio && { uk: `/audio/vocabulary/${word.word}-uk.wav`, us: `/audio/vocabulary/${word.word}-us.wav` }) };
+});

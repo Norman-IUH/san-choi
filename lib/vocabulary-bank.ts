@@ -14,12 +14,12 @@ export const bankWordSchema = z.object({
   part: optional(40), ipa: optional(100), example: optional(400), related: optional(240),
   image: z.union([image, sampleImagePath]).nullish(), uk: z.union([audio, sampleAudioPath]).nullish(), us: z.union([audio, sampleAudioPath]).nullish(),
 });
-export type BankWord = z.infer<typeof bankWordSchema> & { id: string };
+export type BankWord = z.infer<typeof bankWordSchema> & { id: string; archived_at?: string | null };
 
 export const lessonSchema = z.object({
   title: required(100), level: z.enum(levels), skill: z.enum(skills), topic: required(80), unit: required(80),
   difficulty: z.enum(difficultyLevels),
-  entry_keys: z.array(required(160)).min(1).max(60).refine(keys => new Set(keys).size === keys.length),
+  entry_keys: z.array(required(160)).max(60).refine(keys => new Set(keys).size === keys.length),
 });
 export type VocabularyLesson = z.infer<typeof lessonSchema>;
 export const difficultyLabels = { gentle: "Chậm", steady: "Tiêu chuẩn", challenge: "Nâng cao" } as const;

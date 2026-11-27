@@ -99,3 +99,36 @@ Xem [kết quả kiểm thử](TEST_RESULTS.md) và [các phần còn thiếu](L
 | Bài học | Lưu danh sách tham chiếu, lọc theo cấp độ, kỹ năng, chủ đề, unit và độ khó, sao chép bài |
 | Tái sử dụng | Xem trước từ cùng nguồn. Chỉ bật mẫu vượt qua schema và phù hợp dữ liệu đã chọn. Bản soạn và bài giao là bản chụp độc lập |
 | V1.5B/C | Bài luyện nhiều kỹ năng, rubric, thu âm tùy chọn và luyện theo phần thi thuộc các đợt kế tiếp |
+
+## V1.5B1
+
+| Hạng mục | Phạm vi |
+|---|---|
+| Practice v1 | Metadata có version trong nội dung hoạt động và snapshot bài giao. Dùng Quiz hoặc Type the Answer để chấm ở máy chủ. Có thể bỏ trống |
+| Listening | Choose, Match, Colour, Dictation, Dialogue. Có clip mẫu, tốc độ chậm, phát lại và giới hạn phía trình duyệt |
+| Phonics | Letter Sounds, Beginning Sounds, Ending Sounds, Blending, Rhyming Words, Sound Discrimination. Mỗi mẫu yêu cầu clip do giáo viên kiểm tra |
+| Kho từ | Từ đang lưu trữ được lọc khỏi nguồn chọn mới và CSV. Lesson đã lưu vẫn đọc được. [Độ phủ từ vựng](VOCABULARY_COVERAGE.md) |
+| Đợt tiếp theo | Reading, Grammar và Lesson Builder thuộc B2. Speaking, Writing và chấm thủ công thuộc B3 |
+
+## V1.5B2
+
+| Hạng mục | Phạm vi |
+|---|---|
+| Listening | Dùng ảnh phương án, gồm chế độ chỉ hiện ảnh với nhãn trung tính. Ghép 2–8 clip với bộ thẻ chung. Listen and Colour hỗ trợ vùng bầu dục do giáo viên đặt. |
+| Media và bảo mật | Ảnh tải mới được chuyển WebP để bỏ metadata và lưu với tên ngẫu nhiên. Học sinh nhận URL ngắn hạn, mã phương án ảnh và dữ liệu cần để làm bài. Không gửi đáp án, giải thích hoặc transcript đã ẩn trước khi nộp. |
+| Reading | Sentence Matching, Picture Comprehension, Short Passage Comprehension, Story Sequencing, Gap Filling và Multiple Choice. Dùng một ngữ liệu chung, chấm ở server và giữ nguyên bản chụp bài đã giao. |
+| Grammar | 21 chủ điểm nội bộ có ví dụ ngữ cảnh và giải thích cho câu sai khi cho phép xem lại. Dạng nhập chữ nhận các biến thể đã khai báo. Dùng Quiz, Unjumble, Word Magnets, Complete the Sentence và Type the Answer. |
+| Giáo án | Mở rộng Vocabulary Lesson. Có thông tin tiết dạy, ghi chú riêng, bản nháp, thứ tự kéo thả và bàn phím, nhân bản, xem trước, trình chiếu và giao bài từng bước. Xem điểm theo từng bài giao chấm được. |
+| Giáo án mẫu | Colours and Classroom Objects, Animals and Pets, My Daily Routine, Travel and Adventures. Mỗi bộ có năm hoạt động gốc kèm từ vựng, mục tiêu, thời lượng và bài về nhà. |
+| Học liệu | 220/220 mục Kids và Starters có IPA và câu ví dụ. Dấu chờ duyệt và nhật ký duyệt phân biệt độ phủ dữ liệu với chất lượng giảng dạy. [Số liệu và quy trình](VOCABULARY_COVERAGE.md) |
+
+## V1.5B3
+
+| Hạng mục | Phạm vi |
+|---|---|
+| Speaking | Personal Questions, Describe the Picture, Picture Differences, Storytelling, Speaking Cards và Guided Conversation. Hỗ trợ ảnh, audio hướng dẫn, từ gợi ý, câu mẫu, đồng hồ tùy chọn và chấm trực tiếp trên lớp. |
+| Writing | Complete the Word, Sentence Building, Picture-based Writing, Short Answers, Short Paragraph và Story Completion. Dạng khách quan nhận đáp án thay thế đã khai báo. Dạng mở vào hàng chờ chấm. Bản nháp chữ tự lưu trong phiên tab. |
+| Chấm thủ công | Rubric tùy chỉnh được chụp lúc giao bài. Bài nộp, điểm tự động và đánh giá thủ công được lưu riêng. Có lưu đánh giá, công bố, sửa điểm và lọc theo trạng thái, kỹ năng, giáo án, bài giao hoặc cấp độ. |
+| Bản ghi | Cờ mặc định tắt. Khi có quyền, bắt đầu và dừng chủ động, nghe lại, xóa và gửi tệp. Storage riêng tư và URL ký theo phiên hợp lệ hoặc chủ bài. |
+| Duyệt từ vựng | Ghi trạng thái, ngày và nhận xét trong database theo giáo viên. Chỉnh mục trong kho riêng đưa mục về Chưa duyệt. Danh mục mẫu giữ nguồn gốc để sao chép. |
+| Giáo án | Thêm bốn giáo án Speaking và Writing, mỗi cấp một bộ. Mỗi giáo án có năm bước. Giáo án ở trạng thái sẵn sàng mới giao hoạt động được. |

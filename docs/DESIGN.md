@@ -48,3 +48,25 @@ Thư viện tiếng Anh giữ kiểu chữ và nút V1.4D. Thẻ bài mở đầ
 **Prompt sprite**
 
 > Transparent game sprites arranged in precisely spaced 4 columns and 2 rows of equal cells with large transparent gutters, original gouache paper-cut Nintendo-independent children's storybook style. One separate centered character or object per cell. Row 1 from left: teal fox explorer with mustard scarf, orange flying peach with tiny cream paper wings, friendly red and cream propeller plane pointed right, glossy lavender striped balloon with tied ribbon. Row 2: smiling tan mole peeking up with round blue garden hat; orange recycling crate with blue classroom objects; purple and gold theatrical buzzer and stars; coral seedpod with leaves. All eight isolated silhouettes separated with transparent padding, neutral lighting, no baselines that cross cells, no words, no symbols or gradients as background, no text. Landscape aspect ratio.
+
+## V1.5B1 — Luyện nghe và ngữ âm
+
+Màn bài luyện dùng chung HUD và hiển thị nút Nghe, Dừng, Nghe lại cùng tốc độ 0,75× hoặc 1×. Giáo viên có thể đặt giới hạn theo clip trong lượt làm. Trình duyệt lưu lượt nghe của phiên hiện tại, kể cả khi tải lại cùng tab. Giới hạn hướng dẫn luyện tập, còn quyền mở tệp do Storage quản lý.
+
+Audio mẫu được gắn nhãn tổng hợp. Mẫu phonics cung cấp câu hỏi gốc và yêu cầu giáo viên kiểm tra bản ghi trước khi xuất bản. Listen and Colour tô lên hình quyển sách vẽ cho Sân Chơi và có nhãn màu bằng chữ. Listen and Match ghép từng clip với một thẻ. Transcript chỉ hiện trong Dialogue khi giáo viên bật.
+
+## V1.5B2 — Bài đọc, ngữ pháp và giáo án
+
+Khối đọc dùng nền giấy vàng nhạt `#fffae6`, chữ mực `#212b43` và Georgia cho đoạn văn tiếng Anh. Trên màn hình rộng, ngữ liệu ở cột trái và câu hỏi ở cột phải. Trên điện thoại, học sinh mở hoặc gấp ngữ liệu phía trên câu hỏi. Khối ngữ liệu giữ vị trí khi chuyển câu. Ví dụ Grammar nằm cạnh câu hỏi với đường viền tím của giao diện luyện tập.
+
+Thẻ Listening chỉ hiện hình có nhãn số trung tính khi giáo viên bật chế độ ảnh. Hình táo, sách, thước và tranh vùng tô được vẽ cho Sân Chơi, xuất WebP với tên tệp trung tính. Vùng tô có đường viền, số và trạng thái chọn. Bảng ghép hiển thị clip đã nối và khóa thẻ đã dùng ở clip khác. Nút và vùng tô có thể thao tác bằng bàn phím hoặc chạm.
+
+Giáo án dùng một danh sách thứ tự có nhãn giai đoạn và số phút, cùng nút lên/xuống bên cạnh tay nắm kéo. Màn trình chiếu giữ tiêu đề, tiến độ bài và nút trước/sau. Mỗi game dùng chế độ toàn màn hình hiện có. Ghi chú riêng xuất hiện trong trình soạn của chủ giáo án.
+
+## V1.5B3 — Nói, viết và chấm bài
+
+Khối hướng dẫn dùng nền xanh giấy `#eff8fb` và chữ `#182849`. Cặp ảnh đặt cạnh nhau khi đủ chiều rộng và xếp dọc ở khung hẹp. Từ gợi ý và câu mẫu có thể mở theo nhu cầu. Hai đồng hồ Speaking khởi động theo thao tác của người học. Ảnh so sánh hai bàn học do Sân Chơi vẽ, với khác biệt về đồ trên bàn, màu ghế và vị trí quả bóng.
+
+Writing hiển thị số ký tự ở cạnh ô trả lời. Màn chấm đặt nội dung gốc bên trên rubric, từng tiêu chí có mô tả và giới hạn điểm. Nút công bố được bật khi đủ điểm tiêu chí. Trang nhận xét dùng biên nhận phiên trình duyệt và hiện điểm sau khi giáo viên công bố. Rubric dùng trong lớp học của Sân Chơi.
+
+Ghi âm có nút xin microphone riêng, đồng hồ ghi, phát lại, lưu và xóa. Endpoint phát và tải kiểm tra quyền mỗi lần và dùng URL Storage ký ngắn hạn ở phía máy chủ. Bài tập trực tiếp trên lớp dùng cùng Player và rubric. Trình soạn giáo án vẫn dùng danh sách bước hiện có.

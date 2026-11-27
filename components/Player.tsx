@@ -1,10 +1,11 @@
 "use client";
-import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ArrowLeft, Maximize, Minimize, Pause, Play, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { finishAttempt, guessAssignmentLetter, refreshLessonMedia, startAttempt } from "@/app/play/actions";
 import { grade, missedReview, shuffle, templates, type Template, type Item, type PlayItem, type ReviewEntry } from "@/lib/game";
-import { RefreshLessonMedia } from "./games/LessonMedia";
+import { LessonMedia, RefreshLessonMedia } from "./games/LessonMedia";
+import { isReading } from "@/lib/games/practice";
 import { GameRound } from "./games/GameRound";
 import { Progress } from "./games/Progress";
 import { hangmanPattern } from "@/lib/games/word-puzzles";
@@ -15,11 +16,11 @@ import { gameTheme } from "./games/game-themes";
 
 type Props = { title: string; description?: string; backHref?: string; template: Template; initialItems?: PlayItem[]; reveals?: string[];
   localContent?: Item[]; assignment?: string; requireName?: boolean; assets?: Record<string, string>;
-  mediaScope?: { source: "activity" | "resource"; id: string } };
+  mediaScope?: { source: "activity" | "resource"; id: string }; voiceEnabled?: boolean };
 
 const subscribeToNothing = () => () => {};
 
-export function Player({ title, description, backHref, template, initialItems = [], reveals: initialReveals = [], localContent, assignment, requireName, assets: initialAssets = {}, mediaScope }: Props) {
+export function Player({ title, description, backHref, template, initialItems = [], reveals: initialReveals = [], localContent, assignment, requireName, assets: initialAssets = {}, mediaScope, voiceEnabled }: Props) {
   const ready = useSyncExternalStore(subscribeToNothing, () => true, () => false);
   const [items, setItems] = useState(initialItems);
   const [reveals, setReveals] = useState(initialReveals);
@@ -31,11 +32,12 @@ export function Player({ title, description, backHref, template, initialItems = 
   const [nickname, setNickname] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{ score: number | null; total: number; review?: ReviewEntry[] } | null>(null);
+  const [result, setResult] = useState<{ score: number | null; total: number; review?: ReviewEntry[]; pendingReview?: boolean } | null>(null);
   const [feedback, setFeedback] = useState("");
   const [sound, setSound] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [classroomFallback, setClassroomFallback] = useState(false);
+  const [practiceSession, setPracticeSession] = useState<string>();
   const [hudTools, setHudTools] = useState<HTMLDivElement | null>(null);
   const draftId = useRef<string | null>(null);
   const lastMediaRefresh = useRef(0);
@@ -43,10 +45,18 @@ export function Player({ title, description, backHref, template, initialItems = 
   const panelRef = useRef<HTMLElement | null>(null);
   const pauseDialog = useRef<HTMLDialogElement | null>(null);
   const focusTarget = useRef<HTMLElement | null>(null);
+  const pendingFocus = useRef(false);
   const replayPending = useRef(false);
   const outcomeId = useId();
   const draftKey = assignment ? `san-choi-draft:${assignment}` : null;
-  const bindFocus = (node: HTMLElement | null) => { focusTarget.current = node; };
+  const bindFocus = useCallback((node: HTMLElement | null) => {
+    focusTarget.current = node;
+    if (node && pendingFocus.current) {
+      pendingFocus.current = false;
+      node.focus();
+    }
+  }, []);
+  const soundSupported = ready && typeof window.AudioContext === "function";
   const meta = templates[template];
   const theme = gameTheme(template);
   const arcade = isArcadeTemplate(template);
@@ -54,6 +64,8 @@ export function Player({ title, description, backHref, template, initialItems = 
   const artStyle = gameplayThumbnail ? { backgroundImage: `url(/illustrations/${arcade ? "arcade" : "gameplay"}/${template}.webp)` } : { backgroundPosition: theme.artPosition };
   const defaultArcadePractice = arcade && !assignment && !!localContent && localContent.every(item => !item.arcade?.timed);
   const index = order[turn] ?? 0;
+  const practice = items[0]?.practice;
+  const reading = practice && isReading(practice.mode) ? practice : undefined;
   const rows = template === "match-up" || template === "group-sort";
   const board = rows || template === "open-box" || template === "flip-tiles" || template === "matching-pairs";
   const stageScore = (arcade || template === "gameshow") && active && !result && !assignment && localContent
@@ -80,7 +92,10 @@ export function Player({ title, description, backHref, template, initialItems = 
   useEffect(() => () => { void audioContext.current?.close().catch(() => {}); }, []);
 
   useEffect(() => {
-    if (active || replayPending.current) focusTarget.current?.focus();
+    if (active || replayPending.current) {
+      pendingFocus.current = !focusTarget.current;
+      focusTarget.current?.focus();
+    }
     replayPending.current = false;
   }, [active, turn, result]);
 
@@ -138,6 +153,7 @@ export function Player({ title, description, backHref, template, initialItems = 
       if (!started.items?.length) { setError("Hoạt động chưa có nội dung."); return; }
       const indexes = started.items.map((_, i) => i);
       draftId.current = "draftId" in started ? started.draftId ?? null : null;
+      setPracticeSession(draftId.current ?? (started.items.some(item => item.practice) ? crypto.randomUUID() : undefined));
       let draft: { id: string; order: number[]; turn: number; answers: Record<number, string[]> } | null = null;
       if (draftKey && draftId.current) {
         try {
@@ -173,7 +189,7 @@ export function Player({ title, description, backHref, template, initialItems = 
       if ("score" in response) {
         const review = local && localContent ? missedReview(localContent, ordered.map((answer, i) => ({ answer, correct: local.correct[i] })))
           : "review" in response ? response.review : undefined;
-        setResult({ score: response.score, total: response.total, review });
+        setResult({ score: response.score, total: response.total, review, pendingReview: "pendingReview" in response && response.pendingReview });
         if (response.score !== null && (assignment || rows)) chime(response.score === response.total);
       }
     } catch { setError("Mất kết nối. Bạn có thể thử nộp lại."); }
@@ -208,6 +224,12 @@ export function Player({ title, description, backHref, template, initialItems = 
     setError("Tệp học liệu chưa tải được. Em vẫn có thể tiếp tục làm bài.");
   }
 
+  const round = <GameRound key={turn} {...{ template, items, order, turn, index, answers, setAnswers, assets, reveals, busy, bindFocus, next, submit, hudTools, practiceSession }}
+    voiceUrl={voiceEnabled && assignment ? `/play/${assignment}/voice/${index}` : undefined}
+    playHit={arcade ? () => chime(null) : undefined}
+    guess={template === "hangman" ? async (letter, guesses) => assignment ? guessAssignmentLetter(assignment, index, letter)
+      : localContent?.[index] ? { ...hangmanPattern(localContent[index].answers[0], guesses), guesses } : null : undefined}/>;
+
   return <RefreshLessonMedia.Provider value={renewMedia}><section ref={panelRef} className={`player game-stage game-${template} ${arcade ? "arcade-stage" : ""} ${template === "gameshow" ? "gameshow" : ""} ${classroomFallback ? "classroom-fallback" : ""}`}>
     <div className="player-top"><div className="game-identity">
       {backHref && <Link className="icon-button game-back" aria-label={backHref === "/#mau" ? "Tất cả mẫu" : "Quay lại học liệu"} href={backHref}><ArrowLeft size={20}/></Link>}
@@ -221,7 +243,8 @@ export function Player({ title, description, backHref, template, initialItems = 
           panelRef.current?.querySelectorAll("audio").forEach(audio => audio.pause());
           pauseDialog.current?.showModal();
         }}><Pause size={19} aria-hidden="true"/></button>}
-        <button type="button" className="icon-button" aria-label="Âm thanh phản hồi" aria-pressed={sound} onClick={() => void toggleSound()}>
+        <button type="button" className="icon-button" aria-label="Âm thanh phản hồi" aria-pressed={sound} disabled={!soundSupported}
+          title={ready && !soundSupported ? "Trình duyệt không hỗ trợ âm thanh phản hồi" : undefined} onClick={() => void toggleSound()}>
           {sound ? <Volume2 size={19}/> : <VolumeX size={19}/>}
         </button>
         <button type="button" className="icon-button" aria-label={fullscreen || classroomFallback ? "Thoát toàn màn hình" : "Toàn màn hình"}
@@ -241,6 +264,7 @@ export function Player({ title, description, backHref, template, initialItems = 
       aria-describedby={result.score !== null || assignment ? outcomeId : undefined}>Hoàn thành!</h2>
       {result.score !== null && <strong id={outcomeId}>{result.score}/{result.total} điểm</strong>}
       {assignment && <p id={result.score === null ? outcomeId : undefined}>Bài làm đã được lưu.</p>}
+      {assignment && result.pendingReview && <Link className="button" href={`/play/${assignment}/review`}>Xem nhận xét khi giáo viên công bố</Link>}
       <p>{result.score !== null && result.score === result.total ? "Em đã hoàn thành xuất sắc!" : "Giỏi lắm, em đã hoàn thành lượt chơi."}</p>
       {!!result.review?.length && <details className="review-panel"><summary>Xem lại câu sai ({result.review.length})</summary>
         <ol>{result.review.map((entry, index) => <li key={index}>
@@ -265,10 +289,17 @@ export function Player({ title, description, backHref, template, initialItems = 
       {assignment && requireName && <label>Biệt danh<input value={nickname} onChange={event => setNickname(event.target.value)} maxLength={80} required /></label>}
       {assignment && <p className="hint">Nếu đã bắt đầu, em có thể tiếp tục sau khi tải lại trong cùng thẻ trình duyệt.</p>}
       <button ref={bindFocus} className="button primary game-start" disabled={!ready || busy}><Play size={20} aria-hidden="true"/>{busy ? "Đang mở…" : "Bắt đầu"}</button>
-    </form></div> : <GameRound key={turn} {...{ template, items, order, turn, index, answers, setAnswers, assets, reveals, busy, bindFocus, next, submit, hudTools }}
-      playHit={arcade ? () => chime(null) : undefined}
-      guess={template === "hangman" ? async (letter, guesses) => assignment ? guessAssignmentLetter(assignment, index, letter)
-        : localContent?.[index] ? { ...hangmanPattern(localContent[index].answers[0], guesses), guesses } : null : undefined}/>}
+    </form></div> : reading ? <div className="reading-layout">
+      <details className="reading-source" open><summary>Ngữ liệu đọc</summary>
+        <LessonMedia media={{ image: reading.stimulusImage }} assets={assets} label="Hình ngữ liệu đọc"/>
+        {reading.stimulus && <p lang="en">{reading.stimulus}</p>}
+      </details>
+      {round}
+    </div> : <>
+      {items[index]?.practice?.mode === "grammar" && items[index].practice?.stimulus &&
+        <p className="grammar-example">Ví dụ <span lang="en">{items[index].practice.stimulus}</span></p>}
+      {round}
+    </>}
     {active && !result && !arcade && <dialog ref={pauseDialog} className="game-pause-dialog" aria-label="Tạm dừng trò chơi">
       <h2>Đang tạm dừng</h2>
       <form method="dialog"><button className="button primary">Tiếp tục chơi</button></form>

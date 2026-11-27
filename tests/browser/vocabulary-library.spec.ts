@@ -123,6 +123,25 @@ test("teacher imports CSV/XLSX, edits media, updates a selection and exports the
   expect(exported.split("\r\n").length).toBeGreaterThan(440);
   expect(exported.includes('"seedling demo","cây con","Kids","Cây và vườn"')).toBe(true);
   expect(exported.includes("token=")).toBe(false);
+  await page.getByLabel("Tìm từ hoặc nghĩa").fill("seedling demo");
+  await page.getByRole("checkbox", { name: /seedling demo/ }).check();
+  await page.getByLabel("Tên bài học").fill("[TEST B1] Archive reference");
+  await page.getByLabel("Chủ đề bài học").fill("Cây và vườn");
+  await page.getByLabel("Unit", { exact: true }).fill("Unit 1");
+  await page.getByRole("button", { name: "Lưu bài học", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Trò chơi từ bài học" })).toBeVisible();
+  const lessonUrl = page.url();
+  await page.goto("/library");
+  await page.getByLabel("Tìm từ hoặc nghĩa").fill("seedling demo");
+  await page.getByRole("link", { name: "Sửa seedling demo" }).click();
+  await page.getByRole("button", { name: "Lưu trữ từ", exact: true }).click();
+  await page.getByLabel("Tìm từ hoặc nghĩa").fill("seedling demo");
+  await expect(page.getByText("Không tìm thấy từ phù hợp.")).toBeVisible();
+  await page.getByRole("combobox", { name: "Nguồn", exact: true }).selectOption("archived");
+  await expect(page.getByRole("checkbox", { name: /seedling demo/ })).toBeDisabled();
+  await page.goto(lessonUrl);
+  await page.getByRole("button", { name: "Bắt đầu", exact: true }).click();
+  await expect(page.getByRole("button", { name: /seedling demo/ })).toBeVisible();
 });
 
 test("library search and level filters fit desktop and touch profiles", async ({ page }, info) => {

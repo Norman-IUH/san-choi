@@ -162,3 +162,52 @@ Các giới hạn còn lại gồm WebKit và thiết bị thật, máy chiếu 
 | Import và media | CSV, XLSX, cập nhật chủ đề cho nhóm từ và xuất CSV đạt trên dữ liệu thử. Tệp ảnh và phát âm tải lên đi qua Storage. Ảnh tải được bằng signed URL. URL không ký bị từ chối. CSV không chứa signed URL |
 
 20 từ trong bốn bài mở đầu có IPA, câu ví dụ và audio Anh–Anh, Anh–Mỹ tổng hợp có sẵn. Từ còn lại có từ, nghĩa tiếng Việt, từ loại và chủ đề. Phân cấp phục vụ nội bộ. Đánh giá lớp học trên thiết bị thật, nội dung luyện theo phần thi và chấm thủ công thuộc công việc sau V1.5A.
+
+## V1.5B1 — Luyện nghe và ngữ âm
+
+| Hạng mục | Kết quả |
+|---|---|
+| Lint, typecheck, build và Vitest | Đạt. 65 Vitest, gồm schema Practice v1, chấm đúng, sai, bỏ trống, đáp án thay thế, giữ transcript ngoài payload mặc định và kiểm tra sự tồn tại của tệp audio |
+| Chromium và WebKit | Hồi quy 34 mẫu đạt 143 lượt Chromium và 84 lượt WebKit. Bảy lượt Chromium và bốn lượt WebKit dành cho profile hoặc cấu hình khác được bỏ qua |
+| QuizStudy thật | Sáu lượt Chromium và một lượt WebKit đạt. Năm dạng Listening cùng Rhyming Words đi qua editor, giao bài, phát clip chậm, giới hạn nghe và lưu điểm. Dictation chấp nhận biến thể bỏ dấu chấm. Dialogue lưu câu sai 0/1 |
+| Đáp án và media | Playwright kiểm tra phản hồi bắt đầu trong Chromium. Payload không có trường đáp án, câu dictation và transcript chưa bật. URL ký lỗi mô phỏng trong Rhyming Words được cấp lại và audio thật phát được |
+| Thư viện và migration | Một lượt QuizStudy đạt cho CSV/XLSX, ảnh riêng tư, xuất CSV, lưu trữ từ và xác nhận lesson cũ vẫn đọc được. Migration `20261127022933_vocabulary_archive.sql` được chạy thử trong PostgreSQL nhúng rồi áp dụng trên QuizStudy |
+
+B1 thêm 16 mục có IPA, ví dụ và audio cả hai giọng, nâng tổng lên 36/440. Năm clip Listening dùng nội dung gốc và eSpeak NG offline. Sáu dạng phonics có mẫu soạn, yêu cầu giáo viên kiểm tra bản ghi trước khi xuất bản. Lượt Rhyming Words dùng clip thử tổng hợp và không phải đánh giá ngữ âm ngoài lớp. [Báo cáo độ phủ](VOCABULARY_COVERAGE.md)
+
+Kiểm thử dùng tài khoản và dữ liệu riêng. Giới hạn nghe vận hành trong trình duyệt. Đánh giá thiết bị thật và chất lượng bản ghi ngữ âm trong lớp vẫn chờ.
+
+## V1.5B2 — Reading, Grammar và Lesson Builder · 27/11/2026
+
+| Hạng mục | Kết quả |
+|---|---|
+| Kiểm tra mã | Lint, typecheck, production build và 70 Vitest đạt. `npm audit --omit=dev` báo 0 advisory. `npm run vocabulary:check` xác nhận báo cáo khớp 440 mục và 194 mục bổ sung. |
+| Hồi quy 34 mẫu game | 180 lượt đạt trên Chromium desktop, mobile, tablet và WebKit desktop, iPhone mô phỏng. Bộ chạy tập trung gồm demo, vòng chơi word, puzzle và arcade. |
+| Hồi quy điều khiển | 25 lượt đạt sau khi chạy lại focus, tiến độ, chọn thẻ, giảm chuyển động, toàn màn hình và xem lại câu sai. Năm lượt cộng đồng yêu cầu server chưa cấu hình Supabase được bỏ qua. |
+| Listening và Phonics trên QuizStudy | Kiểm tra đủ năm Listening và sáu Phonics trên Chromium bằng clip thử. Có ảnh lựa chọn tải lên, xóa EXIF, nhãn trung tính, bảng ghép, vùng tô và cấp lại URL clip. Dictation chạy lại trên WebKit đạt. Bản ghi thử Phonics phục vụ kiểm tra luồng kỹ thuật. |
+| Reading trên QuizStudy | Chromium và WebKit đạt. Cả hai câu dùng cùng đoạn văn. Học sinh mở lại đoạn văn ở khung 390 × 844 và nộp 1/2. Sửa đoạn văn nguồn sau khi giao không ảnh hưởng bài làm. HTML và phản hồi bắt đầu không có ghi chú riêng hoặc lời giải. |
+| Grammar trên QuizStudy | Chromium và WebKit đạt. Dạng Have got ghi đúng 1/1 cho dạng rút gọn, 0/1 cho dạng sai và chỉ hiện giải thích sau nộp khi bật xem lại. Kiểm tra trên khung 820 × 1180. |
+| Giáo án trên QuizStudy | Tạo từ mẫu, thêm/bỏ bước, đổi thứ tự bằng bàn phím và kéo thả Chromium, lưu nháp, reload, nhân bản, trình chiếu, vào/thoát fullscreen và tạo bài giao riêng cho một hoạt động. Kết quả gắn với đúng bước. Giáo viên thứ hai nhận 404. |
+| Hồi quy thư viện trên QuizStudy | Sáu lượt Chromium đạt, gồm bốn cấp độ, dùng lại Vocabulary Lesson để tạo bài giao, CSV/XLSX, lưu trữ, media và bộ lọc. |
+| Migration | `20261127064352_lesson_builder.sql` qua kiểm tra trên PostgreSQL nhúng với schema và dữ liệu fixture cũ. Kiểm tra schema QuizStudy trước khi áp dụng cho thấy không có dòng lesson xung đột. Sau khi áp dụng, xác nhận migration có trong lịch sử, index mới tồn tại và RLS vẫn bật trên lesson và assignments. |
+| Vercel Preview | GitHub checks của PR #7 báo deployment hoàn thành. Khi kiểm tra bằng phiên khách, đường dẫn giáo án yêu cầu đăng nhập Vercel. E2E có đăng nhập chạy trên app cục bộ nối QuizStudy. |
+
+Hai tài khoản QA dùng biệt danh và bài giao tổng hợp. Ảnh Playwright của màn Reading và Presentation nằm trong `output/playwright/v15b2-lesson-final`. Giáo án mẫu kiểm tra đủ năm hoạt động và liên kết từ vựng ở cả bốn cấp độ bằng Vitest.
+
+Trong lượt chạy tổng hợp ban đầu, một số kiểm thử bắt được thay đổi cấu trúc DOM của Player và lỗi focus khi nạp renderer. Bộ hồi quy trên đã chạy lại sau khi sửa cấu trúc. WebKit trên máy Windows thử nghiệm thiếu `AudioContext`, nên nút âm hiệu được vô hiệu hóa. Audio bài nghe qua trình phát HTML đã phát được trong Dictation. Bảng ghép trên WebKit được kiểm tra bằng chọn thẻ, chạm và bàn phím.
+
+Chất lượng IPA, ví dụ, clip tổng hợp và phát âm Phonics cần lượt duyệt của giáo viên. Đánh giá trên phần cứng lớp học và thiết bị thật chưa chạy. Rủi ro khóa bí mật đã lộ tiếp tục là cổng phát hành.
+
+## V1.5B3 — Speaking, Writing và chấm thủ công · 27/11/2026
+
+| Hạng mục | Kết quả |
+|---|---|
+| Kiểm tra mã | 75 Vitest, lint, typecheck, production build và kiểm tra độ phủ đều đạt. `npm audit --omit=dev` ghi nhận 0 cảnh báo. Audit toàn bộ báo 7 mục moderate trên chuỗi `minimatch` của ESLint. Cùng kết quả xuất hiện khi audit lockfile tại baseline `31831db`. |
+| Hồi quy game | 180 lượt đạt cho 34 mẫu trên Chromium desktop, mobile, tablet, WebKit desktop và iPhone mô phỏng. |
+| Writing và chấm thủ công | Chromium và WebKit đạt luồng tự lưu nháp, nộp bài, giữ rubric gốc sau sửa nguồn, lưu riêng nhận xét, công bố, sửa điểm từ 20/20 xuống 18/20 và kiểm tra quyền giáo viên thứ hai. Chromium chấm đúng biến thể, câu sai và câu trống. PostgreSQL nhúng xác nhận nộp trùng giữ câu trả lời gốc. |
+| Speaking và Storage | Chromium và WebKit đạt upload fixture WAV, chặn tệp giả MIME và quá 2 MB, loại phiên không hợp lệ, tải lại, xóa và chấm trực tiếp. Endpoint phát được kiểm tra với yêu cầu Range và chặn yêu cầu mới sau khi xóa. Fixture WebM Opus, MP4 AAC và MP4 Opus được tạo từ tín hiệu tổng hợp bằng Chromium và qua parser trong Vitest. |
+| Duyệt từ vựng | Chromium đạt tạo mục riêng, ghi nhận xét, đổi trạng thái, lọc và hủy trạng thái duyệt sau khi sửa ví dụ. Giáo viên thứ hai không đọc được mục riêng. Báo cáo repo giữ số liệu độ phủ kỹ thuật. |
+| Giáo án | Vitest kiểm tra tám bộ mẫu, gồm bốn mẫu Speaking và Writing. Chromium kiểm tra trình chiếu đề hai ảnh, đồng hồ chuẩn bị, chặn giao bài ở bản nháp và tạo assignment khi giáo án đã sẵn sàng. |
+| QuizStudy | Ba migration `20261127071851`, `20261127072702` và `20261127111628` đã vào lịch sử. Kiểm tra xác nhận ba bảng mới bật RLS, bucket `practice-voice` ở chế độ riêng tư, và guest và giáo viên bị giới hạn theo quyền trực tiếp đã thiết kế. |
+
+Tổng cộng bảy lượt E2E QuizStudy đạt qua lần chạy lại và ca giáo án kiểm tra riêng. Ba lượt WebKit được skip vì các ca Writing khách quan, duyệt từ vựng và tích hợp giáo án chạy theo profile Chromium. Tất cả dữ liệu kiểm thử là tổng hợp. Kiểm thử microphone vật lý và xác nhận sau đăng nhập trên Vercel Preview vẫn chờ. Ghi âm cho học sinh thật mặc định tắt.

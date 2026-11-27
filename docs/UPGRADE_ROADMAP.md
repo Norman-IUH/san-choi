@@ -66,3 +66,27 @@ V1.4D dựa trên PR #4. Chỉ phát hành sau khi review các PR theo thứ t�
 - V1.5C sẽ đối chiếu cấu trúc thi Cambridge English hiện hành trước khi xây dựng bài luyện gốc theo từng phần. Tiến độ sẽ dùng cách tính điểm nội bộ của Sân Chơi.
 
 V1.5A dùng nhánh review dựa trên V1.4D. Chỉ phát hành sau khi chủ dự án phê duyệt. Khóa bí mật từng lộ vẫn là rủi ro chưa xử lý.
+
+## Tích hợp V1.5B1
+
+Chuỗi nhánh đang review là PR #1 → #2 → #3 → #4 → #5 → #6 → B1. Khi có phê duyệt, tích hợp từng PR từ đầu chuỗi. Với mỗi PR kế tiếp, đổi base về nhánh đích đã tích hợp, xác nhận diff chỉ còn phần riêng của PR, rồi kiểm tra build, migration tương ứng và Vercel Preview. Giữ các nhánh nguồn cho đến khi PR phụ thuộc đã đổi base.
+
+B1 tập trung vào luyện nghe và phonics. B2 thêm Reading, Grammar, giáo án nhiều hoạt động và quy trình học liệu theo lô trên cùng PR #7. B3 dành cho nói, viết, rubric và nhận xét. V1.5C sẽ bắt đầu bằng đối chiếu đặc tả Cambridge hiện hành. Khóa bí mật từng lộ vẫn là rủi ro chưa xử lý.
+
+## Tích hợp ứng viên phát hành V1.5B2
+
+1. Dùng đầu nhánh `codex/v15b-english-skills` ở [PR #7](https://github.com/Norman-IUH/san-choi/pull/7) làm ứng viên tổng hợp. Preview của nhánh này chứa code từ cả bảy PR. Khi bắt đầu nghiệm thu phát hành, ghi lại SHA ứng viên và xác minh Preview đúng SHA đó.
+2. Kiểm tra các migration theo thứ tự trong `supabase/migrations`. QuizStudy đã có `20261127064352_lesson_builder.sql`. Môi trường đích khác cần kiểm tra lịch sử, bản sao lưu và chạy dry run trước khi áp dụng. Migration giữ bảng lesson hiện có và thêm cột kế hoạch, liên kết bài giao và index. Bản app cũ vẫn đọc và ghi các cột lesson cũ.
+3. Xử lý cổng bảo mật và xin chủ dự án phê duyệt trước khi tích hợp. Review PR #1 đến #7 theo thứ tự. Sau mỗi lần merge, xác nhận PR kế tiếp có base và diff đúng với phần thay đổi của nó. Giữ nhánh nguồn đến khi đã kiểm tra các PR phụ thuộc.
+4. Chạy lại build, unit test, hồi quy đủ 34 mẫu và E2E QuizStudy trên ứng viên cuối. Kiểm tra bài giao cũ, Reading dùng snapshot, quyền của giáo viên thứ hai và ghi chú riêng. Sau phê duyệt production, đối chiếu deployment với SHA đã duyệt và chạy smoke test luồng tạo, giao, nộp và xem kết quả.
+5. Nếu cần quay lại, dùng deployment đã kiểm chứng trước đó. Schema additive giữ tương thích với ứng dụng cũ. Lưu dữ liệu giáo án và bài nộp ở nguyên trạng.
+
+Ứng viên B2 ở trạng thái review. Giáo viên vẫn cần duyệt học liệu IPA, ví dụ và audio tổng hợp mới.
+
+## Ứng viên phát hành V1.5B3
+
+- PR #7 giữ nguyên nhánh đích trước khi review chuỗi PR #1–#7. Ngày 27/11, GitHub báo `MERGEABLE` và `CLEAN` với base của PR #6. Kiểm tra lại SHA, base và diff sau từng lần tích hợp vì thông tin merge thay đổi khi nhánh đích cập nhật.
+- Trước khi phát hành, xác nhận bản sao lưu cho database và Storage. Kiểm tra migration theo thứ tự manual assessment, voice recording và vocabulary review. Đối chiếu lịch sử từng môi trường để tránh áp dụng lặp. Xác minh quyền owner, hàng chờ chấm và bài giao cũ sau migration.
+- Nếu cần rollback ứng dụng, dùng deployment trước và giữ các migration additive. Tạm ngưng nhận bản ghi bằng `VOICE_RECORDING_ENABLED=0`. Kết quả, nhận xét và bản ghi đã lưu cần được quản lý theo thời hạn hiện hành.
+- Luồng ghi âm mặc định tắt. Chỉ đặt cả `VOICE_RECORDING_ENABLED=1` và `VOICE_RECORDING_RELEASE_APPROVED=1` sau khi giải quyết cổng bảo mật và được chủ dự án duyệt. QA localhost dùng SHA-256 fixture tổng hợp. `VOICE_RECORDING_RETENTION_DAYS` nhận từ 1 đến 30, mặc định 14. URL ký tối đa 90 giây. Tác vụ Dọn bản ghi ở Kết quả xóa clip hết hạn và tệp rời đủ một ngày, theo từng lô. Cần chạy tác vụ định kỳ khi vận hành ghi âm.
+- Giới hạn lượt nghe thuộc phiên tab. Vùng Listen and Colour cấu hình qua tâm và kích thước khung chữ nhật rồi hiển thị dạng vùng bầu dục. V1.5C Cambridge Exam Practice là đợt riêng. Rủi ro Secret Key từng lộ còn mở và phát hành production chờ phê duyệt.

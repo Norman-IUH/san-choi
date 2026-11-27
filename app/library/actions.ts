@@ -35,6 +35,16 @@ export async function saveBankWord(id: string | null, form: FormData) {
   redirect("/library?saved=word");
 }
 
+export async function setWordArchived(id: string, archived: boolean) {
+  const { db, user } = await account(true);
+  if (!uuid.safeParse(id).success || typeof archived !== "boolean") notFound();
+  const { data, error } = await db.from("vocabulary_entries").update({ archived_at: archived ? new Date().toISOString() : null })
+    .eq("id", id).eq("owner_id", user.id).select("id").maybeSingle();
+  check(error, "archive_bank_word");
+  if (!data) notFound();
+  redirect("/library?saved=word");
+}
+
 export async function importBank(form: FormData) {
   const { db } = await account(true);
   const file = form.get("file");
@@ -79,9 +89,13 @@ export async function saveVocabularyLesson(id: string | null, form: FormData) {
     entry_keys: form.getAll("entry"),
   });
   const path = id ? `/library/${id}` : "/library";
-  if (!parsed.success) return issue(path, "Nhập thông tin bài học và chọn từ 1 đến 60 từ.");
+  if (!parsed.success || !parsed.data.entry_keys.length) return issue(path, "Nhập thông tin bài học và chọn từ 1 đến 60 từ.");
   const words = await loadWords(db, user.id, parsed.data.entry_keys);
   if (words.length !== parsed.data.entry_keys.length) return issue(path, "Một số từ đã chọn không còn khả dụng.");
+  if (words.some(word => word.archived_at)) {
+    const { data: previous } = id ? await db.from("vocabulary_lessons").select("entry_keys").eq("id", id).eq("owner_id", user.id).maybeSingle() : { data: null };
+    if (words.some(word => word.archived_at && !previous?.entry_keys.includes(word.id))) return issue(path, "Hãy khôi phục từ đã lưu trữ trước khi thêm vào bài mới.");
+  }
   const { data, error } = await (id ? db.from("vocabulary_lessons").update(parsed.data).eq("owner_id", user.id).eq("id", id)
     : db.from("vocabulary_lessons").insert(parsed.data)).select("id").single();
   check(error, "save_vocabulary_lesson");

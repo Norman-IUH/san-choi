@@ -5,7 +5,8 @@ test("Quiz maintains focus, labels progress and announces practice feedback", as
   await page.goto("/demo/quiz");
   await expect(page).toHaveTitle("Khám phá hệ Mặt Trời | Sân Chơi");
   const start = page.getByRole("button", { name: "Bắt đầu" });
-  if (info.project.name === "desktop") await start.press("Enter");
+  await expect(start).toBeEnabled();
+  if (!info.project.use.hasTouch) await start.press("Enter");
   else await start.tap();
   await expect(page.getByRole("heading", { name: /hành tinh đỏ/i })).toBeFocused();
   await expect(page.getByRole("progressbar", { name: "Mục 1 / 3" })).toBeVisible();

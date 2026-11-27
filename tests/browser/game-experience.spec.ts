@@ -1,18 +1,20 @@
 import { expect, test } from "@playwright/test";
 
-test("pair board supports both desk drag and touch selection", async ({ page }, info) => {
+test("pair board supports both desk drag and touch selection", async ({ page, browserName }, info) => {
   await page.goto("/demo/match-up");
   await page.getByRole("button", { name: "Bắt đầu" }).click();
   const row = page.getByRole("button", { name: "Một đôi", exact: true });
   const target = page.getByRole("group", { name: "Đáp án ghép" }).getByRole("button", { name: "2", exact: true });
-  if (info.project.name === "desktop") await row.dragTo(target);
-  else { await row.tap(); await target.tap(); }
+  const touch = !!info.project.use.hasTouch;
+  if (touch) { await row.tap(); await target.tap(); }
+  else if (browserName === "chromium") await row.dragTo(target);
+  else { await row.click(); await target.click(); }
   await expect(row).toContainText("2");
   const remaining = page.getByRole("button", { name: "Một tá", exact: true });
   await remaining.press("Enter");
   await page.getByRole("group", { name: "Đáp án ghép" }).getByRole("button", { name: "12", exact: true }).press("Enter");
   await expect(remaining).toContainText("12");
-  if (info.project.name !== "desktop") {
+  if (touch && browserName === "chromium") {
     const source = page.getByRole("button", { name: "Nửa chục", exact: true });
     const destination = page.getByRole("button", { name: "5", exact: true });
     const from = (await source.boundingBox())!;
@@ -40,8 +42,12 @@ test("wheel uses actual labels and motion honors user preference", async ({ page
 
 test("classroom controls and incorrect answer review", async ({ page }) => {
   await page.goto("/demo/quiz");
-  await page.getByRole("button", { name: "Âm thanh phản hồi" }).click();
-  await expect(page.getByRole("button", { name: "Âm thanh phản hồi" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Bắt đầu" })).toBeEnabled();
+  const sound = page.getByRole("button", { name: "Âm thanh phản hồi" });
+  if (await page.evaluate(() => typeof window.AudioContext === "function")) {
+    await sound.click();
+    await expect(sound).toHaveAttribute("aria-pressed", "true");
+  } else await expect(sound).toBeDisabled();
   await page.getByRole("button", { name: "Toàn màn hình", exact: true }).click();
   await expect(page.getByRole("button", { name: "Thoát toàn màn hình" })).toBeVisible();
   await page.getByRole("button", { name: "Thoát toàn màn hình" }).click();
