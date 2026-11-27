@@ -2,6 +2,7 @@ import { z } from "zod";
 import { difficultyLevels } from "./arcade-templates";
 import { mathOperations } from "./puzzle-templates";
 import type { WordSlot } from "./word-puzzles";
+import { practiceSchema, samplePracticeAudio, type publicPractice } from "./practice";
 
 const text = z.string().trim().min(1).max(400);
 export const levels = ["Kids", "Pre A1 Starters", "A1 Movers", "A2 Flyers"] as const;
@@ -10,8 +11,8 @@ export const mediaPath = z.string().regex(/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(png|j
 const imagePath = mediaPath.refine(path => /\.(png|jpg|webp)$/.test(path));
 const audioPath = mediaPath.refine(path => /\.(mp3|wav|ogg)$/.test(path));
 export const sampleAudioPath = z.string().regex(/^\/audio\/vocabulary\/[a-z]+-(uk|us)\.wav$/);
-export const sampleImagePath = z.string().regex(/^\/illustrations\/puzzles\/(classroom|book|pencil|bag)\.webp$/);
-const mediaSchema = z.object({ image: z.union([imagePath, sampleImagePath]).optional(), audio: audioPath.optional() });
+export const sampleImagePath = z.string().regex(/^\/illustrations\/(puzzles\/(classroom|book|pencil|bag)\.webp|practice\/book\.png)$/);
+const mediaSchema = z.object({ image: z.union([imagePath, sampleImagePath]).optional(), audio: z.union([audioPath, samplePracticeAudio]).optional() });
 const englishSchema = z.object({
   level: z.enum(levels).optional(),
   skill: z.enum(skills).optional(),
@@ -36,6 +37,7 @@ export const itemSchema = z.object({
   arcade: z.object({ difficulty: z.enum(difficultyLevels), timed: z.boolean() }).optional(),
   math: z.object({ operation: z.enum(mathOperations), min: z.number().int().min(0).max(30),
     max: z.number().int().min(0).max(30) }).optional(),
+  practice: practiceSchema.optional(),
 });
 export type Item = z.infer<typeof itemSchema>;
 export type Media = z.infer<typeof mediaSchema>;
@@ -48,6 +50,7 @@ export type PlayItem = {
   letters?: number; grid?: { size: number; letters: string[] }; slot?: WordSlot;
   media?: Media; optionMedia?: Item["optionMedia"]; pronunciation?: Pick<NonNullable<Item["english"]>, "uk" | "us">;
   vocabulary?: Pick<NonNullable<Item["english"]>, "ipa" | "example">;
+  practice?: ReturnType<typeof publicPractice>;
 };
 export function normalize(value: string) {
   return value.normalize("NFC").trim().replace(/\s+/g, " ").toLocaleLowerCase("vi");

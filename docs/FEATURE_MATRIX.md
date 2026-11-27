@@ -99,3 +99,13 @@ Xem [kết quả kiểm thử](TEST_RESULTS.md) và [các phần còn thiếu](L
 | Bài học | Lưu danh sách tham chiếu, lọc theo cấp độ, kỹ năng, chủ đề, unit và độ khó, sao chép bài |
 | Tái sử dụng | Xem trước từ cùng nguồn. Chỉ bật mẫu vượt qua schema và phù hợp dữ liệu đã chọn. Bản soạn và bài giao là bản chụp độc lập |
 | V1.5B/C | Bài luyện nhiều kỹ năng, rubric, thu âm tùy chọn và luyện theo phần thi thuộc các đợt kế tiếp |
+
+## V1.5B1
+
+| Hạng mục | Phạm vi |
+|---|---|
+| Practice v1 | Metadata có version trong nội dung hoạt động và snapshot bài giao. Dùng Quiz hoặc Type the Answer để chấm ở máy chủ. Có thể bỏ trống |
+| Listening | Choose, Match, Colour, Dictation, Dialogue. Có clip mẫu, tốc độ chậm, phát lại và giới hạn phía trình duyệt |
+| Phonics | Letter Sounds, Beginning Sounds, Ending Sounds, Blending, Rhyming Words, Sound Discrimination. Mỗi mẫu yêu cầu clip do giáo viên kiểm tra |
+| Kho từ | Từ đang lưu trữ được lọc khỏi nguồn chọn mới và CSV. Lesson đã lưu vẫn đọc được. [Độ phủ từ vựng](VOCABULARY_COVERAGE.md) |
+| Đợt tiếp theo | Reading, Grammar và Lesson Builder thuộc B2. Speaking, Writing và chấm thủ công thuộc B3 |

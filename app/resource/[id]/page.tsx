@@ -32,7 +32,7 @@ export default async function Resource({ params }: Props) {
   const data = await getPublicActivity(id);
   if (!data || !isTemplate(data.template)) notFound();
   const content = contentSchema(data.template).safeParse(data.content);
-  if (!content.success) notFound();
+  if (!content.success || content.data.some(item => item.practice)) notFound();
   return <div className="immersive-page"><Player title={data.title} description={data.description ?? undefined} backHref="/community"
     mediaScope={{ source: "resource", id }} {...localPlay(data.template, content.data, await mediaUrls(content.data, data.owner_id))}/></div>;
 }

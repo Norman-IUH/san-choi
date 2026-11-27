@@ -162,3 +162,17 @@ Các giới hạn còn lại gồm WebKit và thiết bị thật, máy chiếu 
 | Import và media | CSV, XLSX, cập nhật chủ đề cho nhóm từ và xuất CSV đạt trên dữ liệu thử. Tệp ảnh và phát âm tải lên đi qua Storage. Ảnh tải được bằng signed URL. URL không ký bị từ chối. CSV không chứa signed URL |
 
 20 từ trong bốn bài mở đầu có IPA, câu ví dụ và audio Anh–Anh, Anh–Mỹ tổng hợp có sẵn. Từ còn lại có từ, nghĩa tiếng Việt, từ loại và chủ đề. Phân cấp phục vụ nội bộ. Đánh giá lớp học trên thiết bị thật, nội dung luyện theo phần thi và chấm thủ công thuộc công việc sau V1.5A.
+
+## V1.5B1 — Luyện nghe và ngữ âm
+
+| Hạng mục | Kết quả |
+|---|---|
+| Lint, typecheck, build và Vitest | Đạt. 65 Vitest, gồm schema Practice v1, chấm đúng, sai, bỏ trống, đáp án thay thế, giữ transcript ngoài payload mặc định và kiểm tra sự tồn tại của tệp audio |
+| Chromium và WebKit | Hồi quy 34 mẫu đạt 143 lượt Chromium và 84 lượt WebKit. Bảy lượt Chromium và bốn lượt WebKit dành cho profile hoặc cấu hình khác được bỏ qua |
+| QuizStudy thật | Sáu lượt Chromium và một lượt WebKit đạt. Năm dạng Listening cùng Rhyming Words đi qua editor, giao bài, phát clip chậm, giới hạn nghe và lưu điểm. Dictation chấp nhận biến thể bỏ dấu chấm. Dialogue lưu câu sai 0/1 |
+| Đáp án và media | Playwright kiểm tra phản hồi bắt đầu trong Chromium. Payload không có trường đáp án, câu dictation và transcript chưa bật. URL ký lỗi mô phỏng trong Rhyming Words được cấp lại và audio thật phát được |
+| Thư viện và migration | Một lượt QuizStudy đạt cho CSV/XLSX, ảnh riêng tư, xuất CSV, lưu trữ từ và xác nhận lesson cũ vẫn đọc được. Migration `20261127022933_vocabulary_archive.sql` được chạy thử trong PostgreSQL nhúng rồi áp dụng trên QuizStudy |
+
+B1 thêm 16 mục có IPA, ví dụ và audio cả hai giọng, nâng tổng lên 36/440. Năm clip Listening dùng nội dung gốc và eSpeak NG offline. Sáu dạng phonics có mẫu soạn, yêu cầu giáo viên kiểm tra bản ghi trước khi xuất bản. Lượt Rhyming Words dùng clip thử tổng hợp và không phải đánh giá ngữ âm ngoài lớp. [Báo cáo độ phủ](VOCABULARY_COVERAGE.md)
+
+Kiểm thử dùng tài khoản và dữ liệu riêng. Giới hạn nghe vận hành trong trình duyệt. Đánh giá thiết bị thật và chất lượng bản ghi ngữ âm trong lớp vẫn chờ.

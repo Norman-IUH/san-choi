@@ -9,6 +9,7 @@ import { isPuzzleTemplate, mathOperations, mathSymbols, pairOptions, puzzleTempl
 import { arcadeTemplates, defaultArcade, isArcadeTemplate } from "@/lib/games/arcade-templates";
 import { MediaInput } from "./MediaInput";
 import { importVocabulary } from "@/lib/vocabulary-import";
+import { isPhonics, practiceModes, type PracticeMode } from "@/lib/games/practice";
 
 export type ActivityFields = { title: string; description: string; subject: string; grade: string; tags: string;
   visibility: "private" | "public" | "unlisted" };
@@ -25,15 +26,17 @@ function hasEntry(item: Entry) {
     || Boolean(item.optionMedia?.length);
 }
 
-export function Editor({ id, template, initial, content = [], assets: initialAssets = {} }: {
-  id: string | null; template: Template; initial?: ActivityFields; content?: Item[]; assets?: Record<string, string>;
+export function Editor({ id, template, initial, content = [], assets: initialAssets = {}, practiceMode }: {
+  id: string | null; template: Template; initial?: ActivityFields; content?: Item[]; assets?: Record<string, string>; practiceMode?: PracticeMode;
 }) {
   const arcade = isArcadeTemplate(template);
   const diagram = template === "labelled-diagram";
   const compare = template === "pair-or-no-pair";
   const maths = template === "maths-generator";
   const fixedChoices = template === "true-false" ? truthOptions : compare ? pairOptions : null;
-  const defaultEntry: Entry = diagram ? { ...blank, pin: { x: 50, y: 50 } } : arcade ? { ...blank, arcade: defaultArcade } : maths ?
+  const mode = practiceMode ?? content.find(item => item.practice)?.practice?.mode;
+  const defaultEntry: Entry = mode ? { ...blank, practice: { version: 1, mode, maxPlays: 0, showTranscript: false, reviewedAudio: false } } :
+    diagram ? { ...blank, pin: { x: 50, y: 50 } } : arcade ? { ...blank, arcade: defaultArcade } : maths ?
     { ...blank, prompt: "Tính kết quả.", math: { operation: "add", min: 1, max: 10 } } : blank;
   const [error, setError] = useState("");
   const [assets, setAssets] = useState(initialAssets);
@@ -76,7 +79,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
   return <form className="stack editor" onSubmit={handleSubmit((data, event) => {
     if (structureBusy) return;
     const draft = (event?.nativeEvent as SubmitEvent)?.submitter?.getAttribute("value") !== "publish";
-    const entries = data.content.map(({ prompt, answers, options, alternatives, explanation, english, media, optionMedia, secondary, pin, math, arcade: settings }) => {
+    const entries = data.content.map(({ prompt, answers, options, alternatives, explanation, english, media, optionMedia, secondary, pin, math, practice, arcade: settings }) => {
       const lexical = english && {
         level: english.level || undefined, skill: english.skill || undefined, meaning: english.meaning?.trim() || undefined,
         ipa: english.ipa?.trim() || undefined, example: english.example?.trim() || undefined, uk: english.uk, us: english.us,
@@ -85,6 +88,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
       return { version: 2, prompt, answers: lines(answers), options: choices, secondary: secondary?.trim() || undefined, pin, math, arcade: settings && (settings.timed || settings.difficulty !== defaultArcade.difficulty) ? settings : undefined,
         explanation: explanation?.trim() || undefined, alternatives: lines(alternatives ?? ""),
         english: lexical && Object.values(lexical).some(Boolean) ? lexical : undefined,
+        practice: practice && { ...practice, stimulus: practice.stimulus?.trim() || undefined, transcript: practice.transcript?.trim() || undefined },
         media: media?.image || media?.audio ? media : undefined,
         optionMedia: optionMedia?.filter(item => choices.includes(item.option) && (item.image || item.audio)),
       };
@@ -125,6 +129,19 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
       return <fieldset className="panel stack" key={field.id}><legend>Mục {i + 1}</legend>
       <label>{kind === "blank" ? "Câu có dấu ___ ở chỗ trống" : kind === "pair" ? "Mặt trước / nội dung" : "Câu hỏi hoặc gợi ý"}
         <textarea {...register(`content.${i}.prompt`)} maxLength={400} rows={2}/></label>
+      {item?.practice && <section className="stack">
+        <strong>{practiceModes[item.practice.mode]}</strong>
+        <label>Hướng dẫn hoặc ngữ cảnh hiển thị<textarea {...register(`content.${i}.practice.stimulus`)} maxLength={1000}/></label>
+        <label>Số lượt nghe tối đa (0 là không giới hạn)<input type="number" min={0} max={10} {...register(`content.${i}.practice.maxPlays`, { valueAsNumber: true })}/></label>
+        {item.practice.mode === "dialogue" && <>
+          <label>Transcript<textarea {...register(`content.${i}.practice.transcript`)} maxLength={1000}/></label>
+          <label className="check"><input type="checkbox" {...register(`content.${i}.practice.showTranscript`)}/> Hiện transcript cho học sinh</label>
+        </>}
+        {isPhonics(item.practice.mode) && <label className="check">
+          <input type="checkbox" {...register(`content.${i}.practice.reviewedAudio`)}/> Tôi đã nghe và kiểm tra âm mẫu trong bản ghi
+        </label>}
+        <p className="hint">Đính kèm clip trong Học liệu tiếng Anh và tệp.</p>
+      </section>}
       {arcade && <div className="form-grid">
         <label>Độ khó<select {...register(`content.${i}.arcade.difficulty`)} defaultValue="gentle">
           <option value="gentle">Chậm · luyện tập</option><option value="steady">Vừa</option><option value="challenge">Nhanh · thử thách</option>

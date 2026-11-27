@@ -36,6 +36,7 @@ export function Player({ title, description, backHref, template, initialItems = 
   const [sound, setSound] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [classroomFallback, setClassroomFallback] = useState(false);
+  const [practiceSession, setPracticeSession] = useState<string>();
   const [hudTools, setHudTools] = useState<HTMLDivElement | null>(null);
   const draftId = useRef<string | null>(null);
   const lastMediaRefresh = useRef(0);
@@ -138,6 +139,7 @@ export function Player({ title, description, backHref, template, initialItems = 
       if (!started.items?.length) { setError("Hoạt động chưa có nội dung."); return; }
       const indexes = started.items.map((_, i) => i);
       draftId.current = "draftId" in started ? started.draftId ?? null : null;
+      setPracticeSession(draftId.current ?? undefined);
       let draft: { id: string; order: number[]; turn: number; answers: Record<number, string[]> } | null = null;
       if (draftKey && draftId.current) {
         try {
@@ -265,7 +267,7 @@ export function Player({ title, description, backHref, template, initialItems = 
       {assignment && requireName && <label>Biệt danh<input value={nickname} onChange={event => setNickname(event.target.value)} maxLength={80} required /></label>}
       {assignment && <p className="hint">Nếu đã bắt đầu, em có thể tiếp tục sau khi tải lại trong cùng thẻ trình duyệt.</p>}
       <button ref={bindFocus} className="button primary game-start" disabled={!ready || busy}><Play size={20} aria-hidden="true"/>{busy ? "Đang mở…" : "Bắt đầu"}</button>
-    </form></div> : <GameRound key={turn} {...{ template, items, order, turn, index, answers, setAnswers, assets, reveals, busy, bindFocus, next, submit, hudTools }}
+    </form></div> : <GameRound key={turn} {...{ template, items, order, turn, index, answers, setAnswers, assets, reveals, busy, bindFocus, next, submit, hudTools, practiceSession }}
       playHit={arcade ? () => chime(null) : undefined}
       guess={template === "hangman" ? async (letter, guesses) => assignment ? guessAssignmentLetter(assignment, index, letter)
         : localContent?.[index] ? { ...hangmanPattern(localContent[index].answers[0], guesses), guesses } : null : undefined}/>}

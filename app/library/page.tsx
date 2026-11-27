@@ -16,7 +16,7 @@ type Query = { lesson?: string; copy?: string; starter?: string; saved?: string;
 export default async function Library({ searchParams }: { searchParams: Promise<Query> }) {
   const [{ db, user }, query] = await Promise.all([account(true), searchParams]);
   const [privateWords, { data, error }] = await Promise.all([
-    listBankWords(db, user.id),
+    listBankWords(db, user.id, true),
     db.from("vocabulary_lessons").select("id,title,level,skill,topic,unit,difficulty,entry_keys").eq("owner_id", user.id).order("title"),
   ]);
   check(error, "list_vocabulary_lessons");
@@ -43,7 +43,8 @@ export default async function Library({ searchParams }: { searchParams: Promise<
     <header className="section-head">
       <div><Link className="back" href="/activities">← Hoạt động của tôi</Link><h1>Thư viện tiếng Anh</h1></div>
       <div className="inline-actions"><Link className="button primary" href="/library/words/new">Thêm từ</Link>
-        <Link className="button" href="/library/export" prefetch={false} download>Tải CSV</Link></div>
+        <Link className="button" href="/library/export" prefetch={false} download>Tải CSV</Link>
+        <Link className="button" href="/activities/new#english-practice">Tạo bài luyện</Link></div>
     </header>
     {query.problem && <p role="alert" className="notice error">{query.problem}</p>}
     {query.saved && <p role="status" className="notice">{query.saved === "import" ? "Đã nhập từ mới. Từ và nghĩa trùng cấp độ được giữ lại." : "Đã lưu từ vựng."}</p>}

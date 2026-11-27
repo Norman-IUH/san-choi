@@ -115,6 +115,15 @@ test("migration provisions accounts, locks teacher rows and allows one authorita
       .rejects.toThrow(/row-level security/);
     await db.exec("reset role; set role anon;");
     await expect(db.query("select id from vocabulary_entries")).rejects.toThrow(/permission denied/);
+    await db.exec("reset role");
+    const archiveMigration = migrationFiles.find(file => file.endsWith("_vocabulary_archive.sql"))!;
+    await db.exec(await readFile("supabase/migrations/" + archiveMigration, "utf8"));
+    await session(owner);
+    await db.query("update vocabulary_entries set archived_at=now() where id=$1", [word]);
+    expect((await db.query("select id from vocabulary_entries where id=$1 and archived_at is not null", [word])).rows).toHaveLength(1);
+    expect((await db.query("select entry_keys from vocabulary_lessons where id=$1", [lesson])).rows).toEqual([{ entry_keys: [word] }]);
+    await expect(db.query("insert into activities(title,template,content,visibility) values ('Private key','quiz','[{\"practice\":{}}]','public')"))
+      .rejects.toThrow(/practice_activities_private/);
   } finally {
     await db.close();
   }

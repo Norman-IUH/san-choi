@@ -12,7 +12,7 @@ test("catalog has 110 original entries at each internal level with unique stable
     expect(words).toHaveLength(110);
     expect(words.every(word => word.word && word.meaning && word.part && word.topic)).toBe(true);
   }
-  expect(vocabularyCatalog.filter(word => word.ipa && word.example && word.uk && word.us)).toHaveLength(20);
+  expect(vocabularyCatalog.filter(word => word.ipa && word.example && word.uk && word.us)).toHaveLength(36);
 });
 
 test("four starter lessons reuse the same words for flashcards, word exercises and graded answers", () => {

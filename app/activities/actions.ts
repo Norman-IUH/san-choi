@@ -52,6 +52,7 @@ export async function saveActivity(id: string | null, value: unknown) {
   const fields = parsed.data;
   const content = contentSchema(fields.template, fields.draft).safeParse(fields.content);
   if (!content.success) return { error: content.error.issues[0].message };
+  if (fields.visibility !== "private" && content.data.some(item => item.practice)) return { error: "Bài luyện chấm điểm cần giữ riêng tư. Dùng link giao bài để gửi cho học sinh." };
   if (itemMediaPaths(content.data).some(path => !path.startsWith(user.id + "/"))) return { error: "Tệp phải thuộc thư viện của giáo viên." };
   const row = { ...fields, content: content.data, updated_at: new Date().toISOString() };
   const operation = id ? db.from("activities").update(row).eq("id", id).is("deleted_at", null) : db.from("activities").insert(row);

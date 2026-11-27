@@ -6,6 +6,7 @@ import { buildCrossword } from "./word-puzzles";
 import { isArcadeTemplate, riskMarker } from "./arcade-templates";
 import { pairOptions } from "./puzzle-templates";
 import { doubleMarker } from "./scoring";
+import { colourPalette, isPhonics, practiceTemplate, samplePracticeAudio } from "./practice";
 
 export function contentSchema(template: Template, draft = false) {
   return z.array(itemSchema).min(draft ? 0 : 1).max(60).superRefine((items, context) => {
@@ -19,8 +20,17 @@ export function contentSchema(template: Template, draft = false) {
       new Set(items.map(item => normalize(item.answers[0] ?? ""))).size !== items.length)) {
       context.addIssue({ code: "custom", message: "Cần 2–12 cặp có mặt sau khác nhau." });
     }
-    items.forEach(({ answers, options, prompt, alternatives, optionMedia, media, pin, secondary, math, arcade }, index) => {
+    items.forEach(({ answers, options, prompt, alternatives, optionMedia, media, pin, secondary, math, arcade, practice }, index) => {
       const unique = new Set(options.map(normalize));
+      const exposesDictation = practice?.mode === "dictation" && [...answers, ...(alternatives ?? [])]
+        .some(answer => normalize(prompt + " " + (practice.stimulus ?? "")).includes(normalize(answer)));
+      if (practice && (practiceTemplate(practice.mode) !== template || !media?.audio || answers.length !== 1 ||
+        (isPhonics(practice.mode) && (!practice.reviewedAudio || samplePracticeAudio.safeParse(media.audio).success)) ||
+        (practice.mode === "colour" && (!media.image || options.some(option => !Object.hasOwn(colourPalette, normalize(option))))) ||
+        (practice.showTranscript && (practice.mode !== "dialogue" || !practice.transcript)) ||
+        exposesDictation)) {
+        context.addIssue({ code: "custom", path: [index], message: `Kiểm tra clip, đáp án và tùy chọn của bài luyện mục ${index + 1}.` });
+      }
       const valid = template === "maths-generator"
         ? Boolean(math && math.min <= math.max && (math.operation !== "divide" || math.min >= 1) && !answers.length && !options.length)
         : kind === "choice"

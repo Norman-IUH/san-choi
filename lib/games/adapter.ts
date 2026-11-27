@@ -2,6 +2,7 @@ import { templates, type Template } from "./registry";
 import { buildCrossword, makeWordsearch } from "./word-puzzles";
 import { mathProblem } from "./puzzle-templates";
 import { normalize, type Item, type PlayItem } from "./model";
+import { publicPractice } from "./practice";
 
 export function shuffle<T>(items: T[]) {
   const result = [...items];
@@ -35,10 +36,11 @@ export function makePlayItems(template: Template, items: Item[]): PlayItem[] {
     })()),
     prompt: template === "open-box" ? "" : item.prompt,
     media: item.media,
-    optionMedia: item.optionMedia?.map(entry => ({
+    optionMedia: !item.practice ? item.optionMedia?.map(entry => ({
       ...entry, option: item.options.find(option => normalize(option) === normalize(entry.option)) ?? entry.option,
-    })),
-    pronunciation: item.english ? { uk: item.english.uk, us: item.english.us } : undefined,
+    })) : undefined,
+    pronunciation: item.english && !item.practice ? { uk: item.english.uk, us: item.english.us } : undefined,
+    ...(item.practice && { practice: publicPractice(item.practice) }),
     vocabulary: template === "flash-cards" && item.english ? { ipa: item.english.ipa, example: item.english.example } : undefined,
     ...(kind === "choice" && { multiple: item.answers.length > 1 }),
     options: kind === "choice" ? shuffle(item.options) :

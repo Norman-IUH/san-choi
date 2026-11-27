@@ -9,8 +9,10 @@ const WordRound = dynamic(() => import("./WordRound"));
 const BoardRound = dynamic(() => import("./BoardRound"));
 const PuzzleRound = dynamic(() => import("./PuzzleRound"));
 const ArcadeRound = dynamic(() => import("./ArcadeRound"), { ssr: false });
+const PracticeRound = dynamic(() => import("./PracticeRound"));
 
 export function GameRound(props: RoundProps) {
+  if (props.items[props.index]?.practice) return <PracticeRound {...props}/>;
   if (isArcadeTemplate(props.template)) return <ArcadeRound {...props}/>;
   if (isPuzzleTemplate(props.template)) return <PuzzleRound {...props}/>;
   if (props.template === "crossword" || props.template === "matching-pairs") return <BoardRound {...props}/>;

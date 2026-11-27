@@ -66,3 +66,9 @@ V1.4D dựa trên PR #4. Chỉ phát hành sau khi review các PR theo thứ t�
 - V1.5C sẽ đối chiếu cấu trúc thi Cambridge English hiện hành trước khi xây dựng bài luyện gốc theo từng phần. Tiến độ sẽ dùng cách tính điểm nội bộ của Sân Chơi.
 
 V1.5A dùng nhánh review dựa trên V1.4D. Chỉ phát hành sau khi chủ dự án phê duyệt. Khóa bí mật từng lộ vẫn là rủi ro chưa xử lý.
+
+## Tích hợp V1.5B1
+
+Chuỗi nhánh đang review là PR #1 → #2 → #3 → #4 → #5 → #6 → B1. Khi có phê duyệt, tích hợp từng PR từ đầu chuỗi. Với mỗi PR kế tiếp, đổi base về nhánh đích đã tích hợp, xác nhận diff chỉ còn phần riêng của PR, rồi kiểm tra build, migration tương ứng và Vercel Preview. Giữ các nhánh nguồn cho đến khi PR phụ thuộc đã đổi base.
+
+B1 tập trung vào luyện nghe, phonics và độ phủ học liệu Kids/Starters. B2 dành cho đọc, ngữ pháp và Lesson Builder nhiều bước. B3 dành cho nói, viết, rubric và nhận xét. V1.5C sẽ bắt đầu bằng đối chiếu đặc tả Cambridge hiện hành. Khóa bí mật từng lộ vẫn là rủi ro chưa xử lý.

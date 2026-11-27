@@ -17,8 +17,10 @@ export function VocabularyLibrary({ words, initial }: { words: BankWord[]; initi
   const [page, setPage] = useState(0);
   const [chosen, setChosen] = useState(initial?.entry_keys ?? []);
   const topics = [...new Set(words.filter(word => !level || word.level === level).map(word => word.topic))].sort();
-  const matching = words.filter(word => (!level || word.level === level) && (!topic || word.topic === topic) &&
-    (!source || word.id.startsWith("catalog/") === (source === "catalog")) && normalize(word.word + " " + word.meaning).includes(normalize(query)));
+  const matching = words.filter(word => Boolean(word.archived_at) === (source === "archived") &&
+    (!level || word.level === level) && (!topic || word.topic === topic) &&
+    (!source || source === "archived" || word.id.startsWith("catalog/") === (source === "catalog")) &&
+    normalize(word.word + " " + word.meaning).includes(normalize(query)));
   const pages = Math.max(1, Math.ceil(matching.length / perPage));
   const slice = matching.slice(page * perPage, (page + 1) * perPage);
   const selected = new Set(chosen);
@@ -40,7 +42,8 @@ export function VocabularyLibrary({ words, initial }: { words: BankWord[]; initi
         <label>Chủ đề<select value={topic} onChange={event => { setTopic(event.target.value); setPage(0); }}>
           <option value="">Tất cả</option>{topics.map(value => <option key={value}>{value}</option>)}</select></label>
         <label>Nguồn<select value={source} onChange={event => { setSource(event.target.value); setPage(0); }}>
-          <option value="">Tất cả</option><option value="catalog">Học liệu Sân Chơi</option><option value="mine">Từ của tôi</option></select></label>
+          <option value="">Tất cả</option><option value="catalog">Học liệu Sân Chơi</option><option value="mine">Từ của tôi</option>
+          <option value="archived">Đã lưu trữ</option></select></label>
       </div>
       <div className="inline-actions">
         <p role="status" className="muted">{matching.length} từ · Đã chọn {chosen.length}/60</p>
@@ -49,7 +52,7 @@ export function VocabularyLibrary({ words, initial }: { words: BankWord[]; initi
       <ul className="bank-words">
         {slice.map(word => <li key={word.id}>
           <label className="bank-word">
-            <input type="checkbox" checked={selected.has(word.id)} disabled={chosen.length >= 60 && !selected.has(word.id)} onChange={() => pick(word.id)}/>
+            <input type="checkbox" checked={selected.has(word.id)} disabled={!selected.has(word.id) && (Boolean(word.archived_at) || chosen.length >= 60)} onChange={() => pick(word.id)}/>
             <span><strong lang="en">{word.word}</strong><span>{word.meaning}</span></span>
           </label>
           <small>{word.topic}{word.ipa ? " · " + word.ipa : ""}</small>

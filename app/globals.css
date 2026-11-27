@@ -389,3 +389,7 @@ ol.memory-strip{padding-left:1.8rem;gap:1.5rem}
 @media(prefers-reduced-motion:no-preference){.arcade-risk-answers,.game-win-or-lose-quiz .result{animation:arcade-stage-enter .27s ease-out both}}
 @keyframes arcade-stage-enter{from{opacity:0;transform:translateY(.55rem)}}
 @media(max-width:470px){.arcade-bins,.arcade-risk-answers{grid-template-columns:repeat(2,minmax(0,1fr))}.arcade-dom-field{min-height:230px}}
+.practice-picture { position: relative; width: fit-content; isolation: isolate; }
+.practice-picture > span { position: absolute; inset: 0; mask: center / contain no-repeat; mix-blend-mode: multiply; pointer-events: none; }
+.practice-swatch { display: inline-block; width: 1.4rem; height: 1.4rem; border: 1px solid currentColor; border-radius: 50%; margin-inline-end: .5rem; vertical-align: middle; }
+.practice-round .inline-actions label { min-width: 7rem; }

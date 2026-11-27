@@ -7,6 +7,10 @@ import { contentSchema, grade, makePlayItems, missedReview, templateSchema } fro
 import { allowedTeacher, database, privilegedDatabase, serverConfigured } from "@/lib/supabase";
 import { mediaUrls } from "@/lib/media-server";
 import { hangmanPattern } from "@/lib/games/word-puzzles";
+import type { Item } from "@/lib/game";
+
+const studentMedia = (items: Item[]) => items.map(item =>
+  item.practice ? { ...item, english: undefined, optionMedia: undefined } : item);
 
 async function attemptLimit(db: ReturnType<typeof privilegedDatabase>, id: string, operation: "start" | "finish" | "media", attempt?: string) {
   const ip = process.env.VERCEL === "1" ? (await headers()).get("x-vercel-forwarded-for")?.trim() ?? "" : "";
@@ -59,7 +63,7 @@ export async function refreshLessonMedia(source: "assignment" | "activity" | "re
     const { db, data, items } = assignment;
     const attempt = await db.from("attempts").select("id").eq("assignment_id", id).eq("id", token!).is("completed_at", null).maybeSingle();
     if (!attempt.data || await attemptLimit(db, id, "media", "assignment:" + token)) return null;
-    const fresh = await mediaUrls(items, data.owner_id, 900);
+    const fresh = await mediaUrls(studentMedia(items), data.owner_id, 900);
     const stillOpen = await getAssignment(id);
     const stillInProgress = await db.from("attempts").select("id").eq("assignment_id", id)
       .eq("id", token!).is("completed_at", null).maybeSingle();
@@ -77,6 +81,7 @@ export async function refreshLessonMedia(source: "assignment" | "activity" | "re
   }
   const template = templateSchema.safeParse(data.template);
   const items = template.success && contentSchema(template.data, true).safeParse(data.content);
+  if (source === "resource" && items && items.success && items.data.some(item => item.practice)) return null;
   if (!items || !items.success || await attemptLimit(privilegedDatabase(), id, "media")) return null;
   return mediaUrls(items.data, data.owner_id, 900);
 }
@@ -115,7 +120,7 @@ export async function startAttempt(id: string, nickname: string) {
     }
   }
   return { draftId: createHash("sha256").update(token).digest("hex"),
-    items: projected, assets: await mediaUrls(items, data.owner_id),
+    items: projected, assets: await mediaUrls(studentMedia(items), data.owner_id),
     reveals: template === "flash-cards" ? items.map(item => item.answers[0]) :
       template === "open-box" ? items.map(item => item.prompt) : [] };
 }

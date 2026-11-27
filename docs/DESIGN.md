@@ -48,3 +48,9 @@ Thư viện tiếng Anh giữ kiểu chữ và nút V1.4D. Thẻ bài mở đầ
 **Prompt sprite**
 
 > Transparent game sprites arranged in precisely spaced 4 columns and 2 rows of equal cells with large transparent gutters, original gouache paper-cut Nintendo-independent children's storybook style. One separate centered character or object per cell. Row 1 from left: teal fox explorer with mustard scarf, orange flying peach with tiny cream paper wings, friendly red and cream propeller plane pointed right, glossy lavender striped balloon with tied ribbon. Row 2: smiling tan mole peeking up with round blue garden hat; orange recycling crate with blue classroom objects; purple and gold theatrical buzzer and stars; coral seedpod with leaves. All eight isolated silhouettes separated with transparent padding, neutral lighting, no baselines that cross cells, no words, no symbols or gradients as background, no text. Landscape aspect ratio.
+
+## V1.5B1 — Luyện nghe và ngữ âm
+
+Màn bài luyện dùng chung HUD và hiển thị nút Nghe, Dừng, Nghe lại cùng tốc độ 0,75× hoặc 1×. Giáo viên có thể đặt giới hạn theo clip trong lượt làm. Trình duyệt lưu lượt nghe của phiên hiện tại, kể cả khi tải lại cùng tab. Giới hạn hướng dẫn luyện tập, còn quyền mở tệp do Storage quản lý.
+
+Audio mẫu được gắn nhãn tổng hợp. Mẫu phonics cung cấp câu hỏi gốc và yêu cầu giáo viên kiểm tra bản ghi trước khi xuất bản. Listen and Colour tô lên hình quyển sách vẽ cho Sân Chơi và có nhãn màu bằng chữ. Listen and Match ghép từng clip với một thẻ. Transcript chỉ hiện trong Dialogue khi giáo viên bật.
