@@ -12,7 +12,7 @@ import { check, type database } from "@/lib/supabase";
 import { assignLessonStep, duplicatePlan } from "../plan-actions";
 
 type Database = Awaited<ReturnType<typeof database>>;
-export type LessonQuery = { game?: string; problem?: string; mode?: string; step?: string; sample?: string; saved?: string };
+export type LessonQuery = { game?: string; problem?: string; mode?: string; step?: string; sample?: string; saved?: string; omitted?: string };
 
 export async function PlanEdit({ db, owner, id, sample, initial, startingPlan }: { db: Database; owner: string; id: string | null;
   sample?: string; initial?: LessonDetails; startingPlan?: LessonPlan }) {
@@ -80,7 +80,8 @@ export async function PlanView({ db, owner, id, plan, lesson, query }: { db: Dat
       : selected && <p className="notice">Hoạt động chưa có nội dung dùng được. {activity?.activityId && <Link href={`/activities/${activity.activityId}?edit=1`}>Mở trình soạn</Link>}</p>}
     {!presenting && selected && <>
       {query.problem === "deadline" && <p role="alert" className="notice error">Hạn nộp phải ở tương lai.</p>}
-      {playable && !activity.draft && <details className="panel" key={selected.id}><summary>Giao hoạt động này · {activity.title}</summary>
+      {plan.draft && <p className="notice">Lưu giáo án ở trạng thái sẵn sàng để giao hoạt động.</p>}
+      {playable && !plan.draft && !activity.draft && <details className="panel" key={selected.id}><summary>Giao hoạt động này · {activity.title}</summary>
         <AssignmentForm action={assignLessonStep.bind(null, id, selected.id)}/></details>}
       <section className="panel stack"><h3>Kết quả hoạt động</h3>
         {assignments?.data?.length ? <ul className="bank-lesson-list">

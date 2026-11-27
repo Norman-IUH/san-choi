@@ -16,11 +16,11 @@ import { gameTheme } from "./games/game-themes";
 
 type Props = { title: string; description?: string; backHref?: string; template: Template; initialItems?: PlayItem[]; reveals?: string[];
   localContent?: Item[]; assignment?: string; requireName?: boolean; assets?: Record<string, string>;
-  mediaScope?: { source: "activity" | "resource"; id: string } };
+  mediaScope?: { source: "activity" | "resource"; id: string }; voiceEnabled?: boolean };
 
 const subscribeToNothing = () => () => {};
 
-export function Player({ title, description, backHref, template, initialItems = [], reveals: initialReveals = [], localContent, assignment, requireName, assets: initialAssets = {}, mediaScope }: Props) {
+export function Player({ title, description, backHref, template, initialItems = [], reveals: initialReveals = [], localContent, assignment, requireName, assets: initialAssets = {}, mediaScope, voiceEnabled }: Props) {
   const ready = useSyncExternalStore(subscribeToNothing, () => true, () => false);
   const [items, setItems] = useState(initialItems);
   const [reveals, setReveals] = useState(initialReveals);
@@ -32,7 +32,7 @@ export function Player({ title, description, backHref, template, initialItems = 
   const [nickname, setNickname] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{ score: number | null; total: number; review?: ReviewEntry[] } | null>(null);
+  const [result, setResult] = useState<{ score: number | null; total: number; review?: ReviewEntry[]; pendingReview?: boolean } | null>(null);
   const [feedback, setFeedback] = useState("");
   const [sound, setSound] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
@@ -189,7 +189,7 @@ export function Player({ title, description, backHref, template, initialItems = 
       if ("score" in response) {
         const review = local && localContent ? missedReview(localContent, ordered.map((answer, i) => ({ answer, correct: local.correct[i] })))
           : "review" in response ? response.review : undefined;
-        setResult({ score: response.score, total: response.total, review });
+        setResult({ score: response.score, total: response.total, review, pendingReview: "pendingReview" in response && response.pendingReview });
         if (response.score !== null && (assignment || rows)) chime(response.score === response.total);
       }
     } catch { setError("Mất kết nối. Bạn có thể thử nộp lại."); }
@@ -225,6 +225,7 @@ export function Player({ title, description, backHref, template, initialItems = 
   }
 
   const round = <GameRound key={turn} {...{ template, items, order, turn, index, answers, setAnswers, assets, reveals, busy, bindFocus, next, submit, hudTools, practiceSession }}
+    voiceUrl={voiceEnabled && assignment ? `/play/${assignment}/voice/${index}` : undefined}
     playHit={arcade ? () => chime(null) : undefined}
     guess={template === "hangman" ? async (letter, guesses) => assignment ? guessAssignmentLetter(assignment, index, letter)
       : localContent?.[index] ? { ...hangmanPattern(localContent[index].answers[0], guesses), guesses } : null : undefined}/>;
@@ -263,6 +264,7 @@ export function Player({ title, description, backHref, template, initialItems = 
       aria-describedby={result.score !== null || assignment ? outcomeId : undefined}>Hoàn thành!</h2>
       {result.score !== null && <strong id={outcomeId}>{result.score}/{result.total} điểm</strong>}
       {assignment && <p id={result.score === null ? outcomeId : undefined}>Bài làm đã được lưu.</p>}
+      {assignment && result.pendingReview && <Link className="button" href={`/play/${assignment}/review`}>Xem nhận xét khi giáo viên công bố</Link>}
       <p>{result.score !== null && result.score === result.total ? "Em đã hoàn thành xuất sắc!" : "Giỏi lắm, em đã hoàn thành lượt chơi."}</p>
       {!!result.review?.length && <details className="review-panel"><summary>Xem lại câu sai ({result.review.length})</summary>
         <ol>{result.review.map((entry, index) => <li key={index}>

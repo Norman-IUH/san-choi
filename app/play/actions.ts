@@ -1,30 +1,18 @@
 "use server";
-import { createHash, createHmac } from "node:crypto";
-import { isIP } from "node:net";
-import { cookies, headers } from "next/headers";
+import { createHash } from "node:crypto";
+import { cookies } from "next/headers";
 import { z } from "zod";
 import { contentSchema, grade, makePlayItems, missedReview, templateSchema } from "@/lib/game";
 import { allowedTeacher, database, privilegedDatabase, serverConfigured } from "@/lib/supabase";
 import { mediaUrls } from "@/lib/media-server";
 import { hangmanPattern } from "@/lib/games/word-puzzles";
 import type { Item } from "@/lib/game";
+import { isProductive } from "@/lib/games/productive";
+import { attemptLimit } from "@/lib/attempt-rate";
 
 const studentMedia = (items: Item[]) => items.map(item =>
   item.practice ? { ...item, english: undefined, optionMedia: item.practice.pictureChoices
     ? item.optionMedia?.map(({ option, image }) => ({ option, image })) : item.optionMedia } : item);
-
-async function attemptLimit(db: ReturnType<typeof privilegedDatabase>, id: string, operation: "start" | "finish" | "media", attempt?: string) {
-  const ip = process.env.VERCEL === "1" ? (await headers()).get("x-vercel-forwarded-for")?.trim() ?? "" : "";
-  // shortcut: non-Vercel hosts share a bucket per assignment until they supply a trusted client address.
-  const identity = attempt ? `session:${attempt}` : isIP(ip) ? `ip:${ip}` : `assignment:${id.toLowerCase()}`;
-  const scope = createHmac("sha256", process.env.SUPABASE_SECRET_KEY!).update(identity).digest("hex");
-  const { data, error } = await db.rpc("consume_attempt_limit", { p_operation: operation, p_scope: scope });
-  if (error) {
-    console.error(JSON.stringify({ operation: "attempt_rate_limit", code: error.code }));
-    return "Máy chủ đang gián đoạn. Hãy thử lại sau.";
-  }
-  return data === true ? null : "Có quá nhiều yêu cầu. Hãy thử lại sau một phút.";
-}
 
 export async function guessAssignmentLetter(id: string, index: number, letter: string | null) {
   if (!serverConfigured || !z.uuid().safeParse(id).success ||
@@ -128,7 +116,7 @@ export async function startAttempt(id: string, nickname: string) {
 
 export async function finishAttempt(id: string, values: string[][]) {
   if (!z.uuid().safeParse(id).success) return { error: "Bài tập không hợp lệ." } as const;
-  const parsed = z.array(z.array(z.string().max(400)).max(40)).min(1).max(60).safeParse(values);
+  const parsed = z.array(z.array(z.string().max(1200)).max(40)).min(1).max(60).safeParse(values);
   if (!parsed.success) return { error: "Bài làm không hợp lệ." } as const;
   const token = (await cookies()).get(`attempt-${id}`)?.value;
   if (!token || !z.uuid().safeParse(token).success) return { error: "Phiên đã hết hạn. Hãy tải lại bài tập." } as const;
@@ -138,6 +126,11 @@ export async function finishAttempt(id: string, values: string[][]) {
   const limitError = await attemptLimit(db, id, "finish");
   if (limitError) return { error: limitError } as const;
   if (parsed.data.length !== items.length) return { error: "Hãy hoàn thành tất cả các mục trước khi nộp." } as const;
+  if (parsed.data.some((row, index) => {
+    const practice = items[index].practice;
+    if (practice?.production && isProductive(practice.mode)) return row.length > 1 || row.some(value => value.length > practice.production!.limit);
+    return row.some(value => value.length > 400);
+  })) return { error: "Câu trả lời vượt giới hạn." } as const;
   let answers = parsed.data;
   if (template === "hangman") {
     const previous = await db.from("attempts").select("completed_at").eq("assignment_id", id).eq("id", token).maybeSingle();
@@ -162,6 +155,11 @@ export async function finishAttempt(id: string, values: string[][]) {
   }).maybeSingle();
   if (error || !saved) return { error: "Chưa nộp được bài. Kiểm tra hạn và thử lại." } as const;
   const record = saved as { score: number | null; total: number; answers: { answer: string[]; correct: boolean | null }[] };
+  if (data.assessment) {
+    (await cookies()).set(`receipt-${id}`, token, { httpOnly: true, sameSite: "lax", secure: process.env.APP_URL?.startsWith("https:"),
+      path: `/play/${id}/review`, maxAge: 30 * 86400 });
+  }
   return { score: data.show_score ? record.score : null, total: record.total,
+    pendingReview: Boolean(data.assessment),
     ...(data.show_review && { review: missedReview(items, record.answers) }) };
 }

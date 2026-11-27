@@ -51,25 +51,28 @@ export async function duplicatePlan(id: string) {
   const existing = activityIds.length ? await db.from("activities").select("id").eq("owner_id", user.id).is("deleted_at", null).in("id", activityIds) : null;
   check(existing?.error ?? null, "find_duplicated_plan_activities");
   const available = new Set(existing?.data?.map(row => row.id));
+  const steps = plan.steps.filter(step => step.kind === "sample" ? Boolean(sampleStep(step.source)) : available.has(step.source));
   const result = await db.from("vocabulary_lessons").insert({ ...lesson, title: lesson.title.slice(0, 90) + " (bản sao)",
-    plan: { ...plan, draft: true, steps: plan.steps.filter(step => step.kind === "sample" || available.has(step.source)) },
+    plan: { ...plan, draft: true, steps },
   }).select("id").single();
   check(result.error, "duplicate_lesson_plan");
-  redirect(`/library/${result.data!.id}?saved=plan`);
+  redirect(`/library/${result.data!.id}?saved=plan${steps.length < plan.steps.length ? `&omitted=${plan.steps.length - steps.length}` : ""}`);
 }
 
 export async function assignLessonStep(id: string, stepId: string, form: FormData) {
   const { db, user } = await account(true);
   if (!uuid.safeParse(id).success || !uuid.safeParse(stepId).success) notFound();
-  const { data, error } = await db.from("vocabulary_lessons").select("plan").eq("id", id).eq("owner_id", user.id).maybeSingle();
+  const { data, error } = await db.from("vocabulary_lessons").select("plan,level").eq("id", id).eq("owner_id", user.id).maybeSingle();
   check(error, "load_assignment_lesson");
   const plan = lessonPlanSchema.safeParse(data?.plan);
+  if (plan.success && plan.data.draft) redirect(`/library/${id}?step=${stepId}&problem=draft`);
   const step = plan.success && plan.data.steps.find(row => row.id === stepId);
   if (!step) notFound();
   const activity = await lessonActivity(db, user.id, step);
   if (!activity || activity.draft || !contentSchema(activity.template).safeParse(activity.items).success) notFound();
   const assignment = await insertAssignment({ owner_id: user.id, activity_id: activity.activityId,
-    title: activity.title, template: activity.template, content: activity.items, lesson_id: id, lesson_step: stepId }, form);
+    title: activity.title, template: activity.template, content: activity.items, lesson_id: id, lesson_step: stepId, level: data?.level }, form);
+  if (assignment === "draft") redirect(`/library/${id}?step=${stepId}&problem=draft`);
   if (!assignment) redirect(`/library/${id}?step=${stepId}&problem=deadline`);
   redirect(`/assignments/${assignment}`);
 }

@@ -7,6 +7,7 @@ import { isArcadeTemplate, riskMarker } from "./arcade-templates";
 import { pairOptions } from "./puzzle-templates";
 import { doubleMarker } from "./scoring";
 import { colourPalette, grammarTemplates, isAudioPractice, isPhonics, isReading, practiceTemplate, samplePracticeAudio } from "./practice";
+import { isProductive, isSpeaking } from "./productive";
 
 export function contentSchema(template: Template, draft = false) {
   return z.array(itemSchema).min(draft ? 0 : 1).max(60).superRefine((items, context) => {
@@ -21,6 +22,13 @@ export function contentSchema(template: Template, draft = false) {
       context.addIssue({ code: "custom", message: "Cần 2–12 cặp có mặt sau khác nhau." });
     }
     const matching = items.filter(item => item.practice?.mode === "listen-match");
+    const productive = items.find(item => item.practice && isProductive(item.practice.mode))?.practice;
+    if (productive && (items.some(item => item.practice?.mode !== productive.mode ||
+      item.practice?.production?.objective !== productive.production?.objective) || items.length > 12 ||
+      (!productive.production?.objective && !items[0].practice?.production?.rubric) ||
+      items.slice(1).some(item => item.practice?.production?.rubric))) {
+      context.addIssue({ code: "custom", message: "Bài luyện cần 1–12 câu cùng dạng, cách chấm nhất quán và một rubric cho bài chấm thủ công." });
+    }
     const reading = items.find(item => item.practice && isReading(item.practice.mode))?.practice;
     if (reading && (items.some(item => item.practice?.mode !== reading.mode) || !reading.stimulusKind ||
       (!reading.stimulus && !reading.stimulusImage) || (reading.mode === "picture-reading" && !reading.stimulusImage) ||
@@ -36,6 +44,21 @@ export function contentSchema(template: Template, draft = false) {
     }
     items.forEach(({ answers, options, prompt, alternatives, optionMedia, media, pin, secondary, math, arcade, practice }, index) => {
       const unique = new Set(options.map(normalize));
+      const response = practice?.production;
+      if (practice && isProductive(practice.mode)) {
+        const objective = response?.objective ?? false;
+        const speaks = isSpeaking(practice.mode);
+        const needsPicture = ["describe-picture", "picture-differences", "picture-writing"].includes(practice.mode);
+        if (!response || (speaks && objective) || (objective && response.rubric) ||
+          template !== (objective ? "type-answer" : "speaking") || options.length ||
+          (objective ? answers.length !== 1 || [...answers, ...(alternatives ?? [])].some(answer => answer.length > response.limit ||
+            normalize(response.example ?? "").includes(normalize(answer))) : answers.length || alternatives?.length) ||
+          (needsPicture && !media?.image) || (practice.mode === "picture-differences" && !practice.stimulusImage)) {
+          context.addIssue({ code: "custom", path: [index], message: `Kiểm tra ngữ liệu và cách chấm của mục ${index + 1}.` });
+        }
+        return;
+      }
+      if (response) context.addIssue({ code: "custom", path: [index], message: "Cấu hình câu trả lời chỉ dành cho Speaking và Writing." });
       const exposesDictation = practice?.mode === "dictation" && [...answers, ...(alternatives ?? [])]
         .some(answer => normalize(prompt + " " + (practice.stimulus ?? "")).includes(normalize(answer)));
       if (practice && ((practice.mode === "grammar" ? !grammarTemplates.some(id => template === id) : practiceTemplate(practice.mode) !== template) ||

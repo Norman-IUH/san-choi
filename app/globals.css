@@ -402,3 +402,10 @@ ol.memory-strip{padding-left:1.8rem;gap:1.5rem}
 .grammar-example { padding: .6rem .8rem; border-inline-start: 4px solid #6879b5; margin: .5rem 0; }
 .grammar-example span { padding-inline-start: .5rem; font-weight: 700; }
 @media (min-width: 850px) { .reading-layout { grid-template-columns: minmax(15rem, .8fr) minmax(0, 1.2fr); } }
+.productive-brief { padding: clamp(1rem, 3vw, 1.75rem); border: 1px solid #a9bdcf; background: #eff8fb; color: #182849; border-radius: 1rem; }
+.productive-brief h2 { margin-block: .2em .5em; }
+.productive-brief details { margin-top: .65rem; }
+.productive-pictures { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr)); gap: .65rem; }
+.productive-pictures .lesson-image { max-height: 300px; object-fit: contain; }
+.productive-round textarea, .assessment-panel textarea { white-space: pre-wrap; }
+.assessment-response { overflow-wrap: anywhere; white-space: pre-wrap; }

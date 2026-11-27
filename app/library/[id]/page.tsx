@@ -46,7 +46,8 @@ export default async function Lesson({ params, searchParams }: {
           <Link className="button primary" href={`/library/${id}?mode=edit`}>Thêm tiến trình giáo án</Link></>}</div>
     </div>
     {query.saved === "plan" && <p role="status" className="notice">Đã lưu giáo án.</p>}
-    {query.problem && query.problem !== "deadline" && <p role="alert" className="notice error">{query.problem}</p>}
+    {query.omitted && /^\d{1,2}$/.test(query.omitted) && <p role="status" className="notice">Bản sao bỏ qua {query.omitted} hoạt động hiện không khả dụng.</p>}
+    {query.problem && query.problem !== "deadline" && <p role="alert" className="notice error">{query.problem === "draft" ? "Hãy lưu giáo án ở trạng thái sẵn sàng trước khi giao." : query.problem}</p>}
     {plan && <PlanView db={db} owner={user.id} id={id} plan={plan} lesson={lesson} query={query}/>}
     {words.length !== lesson.entry_keys.length && <p role="alert" className="notice error">Một số từ không còn khả dụng. Hãy cập nhật bài học.</p>}
     {!!lesson.entry_keys.length && <><section className="panel stack">

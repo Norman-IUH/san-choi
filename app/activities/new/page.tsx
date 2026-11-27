@@ -10,9 +10,11 @@ import { readingSample } from "@/lib/reading-samples";
 import { builtInMediaUrls } from "@/lib/media";
 import { grammarSample, grammarTopics } from "@/lib/grammar-samples";
 import { levels } from "@/lib/game";
-export default async function Create({ searchParams }: { searchParams: Promise<{ template?: string; practice?: string; grammar?: string }> }) {
+import { isProductive, speakingModes, writingModes } from "@/lib/games/productive";
+import { productiveSample } from "@/lib/productive-samples";
+export default async function Create({ searchParams }: { searchParams: Promise<{ template?: string; practice?: string; grammar?: string; open?: string }> }) {
   await account(true);
-  const { template, practice, grammar } = await searchParams;
+  const { template, practice, grammar, open } = await searchParams;
   const grammarActivity = grammar ? grammarSample(grammar) : null;
   if (grammarActivity) return <div className="narrow wide stack">
     <Link className="back" href="/activities/new#grammar">← Chọn chủ điểm</Link><h1 lang="en">{grammarActivity.title}</h1>
@@ -20,6 +22,14 @@ export default async function Create({ searchParams }: { searchParams: Promise<{
       initial={{ title: grammarActivity.title, subject: "English", description: "", grade: grammarActivity.level, tags: "Grammar", visibility: "private" }}/>
   </div>;
   const mode = practiceModeSchema.safeParse(practice);
+  if (mode.success && isProductive(mode.data)) {
+    const sample = productiveSample(mode.data, open === "1" && mode.data === "short-answers");
+    return <div className="narrow wide stack"><Link className="back" href="/activities/new#productive">← Chọn bài luyện</Link>
+      <h1 lang="en">{sample.label}</h1>
+      <Editor id={null} template={sample.template} practiceMode={mode.data} content={sample.items} assets={builtInMediaUrls(sample.items)}
+        initial={{ title: sample.title, subject: "English", description: "", grade: sample.level, tags: sample.skill, visibility: "private" }}/>
+    </div>;
+  }
   if (mode.success && isReading(mode.data)) {
     const sample = readingSample(mode.data);
     return <div className="narrow wide stack"><Link className="back" href="/activities/new#reading">← Chọn bài đọc</Link>
@@ -54,5 +64,11 @@ export default async function Create({ searchParams }: { searchParams: Promise<{
             {grammarTopics.filter(topic => topic.level === level).map(topic => <Link className="button" key={topic.key}
               href={`/activities/new?grammar=${topic.key}`} lang="en">{topic.title}</Link>)}
           </div></details>)}
+        </section><section id="productive" className="panel stack"><h2>Luyện nói và viết</h2>
+          {[speakingModes, writingModes].map((group, index) => <div className="stack" key={index}>
+            <h3>{index === 0 ? "Speaking" : "Writing"}</h3><div className="inline-actions">{Object.entries(group).map(([id, name]) =>
+              <Link key={id} className="button" href={`/activities/new?practice=${id}`} lang="en">{name}</Link>)}
+              {index === 1 && <Link className="button" href="/activities/new?practice=short-answers&open=1">Short Answers · chấm thủ công</Link>}
+            </div></div>)}
         </section><Templates creator/></div>}</div>;
 }

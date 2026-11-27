@@ -10,6 +10,7 @@ import { arcadeTemplates, defaultArcade, isArcadeTemplate } from "@/lib/games/ar
 import { MediaInput } from "./MediaInput";
 import { importVocabulary } from "@/lib/vocabulary-import";
 import { isPhonics, isReading, practiceModes, type PracticeMode } from "@/lib/games/practice";
+import { defaultRubric, isProductive, isSpeaking } from "@/lib/games/productive";
 
 export type ActivityFields = { title: string; description: string; subject: string; grade: string; tags: string;
   visibility: "private" | "public" | "unlisted" };
@@ -36,11 +37,16 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
   const fixedChoices = template === "true-false" ? truthOptions : compare ? pairOptions : null;
   const mode = practiceMode ?? content.find(item => item.practice)?.practice?.mode;
   const reading = mode && isReading(mode);
+  const productive = Boolean(mode && isProductive(mode));
+  const speaking = Boolean(mode && isSpeaking(mode));
+  const objective = productive && template === "type-answer";
+  const [rubric, setRubric] = useState(() => content[0]?.practice?.production?.rubric ?? defaultRubric(speaking ? "Speaking" : "Writing"));
   const [stimulus, setStimulus] = useState(() => {
     const practice = content[0]?.practice;
     return { stimulus: practice?.stimulus ?? "", stimulusKind: practice?.stimulusKind ?? "passage", stimulusImage: practice?.stimulusImage } as const;
   });
-  const defaultEntry: Entry = mode ? { ...blank, practice: { version: 1, mode, maxPlays: 0, showTranscript: false, reviewedAudio: false } } :
+  const defaultEntry: Entry = mode ? { ...blank, practice: { version: 1, mode, maxPlays: 0, showTranscript: false, reviewedAudio: false,
+    ...(productive && { production: { objective, limit: objective ? 100 : 240, preparation: 0, duration: 0 } }) } } :
     diagram ? { ...blank, pin: { x: 50, y: 50 } } : arcade ? { ...blank, arcade: defaultArcade } : maths ?
     { ...blank, prompt: "Tính kết quả.", math: { operation: "add", min: 1, max: 10 } } : blank;
   const [error, setError] = useState("");
@@ -57,7 +63,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
   const kind = templates[template].kind;
   const alternatives = kind === "blank" || template === "type-answer";
   const wordPuzzle = ["spell-word", "wordsearch", "hangman", "crossword"].includes(template);
-  const maxItems = mode === "listen-match" ? 8 : template === "crossword" ? 10 : template === "matching-pairs" ? 12 : 60;
+  const maxItems = productive ? 12 : mode === "listen-match" ? 8 : template === "crossword" ? 10 : template === "matching-pairs" ? 12 : 60;
   const answerLabel = template === "group-sort" ? "Nhóm" : kind === "pair" ? "Mặt sau / giá trị ghép" :
     kind === "sequence" ? "Các từ theo thứ tự đúng, mỗi dòng một từ hoặc cụm từ" :
     kind === "choice" ? "Đáp án đúng, mỗi dòng một đáp án có trong phương án" : "Đáp án";
@@ -84,7 +90,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
   return <form className="stack editor" onSubmit={handleSubmit((data, event) => {
     if (structureBusy) return;
     const draft = (event?.nativeEvent as SubmitEvent)?.submitter?.getAttribute("value") !== "publish";
-    const source = draft && reading ? data.content.filter(item => item.prompt.trim()) : data.content;
+    const source = draft && (reading || productive) ? data.content.filter(item => item.prompt.trim()) : data.content;
     const entries = source.map(({ prompt, answers, options, alternatives, explanation, english, media, optionMedia, secondary, pin, math, practice, arcade: settings }, index) => {
       const lexical = english && {
         level: english.level || undefined, skill: english.skill || undefined, meaning: english.meaning?.trim() || undefined,
@@ -95,6 +101,9 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
         explanation: explanation?.trim() || undefined, alternatives: lines(alternatives ?? ""),
         english: lexical && Object.values(lexical).some(Boolean) ? lexical : undefined,
         practice: practice && { ...practice, stimulus: practice.stimulus?.trim() || undefined, transcript: practice.transcript?.trim() || undefined,
+          ...(practice.production && { production: { ...practice.production, objective,
+            hints: practice.production.hints?.trim() || undefined, example: practice.production.example?.trim() || undefined,
+            rubric: index === 0 && !objective ? rubric : undefined } }),
           ...(reading && { stimulus: index === 0 ? stimulus.stimulus.trim() || undefined : undefined,
             stimulusKind: index === 0 ? stimulus.stimulusKind : undefined, stimulusImage: index === 0 ? stimulus.stimulusImage : undefined }) },
         media: media?.image || media?.audio ? media : undefined,
@@ -117,6 +126,21 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
         <label>Thẻ<input {...register("tags")} maxLength={250}/></label>
         <label>Quyền xem<select {...register("visibility")}><option value="private">Riêng tư</option>{!mode && <><option value="unlisted">Có link</option><option value="public">Công khai</option></>}</select></label></div>
     </div>
+    {productive && !objective && <section className="panel stack"><h2>Rubric nội bộ</h2>
+      {rubric.map((row, index) => <fieldset className="form-grid" key={index}><legend>Tiêu chí {index + 1}</legend>
+        <label>Tên tiêu chí<input required maxLength={60} value={row.title} onChange={event => {
+          const title = event.target.value; setRubric(previous => previous.map((item, i) => i === index ? { ...item, title } : item));
+        }}/></label>
+        <label>Mô tả tiêu chí<input maxLength={240} value={row.description} onChange={event => {
+          const description = event.target.value; setRubric(previous => previous.map((item, i) => i === index ? { ...item, description } : item));
+        }}/></label>
+        <label>Điểm tối đa<input type="number" required min={1} max={20} value={row.max || ""} onChange={event => {
+          const max = Number(event.target.value); setRubric(previous => previous.map((item, i) => i === index ? { ...item, max } : item));
+        }}/></label>
+        <button type="button" className="button" disabled={rubric.length <= 1} onClick={() => setRubric(rubric.filter((_, i) => index !== i))}>Bỏ tiêu chí {index + 1}</button>
+      </fieldset>)}
+      <button type="button" className="button" disabled={rubric.length >= 8} onClick={() => setRubric([...rubric, { title: "", description: "", max: 4 }])}>Thêm tiêu chí</button>
+    </section>}
     {reading && <section className="panel stack"><h2>Ngữ liệu chung</h2>
       <label>Loại ngữ liệu<select value={stimulus.stimulusKind} onChange={event => {
         const stimulusKind = event.target.value as NonNullable<NonNullable<Item["practice"]>["stimulusKind"]>;
@@ -148,7 +172,22 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
       <label>{kind === "blank" ? "Câu có dấu ___ ở chỗ trống" : kind === "pair" ? "Mặt trước / nội dung" : "Câu hỏi hoặc gợi ý"}
         <textarea {...register(`content.${i}.prompt`)} maxLength={400} rows={2}/></label>
       {item?.practice?.mode === "grammar" && <label>Ví dụ mẫu cho học sinh<textarea lang="en" {...register(`content.${i}.practice.stimulus`)} maxLength={1000}/></label>}
-      {item?.practice && !reading && item.practice.mode !== "grammar" && <section className="stack">
+      {productive && item?.practice?.production && <section className="stack">
+        <label>Ngữ liệu hoặc hướng dẫn<textarea {...register(`content.${i}.practice.stimulus`)} maxLength={3000}/></label>
+        <label>Từ vựng gợi ý<input {...register(`content.${i}.practice.production.hints`)} maxLength={300}/></label>
+        {!objective && <label>Câu mẫu<input {...register(`content.${i}.practice.production.example`)} maxLength={400}/></label>}
+        <label>Giới hạn ký tự {speaking ? "ghi chú" : "câu trả lời"}<input type="number" min={1} max={1200} required
+          {...register(`content.${i}.practice.production.limit`, { valueAsNumber: true })}/></label>
+        {speaking && <div className="form-grid">
+          <label>Thời gian chuẩn bị (giây)<input type="number" min={0} max={120} required {...register(`content.${i}.practice.production.preparation`, { valueAsNumber: true })}/></label>
+          <label>Thời lượng trả lời (0 để tự chọn)<input type="number" min={0} max={90} required {...register(`content.${i}.practice.production.duration`, { valueAsNumber: true })}/></label>
+        </div>}
+        {mode === "picture-differences" && <MediaInput label="Ảnh so sánh" kind="image" path={item.practice.stimulusImage}
+          url={assets[item.practice.stimulusImage ?? ""]} onBusy={trackUpload} onChange={(path, url) => {
+            remember(path, url); setValue(`content.${i}.practice.stimulusImage`, path);
+          }}/>}
+      </section>}
+      {item?.practice && !reading && !productive && item.practice.mode !== "grammar" && <section className="stack">
         <strong>{practiceModes[item.practice.mode]}</strong>
         <label>Hướng dẫn hoặc ngữ cảnh hiển thị<textarea {...register(`content.${i}.practice.stimulus`)} maxLength={1000}/></label>
         <label>Số lượt nghe tối đa (0 là không giới hạn)<input type="number" min={0} max={10} {...register(`content.${i}.practice.maxPlays`, { valueAsNumber: true })}/></label>

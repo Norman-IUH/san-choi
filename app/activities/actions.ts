@@ -142,13 +142,13 @@ export async function changeFolder(id: string | null, command: string, form: For
 export async function createAssignment(id: string, form: FormData) {
   if (!uuid.safeParse(id).success) notFound();
   const { db, user } = await account(true);
-  const { data: activity, error } = await db.from("activities").select("id,title,template,content,draft,deleted_at").eq("id", id).maybeSingle();
+  const { data: activity, error } = await db.from("activities").select("id,title,template,content,draft,deleted_at,grade").eq("id", id).maybeSingle();
   check(error, "assignment_source");
   if (!activity || activity.draft || activity.deleted_at) notFound();
   const template = templateSchema.parse(activity.template);
   const content = contentSchema(template).parse(activity.content);
-  const assignment = await insertAssignment({ owner_id: user.id, activity_id: id, title: activity.title, template, content }, form);
-  if (!assignment) redirect(`/activities/${id}?invalid=1`);
+  const assignment = await insertAssignment({ owner_id: user.id, activity_id: id, title: activity.title, template, content, level: activity.grade }, form);
+  if (!assignment || assignment === "draft") redirect(`/activities/${id}?invalid=1`);
   redirect(`/assignments/${assignment}`);
 }
 
