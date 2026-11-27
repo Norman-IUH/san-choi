@@ -27,6 +27,8 @@ Prompt ImageGen
 
 Hai atlas nguyên gốc được tạo bằng ImageGen cho Sân Chơi. Atlas môi trường được cắt thành ảnh nền WebP riêng. Atlas nhân vật được chia ô và chuẩn hóa alpha ở phần nền bán trong suốt trước khi xuất sprite WebP. Các màn giữ người chơi, đáp án và hiệu ứng ở các lớp riêng. Phaser vẽ sân khấu, còn điều khiển, câu hỏi, media và kết quả dùng giao diện HTML hiện có.
 
+Ảnh đại diện trong thư viện dùng sân khấu đang chơi của từng demo, chụp trên Chromium rồi chuyển sang WebP rộng 640 px trong `public/illustrations/gameplay`. Màn mở đầu dùng ảnh nền ImageGen để giới thiệu chủ đề của trò.
+
 **Prompt môi trường**
 
 > An exact 4 column by 2 row 8 panel game background atlas, wide landscape image, no gaps, even equal rectangles. Original premium illustrated picture-book art for a Vietnamese children's English arcade; tactile paper and gouache, brightly lit, clear silhouettes, composed like game level backgrounds with spacious center. Row 1 panels left to right: aerial emerald jungle maze ruins with turquoise stream, peach-orange golden orchard with flying leaves, deep blue airplane sky with fluffy clouds and sandstone canyons, purple sunset festival with balloons at the edges. Row 2 left to right: green garden with soft grassy earth, aqua classroom recycling workshop, navy and violet art-deco quiz stage with spotlights, cream and coral paper textures. No words, numbers, watermarks, humans, interface, borders or dividing lines. Each panel independently designed to be used as an illustrated game stage.

@@ -1,8 +1,9 @@
 "use client";
-import { useEffect, useEffectEvent, useRef } from "react";
+import { useContext, useEffect, useEffectEvent, useRef } from "react";
 import Phaser from "phaser";
 import { arcadeWorlds } from "@/lib/games/arcade-templates";
-import { arenaHeight, arenaWidth, hits, maze, mazePoint, mazeTile, type ArcadeSimulation } from "@/lib/games/arcade-runtime";
+import { arenaHeight, arenaWidth, maze, mazePoint, mazeTile, type ArcadeSimulation } from "@/lib/games/arcade-runtime";
+import { RefreshLessonMedia } from "./LessonMedia";
 
 export default function ArcadeCanvas({ simulation, assets, onOutcome, onClock }: {
   simulation: ArcadeSimulation;
@@ -13,6 +14,8 @@ export default function ArcadeCanvas({ simulation, assets, onOutcome, onClock }:
   const root = useRef<HTMLDivElement>(null);
   const notifyOutcome = useEffectEvent(onOutcome);
   const notifyClock = useEffectEvent(onClock);
+  const refreshMedia = useContext(RefreshLessonMedia);
+  const renewMedia = useEffectEvent((url: string) => refreshMedia?.(url));
 
   useEffect(() => {
     const host = root.current;
@@ -35,9 +38,14 @@ export default function ArcadeCanvas({ simulation, assets, onOutcome, onClock }:
     const game = new Phaser.Game({
       type: Phaser.CANVAS, parent: mount, width: arenaWidth, height: arenaHeight,
       scale: { mode: Phaser.Scale.NONE },
+      fps: { smoothStep: false },
+      input: { keyboard: false, mouse: false, touch: false },
       backgroundColor: skin.colors[0], audio: { noAudio: true }, banner: false,
       scene: {
         preload(this: Phaser.Scene) {
+          this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: Phaser.Loader.File) => {
+            if (file.key.startsWith("option-") && typeof file.url === "string") renewMedia(file.url);
+          });
           this.load.image("world", path + mode + ".webp");
           this.load.image("avatar", path + mode + "-sprite.webp");
           if (mapped || lane) this.load.image("token", path + "seed-sprite.webp");
@@ -64,13 +72,8 @@ export default function ArcadeCanvas({ simulation, assets, onOutcome, onClock }:
             item.options.forEach((_, i) => this.add.rectangle(480, simulation.lane(i), 908, 2, 0xffffff, .3));
             this.add.rectangle(143, 240, 4, 366, 0xb8f4ff, .65);
           }
-          this.input.on("pointerup", (pointer: Phaser.Input.Pointer) => {
-            if (lane) simulation.steer(pointer.y);
-            else if (!mapped) {
-              const target = simulation.targets().find(target => target.visible &&
-                hits(pointer, { x: target.x, y: target.y - 33 }, 85, 67));
-              if (target) simulation.pick(target.index);
-            }
+          if (mode === "whack-a-mole") simulation.targets().forEach(target => {
+            this.add.ellipse(target.x, target.y + 10, 148, 51, 0x332219).setStrokeStyle(5, 0xa57755);
           });
           pieces = simulation.targets().map(({ x, y, index }) => {
             const width = mapped ? 112 : lane ? 132 : 166;
@@ -81,11 +84,12 @@ export default function ArcadeCanvas({ simulation, assets, onOutcome, onClock }:
             if (this.textures.exists(imageKey)) {
               group.add(this.add.image(0, lane || mapped ? -28 : -52, imageKey).setDisplaySize(lane || mapped ? 36 : 72, lane || mapped ? 36 : 72));
             } else if (!mapped) {
-              group.add(this.add.image(0, lane ? -3 : -57, lane ? "token" : "avatar")
-                .setDisplaySize(lane ? 38 : 102, lane ? 38 : 102).setAlpha(lane ? .36 : 1));
+              const sprite = this.add.image(0, lane ? -3 : -57, lane ? "token" : "avatar");
+              const scale = (lane ? 38 : mode === "balloon-pop" ? 128 : 104) / Math.max(sprite.width, sprite.height);
+              group.add(sprite.setScale(scale).setAlpha(lane ? .36 : 1));
             }
             const text = this.add.text(0, 0, item.options[index], {
-              fontFamily: "system-ui, sans-serif", fontSize: lane || mapped ? "16px" : "21px", fontStyle: "bold",
+              fontFamily: "system-ui, sans-serif", fontSize: lane || mapped ? "22px" : "25px", fontStyle: "bold",
               color: "#ffffff", align: "center", wordWrap: { width: width - 12, useAdvancedWrap: true }, maxLines: 2,
             }).setOrigin(.5);
             group.add([backdrop, text]);
@@ -113,6 +117,7 @@ export default function ArcadeCanvas({ simulation, assets, onOutcome, onClock }:
             const selected = pieces[simulation.choice];
             selected?.setDepth(6);
             if (selected && !simulation.reduced) {
+              if (mode === "balloon-pop") this.tweens.add({ targets: selected, scale: 1.22, alpha: 0, duration: 180 });
               for (let i = 0; i < 8; i++) {
                 const angle = i * Math.PI / 4;
                 const speck = this.add.circle(selected.x, selected.y, 6, 0xffe48b).setDepth(8);
@@ -136,5 +141,19 @@ export default function ArcadeCanvas({ simulation, assets, onOutcome, onClock }:
     };
   }, [simulation, assets]);
 
-  return <div className="arcade-canvas" ref={root} aria-hidden="true"/>;
+  return <div className="arcade-canvas" ref={root} aria-hidden="true" onPointerUp={event => {
+    if (!event.isPrimary || event.button !== 0) return;
+    if (simulation.mode === "maze-chase" || event.currentTarget.dataset.ready !== "true") return;
+    const canvas = event.currentTarget.querySelector("canvas");
+    const bounds = canvas?.getBoundingClientRect();
+    if (!bounds || !bounds.width || !bounds.height) return;
+    const x = (event.clientX - bounds.left) * arenaWidth / bounds.width;
+    const y = (event.clientY - bounds.top) * arenaHeight / bounds.height;
+    if (x < 0 || x > arenaWidth || y < 0 || y > arenaHeight) return;
+    if (simulation.mode === "airplane") {
+      const lane = Math.min(simulation.item.options.length - 1, Math.max(0, Math.floor((y - 60) * simulation.item.options.length / 360)));
+      simulation.steer(simulation.lane(lane));
+    }
+    else simulation.hitTarget({ x, y });
+  }}/>;
 }

@@ -59,6 +59,17 @@ export class ArcadeSimulation {
       if (this.mode === "airplane") return { index, visible: true, y: this.lane(index),
         x: 76 + ((550 + index * 139 - this.elapsed * 124 * this.speed) % 845 + 845) % 845 };
       const phase = this.elapsed * this.speed + index * 1.2;
+      if (this.mode === "balloon-pop") {
+        const band = planned > 4 ? 140 + Math.floor(index / 4) * 180 : 226;
+        return { index, visible: true, x: 145 + (index % 4) * 222 + Math.sin(phase) * 14,
+          y: band + (this.reduced ? 12 : 100) * (1 - ((this.elapsed * this.speed * .27 + index * .13) % 1)) };
+      }
+      if (this.mode === "whack-a-mole") {
+        const pulse = (this.elapsed * this.speed + index * .42) % 2.5;
+        return { index, visible: this.elapsed < .6 || pulse < (this.difficult ? 1.1 : 1.85),
+          x: 145 + (index % 4) * 222, y: (planned > 4 ? 162 + Math.floor(index / 4) * 174 : 251) -
+            (this.reduced ? 0 : Math.max(0, Math.sin(pulse)) * 12) };
+      }
       return { index, visible: true, x: 145 + (index % 4) * 222 + Math.sin(phase) * (this.reduced ? 12 : 38),
         y: (planned > 4 ? 155 + Math.floor(index / 4) * 172 : 230) + Math.cos(phase * 1.2) * (this.reduced ? 10 : 63) };
     });
@@ -99,6 +110,12 @@ export class ArcadeSimulation {
     this.choice = index;
   }
 
+  hitTarget(at: Point) {
+    const target = this.targets().find(candidate => candidate.visible &&
+      hits(at, { x: candidate.x, y: candidate.y - 31 }, 85, this.mode === "balloon-pop" ? 77 : 66));
+    if (target) this.pick(target.index);
+  }
+
   contact() {
     if (this.mode !== "maze-chase" && this.mode !== "airplane") return;
     if (this.mode === "airplane" && (!this.flying || Math.abs(this.pilot.y - this.aim) > 7)) return;
@@ -114,7 +131,7 @@ export class ArcadeSimulation {
 
   tick(milliseconds: number) {
     if (this.paused || this.choice !== null || this.expired) return;
-    const dt = Math.max(0, Math.min(milliseconds, 50)) / 1000;
+    const dt = Math.max(0, Math.min(milliseconds, 250)) / 1000;
     this.elapsed += dt;
     if (this.duration && this.elapsed >= this.duration) { this.expired = true; return; }
     if (this.mode === "airplane") {

@@ -21,6 +21,7 @@ export type RoundProps = {
   bindFocus: (node: HTMLElement | null) => void;
   next: (answer: string[]) => void;
   submit: (answers: Record<number, string[]>) => void;
+  playHit?: () => void;
   guess?: (letter: string, guesses: string[]) => Promise<NonNullable<PlayItem["hangman"]> | null>;
 };
 

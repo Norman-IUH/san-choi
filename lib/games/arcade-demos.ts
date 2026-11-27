@@ -18,4 +18,20 @@ export const arcadeDemos: Record<ArcadeTemplate, { title: string; items: Item[] 
     choose("Which word means the opposite of left?", ["Right", "Under", "Behind"], "Right"),
     choose("Which tool helps you measure a line?", ["Eraser", "Pencil", "Ruler"], "Ruler", "ruler"),
   ] },
+  "balloon-pop": { title: "Lantern Fair", items: [
+    choose("Which word begins with B?", ["Cat", "Bag", "Goat"], "Bag", "bag"),
+    choose("Find the word for something you read.", ["Book", "Duck", "Ruler"], "Book", "book"),
+  ] },
+  "whack-a-mole": { title: "Garden Word Watch", items: [
+    choose("Which one grows in a garden?", ["Sunflower", "Shoe", "Pencil"], "Sunflower"),
+    choose("Find the word that means the opposite of hot.", ["Soft", "Cold", "Tall"], "Cold"),
+  ] },
+  "speed-sorting": { title: "Classroom Sorting", items: [
+    choose("A pencil", ["In my school bag", "On the farm", "In the sky"], "In my school bag", "pencil"),
+    choose("A duck", ["In my school bag", "On the farm", "In the sky"], "On the farm", "duck"),
+  ] },
+  "win-or-lose-quiz": { title: "Spotlight Word Challenge", items: [
+    choose("What does under mean?", ["Below", "Above", "Between"], "Below"),
+    choose("Complete: Yesterday I ___ a book.", ["Reads", "Read", "Reading"], "Read"),
+  ] },
 };

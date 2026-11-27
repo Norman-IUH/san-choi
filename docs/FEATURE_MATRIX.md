@@ -38,7 +38,7 @@ Xem [kết quả kiểm thử](TEST_RESULTS.md) và [các phần còn thiếu](L
 | Auth, PostgREST, RPC, RLS và E2E hai giáo viên trên Supabase | Done | QuizStudy development. Hai giáo viên cách ly, học sinh nộp bài 10/10, chủ bài tải CSV |
 | Tự đăng ký giáo viên và xác minh email | Partial | Đã kiểm tra form, mã lỗi Auth và provision qua Auth Admin. Chờ kiểm tra nhận thư và xác minh bằng hộp thư thực |
 | Mời giáo viên tại trung tâm | Done ở mức thiết kế | Quy trình đóng đăng ký và nghiệm thu lời mời ghi trong roadmap. Chưa bật trên Supabase |
-| V1.4C–V2.0 | Backlog | [Lộ trình và cổng nghiệm thu](UPGRADE_ROADMAP.md) |
+| V1.5–V2.0 | Backlog | [Lộ trình và cổng nghiệm thu](UPGRADE_ROADMAP.md) |
 
 ## Phạm vi cá nhân V1.2
 
@@ -71,4 +71,10 @@ Xem [kết quả kiểm thử](TEST_RESULTS.md) và [các phần còn thiếu](L
 | Sân chơi | Không mặc định đếm giờ. Ảnh gameplay dùng trong thư viện, có toàn màn hình, âm báo, thao tác chạm và bàn phím |
 | Câu đố tương tác V1.4B | Bảy mẫu có editor, demo, preview, gameplay, kết quả và giao bài. Tổng 27 mẫu trên nhánh review |
 | Phiên an toàn | Hangman dùng lịch sử server, cấp lại media giới hạn theo phiên/IP và kiểm tra tình trạng bài giao |
-| Arcade | V1.4C chờ triển khai |
+| Arcade V1.4C | Bảy mẫu mới dùng chung editor, giao bài theo snapshot, kết quả, toàn màn hình và âm thanh. Tổng 34 mẫu trên nhánh review |
+
+## Vận hành arcade
+
+- Phaser được tải khi bắt đầu Maze Chase, Flying Fruit, Airplane, Balloon Pop hoặc Whack-a-Mole. Speed Sorting và Win or Lose Quiz dùng DOM cho các lượt kéo thả và đố vui rời rạc.
+- Mặc định không đếm giờ. Đồng hồ và độ khó nằm trong snapshot từng mục. Ẩn tab hoặc mất focus sẽ tạm dừng. Khi tải lại cùng tab, trò giữ các câu đã chốt và mở lại câu hiện tại từ đầu.
+- Bài giao gửi phương án đã chốt. Server chấm trước khi lưu, kể cả lượt thử sức của Win or Lose Quiz. Đáp án sai và chi tiết trả lời chỉ hiện khi chính sách bài giao cho phép.

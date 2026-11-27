@@ -358,3 +358,34 @@ ol.memory-strip{padding-left:1.8rem;gap:1.5rem}
 .arcade-support .lesson-image{max-height:120px}
 @media(max-width:600px){.arcade-stage .game-intro{grid-template-columns:1fr}.arcade-hud{grid-template-columns:minmax(0,1fr) auto;gap:.35rem}.arcade-field{min-height:174px}}
 @media(orientation:landscape) and (max-height:530px){.arcade-stage:fullscreen,.classroom-fallback.arcade-stage{padding:.7rem 2rem}.arcade-stage:fullscreen .arcade-field,.classroom-fallback.arcade-stage .arcade-field{height:54vh;max-width:min(100%,106vh);justify-self:center}}
+
+.arcade-stage.game-balloon-pop{--game-accent:#7e386c;--game-paper:#fbedf7;--game-edge:#e3adcf}
+.arcade-stage.game-whack-a-mole{--game-accent:#286342;--game-paper:#ecf7de;--game-edge:#9ac9a5}
+.arcade-stage.game-speed-sorting{--game-accent:#1b6475;--game-paper:#e5f8f6;--game-edge:#8dcac4}
+.arcade-stage.game-win-or-lose-quiz{--game-accent:#613b9b;--game-paper:#f4edff;--game-edge:#cfb6ef}
+.arcade-dom-field{aspect-ratio:auto;min-height:clamp(255px,50vw,430px);align-items:center}
+.arcade-sort,.arcade-risk{display:grid;gap:.75rem;min-width:0;padding:clamp(.7rem,3vw,2rem);background:#1725477a}
+.arcade-sort-token{justify-self:center;min-height:58px;padding:.55rem 1.1rem;border-radius:.7rem;border:3px solid #9ce8de;
+  background:#fafff4;color:#113949;font-weight:850;font-size:clamp(1.05rem,2.3vw,1.5rem);
+  cursor:grab;touch-action:none;box-shadow:0 5px 0 #42888a;position:relative;z-index:1;user-select:none}
+.arcade-sort-token:active{cursor:grabbing}
+.arcade-sort-token[aria-pressed=true]{outline:3px solid #fff0a9;outline-offset:3px}
+.arcade-bins,.arcade-risk-answers{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,8.3rem),1fr));gap:.55rem}
+.arcade-bin{display:grid;place-items:center;gap:.45rem;min-height:100px;border-radius:.8rem;border:2px dashed #baf5e6;
+  background:#153953e8;color:white;padding:.55rem;font-weight:800;overflow-wrap:anywhere}
+.arcade-bin[aria-pressed=true]{background:#0b5644;border-style:solid;outline:2px solid #f6df81}
+.arcade-bin-art{display:block;width:clamp(3rem,11vw,6rem);aspect-ratio:1;background:url("/illustrations/arcade/speed-sorting-sprite.webp") center / contain no-repeat}
+.arcade-risk{background:#19113d9c}
+.arcade-risk-rules{display:flex;align-items:center;justify-content:center;gap:.75rem;flex-wrap:wrap;color:#fff;font-weight:800}
+.arcade-risk-rules .button{color:#281941}
+.arcade-risk-rules::before{content:"";width:clamp(2.9rem,9vw,5.5rem);aspect-ratio:1;background:url("/illustrations/arcade/win-or-lose-quiz-sprite.webp") center / contain no-repeat}
+.arcade-risk-rules button[aria-pressed=true]{background:#f7d97b;color:#281941}
+.arcade-risk-answers button{min-height:54px;text-align:center;overflow-wrap:anywhere}
+.arcade-risk-answers button[aria-pressed=true]{background:#ffe389;color:#2f1c46}
+.game-win-or-lose-quiz .result{background:linear-gradient(110deg,#1b1439f0,#211447a0),url('/illustrations/arcade/win-or-lose-quiz.webp') center / cover;
+  color:#fff;min-height:clamp(255px,38vw,400px);align-content:center;padding:clamp(1.25rem,5vw,3rem);border-radius:.9rem}
+.game-win-or-lose-quiz .result>strong{color:#ffe389}
+.game-win-or-lose-quiz .result .review-panel{color:#281941}
+@media(prefers-reduced-motion:no-preference){.arcade-risk-answers,.game-win-or-lose-quiz .result{animation:arcade-stage-enter .27s ease-out both}}
+@keyframes arcade-stage-enter{from{opacity:0;transform:translateY(.55rem)}}
+@media(max-width:470px){.arcade-bins,.arcade-risk-answers{grid-template-columns:repeat(2,minmax(0,1fr))}.arcade-dom-field{min-height:230px}}

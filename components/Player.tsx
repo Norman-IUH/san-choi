@@ -105,14 +105,14 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
     } catch { setError("Thiết bị chưa bật được âm thanh."); }
   }
 
-  function chime(correct: boolean) {
+  function chime(correct: boolean | null) {
     const audio = audioContext.current;
     if (!sound || !audio || audio.state !== "running") return;
     const now = audio.currentTime;
     const tone = audio.createOscillator();
     const volume = audio.createGain();
-    tone.frequency.setValueAtTime(correct ? 520 : 290, now);
-    tone.frequency.exponentialRampToValueAtTime(correct ? 740 : 210, now + 0.16);
+    tone.frequency.setValueAtTime(correct === null ? 420 : correct ? 520 : 290, now);
+    tone.frequency.exponentialRampToValueAtTime(correct === null ? 170 : correct ? 740 : 210, now + 0.16);
     volume.gain.setValueAtTime(0.0001, now);
     volume.gain.exponentialRampToValueAtTime(0.12, now + 0.025);
     volume.gain.exponentialRampToValueAtTime(0.0001, now + 0.21);
@@ -244,6 +244,7 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
       {assignment && <p className="hint">Nếu đã bắt đầu, em có thể tiếp tục sau khi tải lại trong cùng thẻ trình duyệt.</p>}
       <button ref={bindFocus} className="button primary" disabled={!ready || busy}>{busy ? "Đang mở…" : "Bắt đầu"}</button>
     </form></div> : <GameRound key={turn} {...{ template, items, order, turn, index, answers, setAnswers, assets, reveals, busy, bindFocus, next, submit }}
+      playHit={arcade ? () => chime(null) : undefined}
       guess={template === "hangman" ? async (letter, guesses) => assignment ? guessAssignmentLetter(assignment, index, letter)
         : localContent?.[index] ? { ...hangmanPattern(localContent[index].answers[0], guesses), guesses } : null : undefined}/>}
   </section></RefreshLessonMedia.Provider>;

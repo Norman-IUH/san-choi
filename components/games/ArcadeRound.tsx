@@ -3,10 +3,11 @@ import dynamic from "next/dynamic";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Pause, Play } from "lucide-react";
 import { ArcadeSimulation, type Direction } from "@/lib/games/arcade-runtime";
-import { arcadeWorlds, isArcadeTemplate } from "@/lib/games/arcade-templates";
+import { arcadeWorlds, hasArcadeCanvas, isArcadeTemplate, riskMarker } from "@/lib/games/arcade-templates";
 import type { RoundProps } from "./LegacyRound";
 import { LessonMedia, Pronunciation } from "./LessonMedia";
 import { Progress } from "./Progress";
+import { RiskBoard, SortingBoard } from "./ArcadeBoards";
 
 const ArcadeCanvas = dynamic(() => import("./ArcadeCanvas"), { ssr: false, loading: () => <p role="status">Đang mở sân chơi…</p> });
 const directions = [
@@ -15,16 +16,20 @@ const directions = [
 ] as const;
 const keyboard: Record<string, Direction | undefined> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" };
 
-export default function ArcadeRound({ template, items, index, turn, answers, next, busy, assets, bindFocus }: RoundProps) {
+export default function ArcadeRound({ template, items, index, turn, answers, next, busy, assets, bindFocus, playHit }: RoundProps) {
   if (!isArcadeTemplate(template)) throw new Error("Unknown arcade stage");
   const item = items[index];
   const [world] = useState(() => new ArcadeSimulation(template, item, matchMedia("(prefers-reduced-motion: reduce)").matches));
   const [paused, setPaused] = useState(false);
   const [selected, setSelected] = useState<number | null | undefined>(undefined);
   const [seconds, setSeconds] = useState(world.duration);
+  const [risk, setRisk] = useState(false);
   const stage = useRef<HTMLDivElement>(null);
   const mapped = template === "maze-chase";
   const plane = template === "airplane";
+  const canvas = hasArcadeCanvas(template);
+  const blocked = paused || selected !== undefined;
+  const riskAvailable = !Object.values(answers).some(answer => answer.includes(riskMarker));
 
   useEffect(() => {
     stage.current?.focus();
@@ -37,6 +42,27 @@ export default function ArcadeRound({ template, items, index, turn, answers, nex
       document.removeEventListener("visibilitychange", hidden);
     };
   }, [world]);
+
+  useEffect(() => {
+    if (canvas || !world.duration || blocked) return;
+    const timer = window.setInterval(() => {
+      world.tick(50);
+      setSeconds(Math.max(0, Math.ceil(world.duration - world.elapsed)));
+      if (world.expired) setSelected(null);
+    }, 50);
+    return () => window.clearInterval(timer);
+  }, [blocked, canvas, world]);
+
+  function outcome(choice: number | null) {
+    setSelected(choice);
+    if (choice !== null) playHit?.();
+  }
+
+  function pickBoard(index: number) {
+    if (blocked) return;
+    world.pick(index);
+    if (world.choice !== null) outcome(world.choice);
+  }
 
   function control(event: KeyboardEvent) {
     const direction = keyboard[event.key];
@@ -54,9 +80,11 @@ export default function ArcadeRound({ template, items, index, turn, answers, nex
       </button>
     </div>
     <h2 tabIndex={-1} ref={bindFocus} className="arcade-question">{item.prompt}</h2>
-    <div className="arcade-field" ref={stage} tabIndex={0} aria-label="Sân chơi arcade"
+    <div className={`arcade-field${canvas ? "" : " arcade-dom-field"}`} ref={stage} tabIndex={0} aria-label="Sân chơi arcade"
       style={{ backgroundImage: "url(/illustrations/arcade/" + template + ".webp)", borderColor: arcadeWorlds[template].colors[1] }}>
-      <ArcadeCanvas simulation={world} assets={assets} onOutcome={setSelected} onClock={setSeconds}/>
+      {canvas ? <ArcadeCanvas simulation={world} assets={assets} onOutcome={outcome} onClock={setSeconds}/> :
+        template === "speed-sorting" ? <SortingBoard item={item} blocked={blocked} selected={selected} onPick={pickBoard}/> :
+          <RiskBoard item={item} assets={assets} risk={risk} setRisk={setRisk} riskAvailable={riskAvailable} blocked={blocked} selected={selected} onPick={pickBoard}/>}
       {paused && <div className="arcade-overlay">Đang tạm dừng</div>}
     </div>
     {(mapped || plane) && <div className="arcade-direction" role="group" aria-label="Điều khiển di chuyển">
@@ -66,11 +94,11 @@ export default function ArcadeRound({ template, items, index, turn, answers, nex
     </div>}
     <div className="arcade-support">
       <LessonMedia media={item.media} assets={assets} label={item.prompt}/><Pronunciation item={item} assets={assets}/>
-      <details><summary>{mapped || plane ? "Đọc mục tiêu" : "Chọn mục tiêu bằng bàn phím"}</summary>
+      <details><summary>{mapped || plane || !canvas ? "Đọc mục tiêu" : "Chọn mục tiêu bằng bàn phím"}</summary>
         <div className="options">{item.options.map((option, position) => {
           const media = item.optionMedia?.find(entry => entry.option === option);
           return <div key={option}>
-            {mapped || plane ? <span>{option}</span> : <button className="option" disabled={paused || selected !== undefined}
+            {mapped || plane || !canvas ? <span>{option}</span> : <button className="option" disabled={paused || selected !== undefined}
               onClick={() => world.pick(position)}>{option}</button>}
             <LessonMedia media={media} assets={assets} label={option}/>
           </div>;
@@ -78,7 +106,8 @@ export default function ArcadeRound({ template, items, index, turn, answers, nex
     </div>
     {selected !== undefined && <div className="arcade-confirm">
       <p aria-live="polite">{selected === null ? "Đã hết thời gian." : "Đã chọn " + item.options[selected]}</p>
-      <button className="button primary" disabled={busy} onClick={() => next(selected === null ? [] : [item.options[selected]])}>
+      <button className="button primary" disabled={busy} onClick={() => next(selected === null ? [] :
+        risk && riskAvailable ? [item.options[selected], riskMarker] : [item.options[selected]])}>
         {busy ? "Đang nộp…" : turn + 1 === items.length ? "Hoàn thành" : "Tiếp theo"}</button>
     </div>}
   </div>;

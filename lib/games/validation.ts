@@ -3,7 +3,7 @@ import { templates, type Template } from "./registry";
 import { itemSchema, normalize, type Item } from "./model";
 import { englishPuzzleWord, truthOptions } from "./word-templates";
 import { buildCrossword } from "./word-puzzles";
-import { isArcadeTemplate } from "./arcade-templates";
+import { isArcadeTemplate, riskMarker } from "./arcade-templates";
 import { pairOptions } from "./puzzle-templates";
 import { doubleMarker } from "./scoring";
 
@@ -36,7 +36,7 @@ export function contentSchema(template: Template, draft = false) {
       const invalidDiagram = template === "labelled-diagram" && (!pin || !media?.image || answers.length !== 1);
       const invalidPair = template === "pair-or-no-pair" && (!secondary || answers.length !== 1 || options.length !== 2 ||
         !pairOptions.every(option => unique.has(normalize(option))));
-      if (!valid || (isArcadeTemplate(template) ? answers.length !== 1 : Boolean(arcade)) || requiresPicture || invalidDiagram || invalidPair ||
+      if (!valid || (isArcadeTemplate(template) ? answers.length !== 1 || unique.has(riskMarker) : Boolean(arcade)) || requiresPicture || invalidDiagram || invalidPair ||
         (pin && template !== "labelled-diagram") || (secondary && template !== "pair-or-no-pair") ||
         (math && template !== "maths-generator") || (englishPuzzle && !englishPuzzleWord.safeParse(answers[0]).success) ||
         (template === "image-quiz" && answers.length !== 1) ||

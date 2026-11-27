@@ -45,3 +45,17 @@ Các mẫu dùng chung ảnh câu hỏi, audio và phát âm UK/US khi nội dun
 | Maths Generator | Tính từng phép tự sinh theo cấu hình | Khoảng toán hạng và phép cộng, trừ, nhân hoặc chia hết. Một điểm mỗi phép | Luyện số cơ bản bằng tiếng Anh |
 
 Wordsearch vẫn dùng một từ mỗi bảng. Bảng nhiều từ sẽ cần luật chọn từ và schema chấm nhiều đáp án để giữ kết quả cũ.
+
+## V1.4C trên nhánh review
+
+| Mẫu | Tương tác | Editor và luật điểm | Cấp độ gợi ý |
+|---|---|---|---|
+| Maze Chase | Điều khiển cáo trong mê cung nhiều lối, né vật cản ở mức thử thách | Một đáp án đúng cho mỗi mê cung. Có chỉnh độ khó và bật giới hạn giờ riêng từng mục | Kids đến Movers |
+| Flying Fruit | Chạm quả bay có từ phù hợp | Tốc độ theo độ khó, hỗ trợ ảnh từng mục tiêu và phát âm | Kids đến Starters |
+| Airplane | Đổi làn bằng phím hoặc chạm, máy bay phải va vào mục tiêu | Máy chủ chấm đáp án đã ghi. Hỗ trợ cấu hình tốc độ và giới hạn giờ | Starters đến Flyers |
+| Balloon Pop | Chạm bóng đang bay để làm nổ và ghi đáp án | Tốc độ và giới hạn giờ tùy chọn. Có hình hoặc chữ trên bóng | Kids đến Movers |
+| Whack-a-Mole | Chờ chuột chũi xuất hiện rồi chạm vào mục tiêu | Mức chậm giữ mục tiêu lâu hơn. Mục tiêu đang ẩn không ghi đáp án | Kids đến Movers |
+| Speed Sorting | Kéo thẻ hoặc chạm thẻ rồi chọn thùng | Giáo viên nhập vật cần phân loại và nhãn các thùng. Mặc định không giới hạn giờ | Starters đến Flyers |
+| Win or Lose Quiz | Chọn đáp án trên sân khấu và dùng một lượt thử sức nếu muốn | Bình thường đúng +1, sai 0. Lượt thử sức đúng +2, sai −1. Điểm cuối thấp nhất là 0 | Movers và Flyers |
+
+Mọi mẫu arcade dùng schema câu hỏi lựa chọn có một đáp án đúng. Có thể đổi từ các mẫu cùng cấu trúc nếu dữ liệu đạt schema đích. Tùy chỉnh arcade đã lưu chỉ được chuyển sang nơi có thể giữ tùy chỉnh đó.
