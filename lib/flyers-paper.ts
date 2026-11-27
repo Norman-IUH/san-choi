@@ -1,5 +1,5 @@
 import type { Item, Template } from "./game";
-import type { Rubric } from "./games/productive";
+import { defaultRubric, type Rubric } from "./games/productive";
 import { cambridgeCounts, cambridgeLevels, flyerPartNames, starterPapers, type CambridgePart, type StarterPaper } from "./games/starters";
 
 const picture = (name: string) => `/illustrations/flyers/${name}.webp`;
@@ -125,8 +125,40 @@ const writingRubric: Rubric = [
   { title: "Trình tự và liên kết", description: "Các sự kiện nối tiếp hợp lý. Dùng 0 cho phần bỏ trống.", max: 2 },
   { title: "Diễn đạt dễ hiểu", description: "Bài viết truyền đạt được ý. Xem cả cách dùng từ, câu và hướng dẫn 20 từ.", max: 1 },
 ];
-const papers: Partial<Record<StarterPaper, Question[][]>> = { listening, reading };
-const rubrics: Partial<Record<StarterPaper, Rubric>> = { reading: writingRubric };
+const speaking: Question[][] = [
+  [{
+    prompt: "Look at the two pictures of the discovery centre. Describe four differences.",
+    config: { visuals: [picture("difference-1"), picture("difference-2")],
+      guide: "So sánh vị trí, màu và đồ vật bằng câu đầy đủ. Có thể dùng ‘In Picture A … whereas in Picture B …’.",
+      teacher: "Greet the learner. For role-play, ask for an invented first name, surname and age. Ask for four differences. Possible answers: teal versus orange roof, green versus purple coat on the left, notebook versus compass on the right, and binoculars versus lantern on the left." },
+  }],
+  [{
+    prompt: "Find out about two trips. First answer your teacher. Then ask about the other trip.",
+    config: { exchange: {
+      learner: { value: "Lighthouse walk", image: picture("tour-1") },
+      examiner: { value: "Harbour boat trip", image: picture("tour-2") },
+      rows: [
+        { label: "Day", value: "Tuesday" }, { label: "Start time", value: "11:20 a.m." },
+        { label: "Meeting place", value: "By the stone gate" }, { label: "What to bring", value: "A notebook" },
+        { label: "Length", value: "45 minutes" },
+      ] },
+      guide: "Đổi vai sau khi trả lời. Đặt câu hỏi cho cả năm dòng, chẳng hạn ‘What time does it start?’",
+      teacher: "First ask the learner about the lighthouse walk: day, start time, meeting place, thing to bring and duration. Then invite them to ask about the Harbour boat trip. Keep this answer sheet on your own screen. It is on Thursday. The boat leaves at 2:10 p.m. Meet outside the ticket office. Bring a water bottle. The trip takes 30 minutes." },
+  }],
+  [{
+    prompt: "Mira's rainy afternoon · Listen to the opening and tell the rest of the story.",
+    config: { visuals: [1, 2, 3, 4].map(i => picture(`talk-${i}`)),
+      guide: "Nghe giáo viên kể khung đầu. Kể lần lượt ba khung sau và giải thích điều gì xảy ra trước hoặc sau mưa.",
+      teacher: "Show all four pictures. Begin: This is Mira. She has brought her compass to the coastal centre. She wants to see the telescope before it gets dark. Ask the learner to continue. In picture 2 it starts raining and Mira gets her raincoat. In picture 3 she meets another visitor and writes notes. In picture 4 they finally see the telescope and have a lantern for the evening. Accept any coherent story that fits the pictures." },
+  }],
+  [{
+    prompt: "Talk with your teacher about your interests, holidays or a day you remember.",
+    config: { guide: "Trả lời bằng một hoặc hai câu. Thêm một lý do hoặc một chi tiết về thời gian, nơi chốn.",
+      teacher: "Ask some of these questions: What do you like doing on holiday? Which places would you like to visit? Tell me about your last birthday or a special day at school. What would you take on a day trip, and why? Use invented details for demonstrations. Do not ask the learner to enter personal details into the website." },
+  }],
+];
+const papers: Record<StarterPaper, Question[][]> = { listening, reading, speaking };
+const rubrics: Partial<Record<StarterPaper, Rubric>> = { reading: writingRubric, speaking: defaultRubric("Speaking") };
 
 export function flyerPaper(paper: StarterPaper, part?: number) {
   const rows = papers[paper];

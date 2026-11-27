@@ -53,3 +53,13 @@ test("Flyers Reading & Writing holds 43 automatic answers and one rubric-scored 
   expect(grade(mock.template, mock.items, withStoryResponse)).toMatchObject({ score: 43, total: 43 });
   expect(grade(mock.template, mock.items, withStoryResponse).correct.at(-1)).toBeNull();
 });
+
+test("Flyers Speaking shows the learner's information card while keeping the examiner answers private", () => {
+  const mock = verifyPaper("speaking");
+  const exchange = mock.items[1].practice?.starters?.exchange;
+  expect(exchange?.rows.map(row => row.value)).toContain("Tuesday");
+  expect(mock.items[1].practice?.starters?.teacher).toContain("Thursday");
+  expect(mock.items[0].practice?.starters?.visuals).toHaveLength(2);
+  expect(mock.items[2].practice?.starters?.visuals).toHaveLength(4);
+  expect(JSON.stringify(localPlay(mock.template, mock.items))).not.toContain("Thursday");
+});
