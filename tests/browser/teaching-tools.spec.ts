@@ -30,6 +30,8 @@ async function importAndAssign(page: Page, paper: string) {
   await button(page, "Tạo link giao bài").click();
   const share = page.getByLabel("Link chia sẻ");
   await expect(share).toBeVisible({ timeout: 30000 });
+  const url = new URL(page.url());
+  await expect(share).toHaveValue(new URL("/play/" + url.pathname.split("/").at(-1), url).toString());
   return { activity, assignment: page.url(), play: await share.inputValue() };
 }
 
@@ -86,6 +88,10 @@ test("QuizStudy teaching workflow prints, scans and exports private results", as
   try {
     const listening = await importAndAssign(page, "listening");
     assigned.push(listening.assignment);
+    await page.goto(listening.activity + "?edit=1");
+    await page.getByRole("link", { name: "In bài tập", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "In học liệu" })).toBeVisible();
+    await page.goto(listening.assignment);
     expect(new URL(listening.play).origin).toBe(new URL(listening.assignment).origin);
     await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
     await button(page, "Sao chép link").click();
@@ -107,6 +113,9 @@ test("QuizStudy teaching workflow prints, scans and exports private results", as
     }; });
     await button(page, "In mã QR").click();
     await expect(page.locator("body")).toHaveAttribute("data-qa-qr-print", "true");
+    await page.evaluate(() => { document.body.dataset.printAssignmentQr = "true"; });
+    await page.pdf({ path: info.outputPath("assignment-qr-print.pdf"), format: "A4" });
+    await page.evaluate(() => { delete document.body.dataset.printAssignmentQr; });
     await button(page, "Trình chiếu QR").click();
     await expect(page.getByRole("dialog", { name: "Trình chiếu QR" })).toBeVisible();
     await page.screenshot({ path: info.outputPath("assignment-qr-presentation.png") });

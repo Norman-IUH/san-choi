@@ -1,5 +1,21 @@
 # Kết quả kiểm thử ngày 14/11/2026
 
+## V1.6A Teaching Tools · 27/11/2026
+
+| Hạng mục | Kết quả |
+|---|---|
+| Lint, typecheck, Vitest và production build | Đạt. 90 bài Vitest. Audit dependency runtime báo 0 advisory. |
+| Hồi quy Playwright | 163 lượt đạt, 5 lượt bỏ qua theo điều kiện của kịch bản. Chạy English Practice, Starters, Movers, Flyers và Teaching Tools trên Chromium desktop, mobile và tablet mô phỏng. |
+| QuizStudy và phân quyền | Hai giáo viên thử nghiệm tổng hợp qua Auth. Kịch bản tạo bài giao Listening và Speaking, học sinh nộp, điểm tự động lưu 1/25, điểm Speaking đi từ chờ chấm đến công bố 10/20. Phiên ẩn danh được yêu cầu đăng nhập. Giáo viên khác nhận 404 khi truy cập PDF riêng của hoạt động, giáo án, bài giao và dữ liệu XLSX của chủ bài. |
+| A1 · PDF | Từ Activity Editor, bài giao, giáo án đã lưu và mẫu cả ba cấp Cambridge. Tệp Flyers Listening A4 có 6 trang, đủ 25 câu và 30 đối tượng ảnh. Đã mở PDF và trích văn bản kiểm tra tiếng Việt, IPA, ngắt trang, đáp án và transcript tách riêng. Giáo án mẫu xuất 2 trang và giữ ghi chú của giáo viên trong bản PDF riêng. |
+| A2 · QR | Trình duyệt sao chép link, tải PNG/SVG, trình chiếu và in. Giải mã riêng cả hai tệp và mở URL đã giải mã. Bản in A4 một trang có mã và URL. Cùng URL trả trạng thái đóng bài sau khi giáo viên đóng bài. |
+| A3 · Excel | Tải tệp từ bộ lọc hai bài giao và một ngày. Đọc lại ba sheet, xác nhận khoảng ngày loại trừ dữ liệu, điểm tự động, điểm rubric, ô trống chờ chấm, trạng thái công bố và chi tiết đúng/sai. Biệt danh dạng `=1+1` giữ kiểu chữ. Kiểm tra XML của workbook xuất thật không có ô công thức. CSV chạy hồi quy. |
+| Vercel | [Draft PR #9](https://github.com/Norman-IUH/san-choi/pull/9) dựa trên nhánh của PR #8. [Preview](https://san-choi-git-codex-v16a-teaching-tools-norman22.vercel.app) có kiểm tra Vercel thành công và yêu cầu xác thực Vercel với phiên ẩn danh. E2E dùng production build chạy cục bộ kết nối QuizStudy. |
+
+Chưa kiểm tra máy in và camera vật lý. [Tệp QA cục bộ](../output/playwright/v16a-hosted) · [Hướng dẫn giáo viên](TEACHING_TOOLS.md).
+
+## Kiểm thử ban đầu
+
 | Lệnh | Kết quả |
 |---|---|
 | `npm run lint` | Đạt |

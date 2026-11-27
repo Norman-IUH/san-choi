@@ -22,6 +22,19 @@ test("worksheet and teacher key use separate projections", () => {
   expect(worksheet("Tìm từ", "wordsearch", wordsearch, "key").blocks[0].grid?.cells.some(cell => cell.marked)).toBe(true);
 });
 
+test("the ten requested game types produce a student worksheet and key from their existing demos", () => {
+  for (const template of ["quiz", "match-up", "flash-cards", "wordsearch", "crossword", "hangman", "anagram",
+    "group-sort", "unjumble", "sentence"] as const) {
+    const items = demoContent(template);
+    expect(canPrint(template, items)).toBe(true);
+    const student = worksheet(template, template, items, "worksheet");
+    const key = worksheet(template, template, items, "key");
+    expect(student.blocks.length).toBeGreaterThanOrEqual(items.length);
+    expect(student.blocks).not.toEqual(key.blocks);
+    expect(student.cards).toBe(template === "flash-cards");
+  }
+});
+
 test("all Cambridge papers have a student handout and original transcripts are teacher-only", () => {
   for (const paper of [starterPaper, moverPaper, flyerPaper]) {
     for (const skill of ["listening", "reading", "speaking"] as const) {
