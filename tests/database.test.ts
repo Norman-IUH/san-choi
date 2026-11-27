@@ -224,6 +224,7 @@ test("migration provisions accounts, locks teacher rows and allows one authorita
       [owner, room, ids[0], snapshot])).rows[0].id;
     const start = async (code: string) => (await db.query<{ attempt_id: string | null; issue: string | null }>(
       "select * from open_classroom_attempt($1,$2,null,false)", [classAssignment, code])).rows[0];
+    await db.query("update classroom_members set removed_at=now() where classroom_id=$1 and student_id=$2", [room, ids[0]]);
     expect((await start(secondCode)).issue).toBe("code");
     await expect(db.query("insert into attempts(id,assignment_id,nickname) values (gen_random_uuid(),$1,'No code')",
       [classAssignment])).rejects.toThrow(/classroom identity required/);
@@ -235,6 +236,13 @@ test("migration provisions accounts, locks teacher rows and allows one authorita
     expect(second).not.toBe(first);
     await db.query("select * from finish_attempt($1,$2,'[]',1,1)", [classAssignment, second]);
     expect((await start(firstCode)).issue).toBe("tries");
+    await db.query("update assignments set deadline=now()-interval '1 second' where id=$1", [classAssignment]);
+    expect((await start(firstCode)).issue).toBe("closed");
+    await db.query("update assignments set deadline=null where id=$1", [classAssignment]);
+    const codeScope = "e".repeat(64);
+    expect((await db.query("select consume_attempt_limit('student-code',$1) as allowed", [codeScope])).rows).toEqual([{ allowed: true }]);
+    await db.query("update private.attempt_rate_limits set hits=60 where operation='student-code' and scope=$1", [codeScope]);
+    expect((await db.query("select consume_attempt_limit('student-code',$1) as allowed", [codeScope])).rows).toEqual([{ allowed: false }]);
     await db.query("update students set code_hash=null,code_version=gen_random_uuid() where id=$1", [ids[0]]);
     expect((await start(firstCode)).issue).toBe("code");
     expect((await db.query("select valid_classroom_attempt($1,$2) as valid", [classAssignment, second])).rows).toEqual([{ valid: false }]);

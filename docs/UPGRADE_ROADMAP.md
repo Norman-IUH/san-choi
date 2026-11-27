@@ -13,7 +13,8 @@
 | Visual Polish cho 34 mẫu | Đề xuất sau V1.4C | So sánh ảnh Start, Playing, Result. Ưu tiên màn chơi lớp học, chữ trên di động, phản hồi, độ tương phản và điều khiển chạm. |
 | V1.5 English Practice và Cambridge YLE | B3 và C1–C3 trên nhánh review | 44/44 Part Paper-based gồm 13 Starters, 15 Movers và 16 Flyers. [Đặc tả và giới hạn mô phỏng](CAMBRIDGE_SPEC.md). |
 | V1.6A Teaching Tools | Triển khai trên nhánh review | A1 phiếu in và PDF, A2 QR theo môi trường, A3 Excel nhiều bài giao và tích hợp giáo viên. [Hướng dẫn](TEACHING_TOOLS.md). |
-| Quản lý lớp, Realtime và AI | Backlog | Nằm ngoài V1.6A. |
+| V1.6B Lớp học và tiến độ học sinh | Nhánh review | B1 danh sách lớp và mã cá nhân. B2 giao bài theo lớp, lịch sử và tiến độ. B3 dashboard và xuất báo cáo riêng. [Hướng dẫn](CLASSROOMS.md). |
+| Realtime, Leaderboard và AI | Backlog | Nằm ngoài V1.6B. |
 | V2.0 Production | Not Started | Backup và rollback, audit bảo mật, kiểm thử tải, preview từ mạng di động và triển khai HTTPS với project production riêng. |
 
 ## Khôi phục kết nối Supabase development
@@ -116,3 +117,10 @@ B1 tập trung vào luyện nghe và phonics. B2 thêm Reading, Grammar, giáo �
 - A2 tạo mã QR từ domain đang mở. Có sao chép link, tải PNG/SVG, in và trình chiếu toàn màn hình.
 - A3 xuất Excel nhiều bài giao và lọc ngày theo giờ Việt Nam. Báo cáo tách điểm tự động và thủ công, giữ ô trống cho bài chưa có điểm và giữ chức năng CSV.
 - Dùng schema, quyền truy cập và cài đặt QuizStudy hiện có. Nhánh V1.6A phụ thuộc [PR #8](https://github.com/Norman-IUH/san-choi/pull/8). [Kết quả kiểm thử](TEST_RESULTS.md).
+
+## V1.6B Classroom và Student Progress
+
+- B1 thêm lớp, hồ sơ, thành viên nhiều lớp, nhập CSV/XLSX và mã cá nhân. Khôi phục hồ sơ lưu trữ cần cấp mã mới.
+- B2 chụp người nhận cùng nội dung khi giao. Bài cũ quy về luồng ẩn danh và giữ nguyên các lượt làm đã lưu. Bài lớp dùng ID hồ sơ và lưu từng lượt làm, gồm điểm tự động và điểm rubric.
+- B3 thêm dashboard lớp, tiến độ cá nhân và báo cáo riêng PDF/XLSX. Báo cáo cho phụ huynh chỉ chứa dữ liệu của học sinh đã chọn.
+- Hai migration additive đã chạy trên QuizStudy. Nhánh V1.6B dựa trên [PR #9](https://github.com/Norman-IUH/san-choi/pull/9). Kiểm tra cổng bảo mật và phê duyệt trước phát hành.

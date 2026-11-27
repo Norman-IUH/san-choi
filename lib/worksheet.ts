@@ -20,7 +20,7 @@ export type PaperOptions = z.infer<typeof paperOptions>;
 type Figure = { path: string; label?: string; pins?: { x: number; y: number; id: string }[] };
 type Grid = { width: number; height: number; cells: (Cell & { value?: string; number?: string; marked?: boolean })[] };
 export type PaperBlock = { heading?: string; text?: string; figures?: Figure[]; grid?: Grid; lines?: number; card?: boolean };
-export type PaperDocument = { title: string; heading: string; blocks: PaperBlock[]; cards?: boolean };
+export type PaperDocument = { title: string; heading: string; blocks: PaperBlock[]; cards?: boolean; showStudentFields?: boolean };
 export const printableTemplates = ["quiz", "match-up", "flash-cards", "wordsearch", "crossword", "hangman", "anagram", "group-sort",
   "unjumble", "sentence", "type-answer", "spell-word", "image-quiz", "true-false", "speaking", "word-magnets"] satisfies Template[];
 

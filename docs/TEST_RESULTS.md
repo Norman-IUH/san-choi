@@ -1,5 +1,18 @@
 # Kết quả kiểm thử ngày 14/11/2026
 
+## V1.6B Classroom và Student Progress · 28/11/2026
+
+| Hạng mục | Kết quả |
+|---|---|
+| Kiểm tra mã nguồn | Lint, typecheck, production build và 93 bài Vitest đạt. Audit dependency runtime báo 0 advisory. |
+| Migration | Kiểm thử PostgreSQL cục bộ đạt trước khi áp dụng vào QuizStudy. Lịch sử hosted có `20261127165941_classroom_roster.sql` và `20261127165946_classroom_assignments.sql`. Bốn bảng mới bật RLS và role ẩn danh không có quyền SELECT. |
+| Lớp và hồ sơ | Playwright dùng giáo viên tổng hợp để tạo lớp, nhập CSV và XLSX, phân biệt hai hồ sơ cùng tên, nhân bản lớp với cùng hồ sơ và cấp mã riêng. |
+| Giao bài và tiến độ | Giao Listening cả lớp, Speaking cho một học sinh, mở QR, phân biệt chưa làm/đang làm và giữ hai lượt đã nộp của cùng hồ sơ. Mã sai, mã của người ngoài danh sách, mã đã thu hồi và lượt vượt giới hạn đều bị từ chối. Kết quả tự động 0/5 giữ nguyên điểm 0. Speaking đi từ chờ chấm tới công bố 10/20. Hồ sơ hiển thị Part Cambridge và lịch sử từng lượt. |
+| Quyền và báo cáo | Giáo viên khác nhận 404 với hồ sơ và tệp PDF/XLSX riêng. Đã mở lại Excel ba sheet để kiểm tra lọc ngày và kỹ năng, chấm tự động và rubric, ô điểm chờ chấm và XML không có công thức. Đã mở ba PDF A4, kiểm tra tiếng Việt và xác nhận ghi chú riêng chỉ có trong bản giáo viên. |
+| Hồi quy | 23 lượt Playwright desktop đạt, gồm Flyers, giao bài ẩn danh từ Lesson Builder, điểm và đáp án, PDF, QR, CSV/XLSX V1.6A. |
+
+Security Advisor vẫn liệt kê các cảnh báo cũ của `public.rls_auto_enable()`. Nghiệm thu dùng hồ sơ và bài làm tổng hợp trên QuizStudy. [Cảnh báo Advisor](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable) · [Hướng dẫn lớp học](CLASSROOMS.md).
+
 ## V1.6A Teaching Tools · 27/11/2026
 
 | Hạng mục | Kết quả |

@@ -91,12 +91,13 @@ export function ProgressSummary({ data, individual = false }: { data: Data; indi
       </section>
       <section className="panel stack"><h3>Cambridge theo từng Part</h3>
         {progress.parts.length ? <ul className="assignment-list">{progress.parts.map(part => <li key={part.label}>
-          <span>{part.label}</span><span>{part.correct}/{part.total} câu tự động{part.open ? ` · ${part.open} mục giáo viên đánh giá` : ""}</span>
+          <span>{part.label}</span><span>{[part.total ? `${part.correct}/${part.total} câu tự động đúng` : "",
+            part.open ? `${part.open} mục giáo viên đánh giá` : ""].filter(Boolean).join(" · ")}</span>
         </li>)}</ul> : <p>Chưa có kết quả Cambridge.</p>}
       </section>
       <section className="panel stack"><h3>Từ vựng đã luyện</h3>
         {progress.vocabulary.length ? <ul className="assignment-list">{progress.vocabulary.map(word => <li key={word.label}>
-          <span>{word.label}</span><span>{word.seen} lượt luyện · {word.correct}/{word.marked} lượt đúng có chấm</span>
+          <span>{word.label}</span><span>{word.seen} lượt luyện · {word.marked ? `${word.correct}/${word.marked} lượt đúng có chấm` : "Chưa có điểm tự động"}</span>
         </li>)}</ul> : <p>Chưa có lượt luyện được gắn kỹ năng từ vựng.</p>}
       </section>
     </>}

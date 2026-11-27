@@ -38,7 +38,7 @@ export async function renderWorksheet(document: PaperDocument, options: PaperOpt
     y = text(first ? document.heading : (options.title || document.title), margin, y, width(), first ? 11 : 10, accent) + 7;
     if (!first) return;
     y = text(options.title || document.title, margin, y, width(), 22, accent) + 10;
-    if (options.version === "worksheet" && document.heading !== "Giáo án") {
+    if (options.version === "worksheet" && (document.showStudentFields ?? document.heading !== "Giáo án")) {
       const fields = `Họ tên ${options.student || "____________________"}     Lớp ${options.className || "________"}     Ngày ${options.date || "________"}`;
       y = text(fields, margin, y, width(), fontSize) + 8;
     }

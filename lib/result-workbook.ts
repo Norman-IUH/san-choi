@@ -2,6 +2,7 @@ import writeXlsxFile, { type Cell } from "write-excel-file/node";
 import { z } from "zod";
 import { itemSchema, readableResponse } from "./game";
 import { assessmentSchema } from "./games/productive";
+import { literalSheet } from "./xlsx";
 
 export type ResultAssignment = { id: string; title: string; content: unknown; assessment: unknown };
 export type ResultAttempt = {
@@ -79,9 +80,5 @@ export function resultWorkbook(assignments: ResultAssignment[], attempts: Result
     { sheet: "Tổng quan", data: overview, widths: [36, 21, 48, 18, 24, 20] },
     { sheet: "Kết quả", data: results, widths: [36, 40, 24, 26, 26, 17, 18, 17, 18, 22] },
     { sheet: "Chi tiết trả lời", data: details, widths: [36, 40, 24, 9, 50, 50, 17] },
-  ].map(({ sheet, data, widths }) => ({
-    sheet, columns: widths.map(width => ({ width })),
-    data: data.map((row, index) => row.map((cell): Cell => typeof cell === "string"
-      ? { type: String, value: cell, fontWeight: index === 0 ? "bold" : undefined } : cell)),
-  })));
+  ].map(({ sheet, data, widths }) => literalSheet(sheet, data, widths)));
 }
