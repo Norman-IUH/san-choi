@@ -90,6 +90,13 @@
 .mover-sign input { width: 100%; height: 100%; min-height: 2rem; padding: .1rem .2rem; text-align: center; font-size: inherit; }
 .starter-pin.mover-colour-pin { mix-blend-mode: multiply; color: #192d49; }
 .starter-choice-letter { display: inline-block; margin-right: .45rem; color: var(--starter-coral); font-weight: 750; }
+.mover-scenes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
+.mover-scenes figure { display: grid; margin: 0; padding: .35rem; background: var(--starter-aqua); border-radius: .7rem; text-align: center; }
+.mover-scenes img { display: block; width: 100%; border-radius: .45rem; }
+.mover-scenes figcaption { padding: .3rem; font-weight: 720; }
+.mover-odd { margin: 0; min-width: 0; border: 1px solid #bfdad6; border-radius: .65rem; padding: .5rem; }
+.mover-odd legend { padding: 0 .35rem; font-weight: 750; }
+.mover-odd .starter-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 @media (max-width: 540px) {
   .starter-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .starter-import { margin: .75rem; }

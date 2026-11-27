@@ -1,6 +1,6 @@
 import type { Item, Template } from "./game";
 import { cambridgeLevels, moverPartNames, starterPapers, cambridgeCounts, type CambridgePart, type StarterPaper } from "./games/starters";
-import type { Rubric } from "./games/productive";
+import { defaultRubric, type Rubric } from "./games/productive";
 
 const image = (name: string) => `/illustrations/movers/${name}.webp`;
 const cards = (names: string[], labels = names) => names.map((name, i) => ({ value: labels[i], image: image(name) }));
@@ -115,14 +115,42 @@ const writingRubric: Rubric = [
   { title: "Part 6, câu 5", description: "Một câu hoàn chỉnh, dễ hiểu và đúng với một người trong tranh. Nếu bỏ trống, cho 0 điểm.", max: 1 },
   { title: "Part 6, câu 6", description: "Một câu hoàn chỉnh, dễ hiểu và đúng với một vật bên cạnh gian hàng. Nếu bỏ trống, cho 0 điểm.", max: 1 },
 ];
-const papers: Partial<Record<StarterPaper, Question[][]>> = { listening, reading };
+const speaking: Question[][] = [
+  [{
+    prompt: "Look at both pictures. Tell your teacher four things that are different.",
+    config: { visuals: [image("stall-a"), image("stall-b")],
+      guide: "Dùng ‘In the first picture …, but in the second picture …’ để mô tả bốn điểm khác nhau.",
+      teacher: "Greet the learner and ask for a first name and age as role-play. Ask them to describe four differences between the two stalls. Contrast the roof colour, the shirt of the person on the left, the basket and bag, and the camera and bottle on the table. Give another prompt if the learner needs help getting started." },
+  }],
+  [{
+    prompt: "A surprise at the fair · Listen to the beginning, then tell the rest of Leo's story.",
+    config: { visuals: ["story-notice", "story-find", "story-help", "story-celebrate"].map(image),
+      guide: "Nghe giáo viên kể khung đầu. Sau đó dùng ‘then’, ‘after that’ và ‘in the end’ để kể ba khung còn lại.",
+      teacher: "Show all four pictures. Start: This is Leo. On Saturday he saw a notice about the school fair and decided to go. Now tell me about the other pictures. In picture 2 Leo finds a red bag near the bench. In picture 3 he returns it to the photo stall. In picture 4 he stays for the music. Accept sensible accounts that fit the pictures." },
+  }],
+  [{
+    prompt: "In each set, choose the different picture. Tell your teacher why.",
+    config: { groups: [
+      ["pear", "lemon", "scarf", "sandwich"], ["rabbit", "umbrella", "bird", "fish"],
+      ["skates", "shoe", "helmet", "camera"], ["flower", "torch", "camera", "clock"],
+    ].map(group => group.map(image)),
+    guide: "Chọn hình khác trong mỗi nhóm rồi giải thích bằng ‘These are all …, but this one …’. Có thể có nhiều cách giải thích hợp lý.",
+    teacher: "Ask which picture is different and why, for each of the four sets. Possible groupings: food versus scarf; animals versus umbrella; things you wear versus camera; devices versus flower. Accept a different grouping if the learner explains it clearly." },
+  }],
+  [{
+    prompt: "Talk to your teacher about school, weekends, and things you like doing.",
+    config: { guide: "Trả lời trực tiếp bằng một câu ngắn, rồi thêm một chi tiết nếu em có thể.",
+      teacher: "Ask: What do you like doing after school? Who do you play with at weekends? What did you do last Saturday? Tell me about a game you enjoy. Use invented names and details for demonstrations. The app does not ask the learner to type personal answers." },
+  }],
+];
+const papers: Record<StarterPaper, Question[][]> = { listening, reading, speaking };
 export function moverPaper(paper: StarterPaper, part?: number) {
   const rows = papers[paper];
   const mock = part === undefined;
   if (!rows || (!mock && (!Number.isInteger(part) || !rows[part - 1]))) return null;
   const indices = mock ? rows.map((_, index) => index) : [part - 1];
   const template: Template = paper === "speaking" ? "speaking" : "type-answer";
-  const rubric = paper === "reading" && (mock || part === 6) ? writingRubric : undefined;
+  const rubric = paper === "speaking" ? defaultRubric("Speaking") : paper === "reading" && (mock || part === 6) ? writingRubric : undefined;
   const items: Item[] = indices.flatMap(index => rows[index].map(({ prompt, answer, alternatives, config, clip }, question) => ({
     version: 2, prompt, answers: answer ? [answer] : [], options: [], alternatives,
     english: { level: cambridgeLevels.movers, skill: paper === "listening" ? "Listening" : paper === "reading" ? "Reading" : "Speaking" },

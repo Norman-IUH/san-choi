@@ -48,3 +48,13 @@ test("Movers Reading & Writing holds 33 automatic marks and two open questions f
   snapshot[33].answers = ["Any sentence"];
   expect(contentSchema(paper.template).safeParse(snapshot).success).toBe(false);
 });
+
+test("Movers Speaking uses two comparison pictures, four story scenes and four sets of four images", () => {
+  checkPaper("speaking");
+  const { items } = moverPaper("speaking")!;
+  expect(items[0].practice?.starters?.visuals).toHaveLength(2);
+  expect(items[1].practice?.starters?.visuals).toHaveLength(4);
+  expect(items[2].practice?.starters?.groups?.map(group => group.length)).toEqual([4, 4, 4, 4]);
+  expect(items[0].practice?.production?.rubric).toHaveLength(5);
+  expect(items.every(item => item.practice?.starters?.teacher)).toBe(true);
+});

@@ -62,6 +62,75 @@ async function next(page: Page, remaining: number) {
   await expect(page.getByRole("heading", { name: "Hoàn thành!" })).toBeVisible();
 }
 
+test("Movers library links all fifteen practice parts and three mocks", async ({ page }) => {
+  await page.goto(root);
+  await expect(page.locator(".starter-paper-grid li a")).toHaveCount(15);
+  await expect(page.getByRole("link", { name: /^Thi thử/ })).toHaveCount(3);
+  expect((await page.goto(root + "/listening?part=6"))?.status()).toBe(404);
+});
+
+for (const part of [1, 2, 3, 4]) {
+  test(`Movers Speaking Part ${part}`, async ({ page }) => {
+    await start(page, "speaking?part=" + part);
+    await expect(page.getByText("Gợi ý luyện tập")).toBeVisible();
+    if (part === 1 || part === 2) await expect(page.locator(".mover-scenes figure")).toHaveCount(part === 1 ? 2 : 4);
+    if (part === 3) {
+      for (let group = 1; group <= 4; group++) {
+        const cards = page.getByRole("group", { name: "Set " + group }).getByRole("button");
+        await expect(cards).toHaveCount(4);
+        await cards.nth(1).focus();
+        await page.keyboard.press("Space");
+        await expect(cards.nth(1)).toHaveAttribute("aria-pressed", "true");
+      }
+    }
+    await expect(page.locator("audio, .starter-sheet input, .starter-sheet textarea")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /microphone|ghi âm/ })).toHaveCount(0);
+    await next(page, 1);
+    await expect(page.locator(".game-completion strong")).toHaveCount(0);
+  });
+}
+
+test("Movers mock timers, two audio plays, and routes between speaking parts", async ({ page }) => {
+  await page.clock.install();
+  await start(page, "listening");
+  await expect(page.getByRole("timer")).toHaveText(/^(?:25:00|24:59)$/);
+  await expect(page.getByText("Gợi ý luyện tập")).toHaveCount(0);
+  for (const play of [1, 2]) {
+    await button(page, "Nghe đoạn hội thoại").click();
+    await expect(page.getByText(`Lượt nghe ${play}/2`)).toBeVisible();
+    await page.locator("audio").evaluate(async element => {
+      const audio = element as HTMLAudioElement;
+      if (!Number.isFinite(audio.duration)) await new Promise(resolve => audio.addEventListener("loadedmetadata", resolve, { once: true }));
+      audio.currentTime = audio.duration - .05;
+    });
+    await expect(button(page, "Nghe đoạn hội thoại")).toBeVisible();
+  }
+  await button(page, "Person 2").click();
+  await button(page, "Tiếp theo").click();
+  await expect(button(page, "Nghe đoạn hội thoại")).toBeDisabled();
+  await button(page, "Câu trước").click();
+  await expect(button(page, "Person 2")).toHaveAttribute("aria-pressed", "true");
+  await page.clock.fastForward(25 * 60 * 1000 + 1000);
+  await expect(page.getByText("1/25 điểm", { exact: true })).toBeVisible();
+  await start(page, "reading");
+  await expect(page.getByRole("timer")).toHaveText(/^(?:30:00|29:59)$/);
+  await page.getByLabel("Your answer").fill("helmet");
+  await page.clock.fastForward(30 * 60 * 1000 + 1000);
+  await expect(page.getByText("1/33 điểm tự động", { exact: true })).toBeVisible();
+  await start(page, "speaking");
+  await expect(page.getByRole("timer")).toHaveText(/^(?:7:00|6:59)$/);
+  await expect(page.getByText("Gợi ý luyện tập")).toHaveCount(0);
+  await button(page, "Tiếp theo").click();
+  await button(page, "Tiếp theo").click();
+  const choice = page.getByRole("group", { name: "Set 1" }).getByRole("button").nth(2);
+  await choice.click();
+  await button(page, "Tiếp theo").click();
+  await button(page, "Câu trước").click();
+  await expect(choice).toHaveAttribute("aria-pressed", "true");
+  await button(page, "Tiếp theo").click();
+  await next(page, 1);
+});
+
 for (const part of [1, 2, 3, 4, 5]) {
   test(`Movers Listening Part ${part}`, async ({ page }) => {
     await start(page, "listening?part=" + part);

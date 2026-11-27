@@ -8,7 +8,7 @@ import type { RoundProps } from "./LegacyRound";
 export default function StartersRound({ items, index, turn, answers, assets, setAnswers, next, busy, bindFocus }: RoundProps) {
   const item = items[index];
   const config = item.practice!.starters!;
-  const { paper, part, scene, cards, targets, letters, passage, guide, example, fields, lead, choices, copyWord, open, sign } = config;
+  const { paper, part, scene, cards, targets, letters, passage, guide, example, fields, lead, choices, copyWord, open, sign, visuals, groups } = config;
   const movers = config.level === "movers";
   const match = paper === "listening" && part === 1;
   const colouring = paper === "listening" && part === (movers ? 5 : 4);
@@ -37,7 +37,7 @@ export default function StartersRound({ items, index, turn, answers, assets, set
   return <form className="starter-sheet" lang="en" onSubmit={event => {
     event.preventDefault();
     // Card placement is a teaching aid. The teacher assesses the spoken work.
-    next(!speaking && value.trim() ? [value.trim()] : []);
+    next(groups ? answers[index] ?? [] : !speaking && value.trim() ? [value.trim()] : []);
   }}>
     <div>
       <p className="starter-label" lang="vi">Part {part} · {heading}</p>
@@ -47,6 +47,22 @@ export default function StartersRound({ items, index, turn, answers, assets, set
       <summary>{config.mock ? "Ví dụ mẫu" : "Gợi ý luyện tập"}</summary><p>{guide ?? example}</p>
     </details>}
     {speaking && <p className="starter-guide" lang="vi">Làm phần này cùng giáo viên. Em có thể trả lời trực tiếp bằng lời.</p>}
+    {visuals && <div className="mover-scenes">
+      {visuals.map((src, i) => <figure key={src}>
+        <LessonMedia media={{ image: src }} assets={assets} label={`Fair scene ${i + 1}`}/>
+        <figcaption>{visuals.length === 2 ? `Picture ${"AB"[i]}` : `Picture ${i + 1}`}</figcaption>
+      </figure>)}
+    </div>}
+    {groups?.map((group, i) => <fieldset key={i} className="mover-odd">
+      <legend>Set {i + 1}</legend>
+      <div className="starter-cards">{group.map((src, n) => <button key={src} className="starter-card" type="button"
+        aria-pressed={answers[index]?.[i] === String(n)} onClick={() => setAnswers(old => ({
+          ...old, [index]: groups.map((_, groupIndex) => groupIndex === i ? String(n) : old[index]?.[groupIndex] ?? ""),
+        }))}>
+        <LessonMedia media={{ image: src }} assets={assets} label={src.split("/").at(-1)!.replace(".webp", "")}/>
+        <span>{"ABCD"[n]}</span>
+      </button>)}</div>
+    </fieldset>)}
     {passage && <div className="starter-passage">{passage}</div>}
     {fields && <dl className="mover-booking">{fields.map((name, i) => <div key={name} aria-current={section[i] === index ? "step" : undefined}>
       <dt>{name}</dt><dd>{answers[section[i]]?.[0] || "—"}</dd>
