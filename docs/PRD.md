@@ -14,3 +14,11 @@ Production dùng một tài khoản giáo viên do chủ hệ thống tạo trư
 - **Vận hành** qua HTTPS trên hosting Next.js, backend cloud và project production riêng để dữ liệu thử nghiệm nằm ở development. Giữ khả năng phục hồi bằng backup và rollback.
 
 Cộng đồng nhiều giáo viên, Admin Dashboard, đăng ký công khai, thuê bao và billing nằm ngoài phạm vi sản phẩm cá nhân. Các route cũ có thể tiếp tục tồn tại khi vẫn có ích. Tham chiếu chức năng từ [Wordwall Features](https://wordwall.net/features). Chỉ dùng học liệu gốc hoặc được cấp quyền và không tuyên bố kết quả nội bộ là chứng nhận Cambridge.
+
+## V1.5A — Thư viện học liệu tiếng Anh
+
+Giáo viên có thể chọn cấp độ, chủ đề và từ, lưu thành bài học theo unit và kỹ năng, rồi xem trước mẫu tương thích. Bản soạn có thể tùy chỉnh trong editor hiện có trước khi giáo viên xuất bản hoặc giao. Một lesson lưu tham chiếu đến nguồn từ vựng và tập hợp nhiều hoạt động. Bài đã giao giữ bản chụp nội dung để điểm cũ vẫn nhất quán khi nguồn thay đổi.
+
+Thư viện khởi đầu có 440 mục theo bốn nhóm nội bộ. Mỗi cấp độ có một bài mở đầu năm từ kèm ví dụ, IPA và audio tổng hợp Anh–Anh, Anh–Mỹ. Giáo viên có thể nhập CSV hoặc XLSX, sửa từ riêng, cập nhật cấp độ và chủ đề hàng loạt, và tải CSV dữ liệu chữ. Dữ liệu đa phương tiện lưu qua Storage hiện có.
+
+Tên cấp độ dùng để hỗ trợ giáo viên tổ chức bài. V1.5A chưa có đề luyện theo phần thi, rubric hay chấm thủ công. V1.5B và V1.5C cần nghiệm thu riêng, gồm đối chiếu đặc tả Cambridge chính thức trước khi soạn bài luyện theo kỳ thi.

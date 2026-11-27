@@ -58,3 +58,11 @@ Sau khi xử lý cổng bảo mật và có phê duyệt, merge PR #1 trước v
 Labelled Diagram tiếp tục giữ một ghim mỗi mục. Nhiều ghim trong một ảnh cần thiết kế cấu trúc nhập liệu, snapshot và luật chấm trước khi triển khai.
 
 V1.4D dựa trên PR #4. Chỉ phát hành sau khi review các PR theo thứ tự và chủ dự án phê duyệt. Rủi ro Secret Key từng lộ vẫn được ghi nhận theo cấu hình hiện tại.
+
+## V1.5 — Công cụ soạn bài tiếng Anh
+
+- V1.5A bổ sung Ngân hàng từ vựng và lesson version 1, danh mục 440 từ, nhập và xuất, dùng lại nguồn trong các mẫu tương thích. Migration additive trên QuizStudy thêm hai bảng của giáo viên và liên kết tùy chọn tới hoạt động.
+- V1.5B sẽ dùng bài học làm nguồn để luyện nghe, phonics, nói, đọc, viết và ngữ pháp. Rubric và bản ghi âm học sinh cần một đợt thiết kế quyền truy cập và lưu giữ riêng.
+- V1.5C sẽ đối chiếu cấu trúc thi Cambridge English hiện hành trước khi xây dựng bài luyện gốc theo từng phần. Tiến độ sẽ dùng cách tính điểm nội bộ của Sân Chơi.
+
+V1.5A dùng nhánh review dựa trên V1.4D. Chỉ phát hành sau khi chủ dự án phê duyệt. Khóa bí mật từng lộ vẫn là rủi ro chưa xử lý.

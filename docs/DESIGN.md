@@ -37,6 +37,10 @@ Trang demo, bài giao còn mở và học liệu công khai có Game Shell toàn
 
 Canvas arcade dọc dùng khung 720 × 540 và tính lại tọa độ vẽ từ không gian mô phỏng. Canvas ngang giữ 960 × 480. Điều này giữ va chạm và lượt chơi qua thay đổi hướng màn hình. Hình đáp án, nền và sprite gốc V1.3–V1.4C tiếp tục được tái sử dụng. 34 thẻ thư viện dùng thumbnail WebP chụp từ gameplay và tải theo vị trí cuộn.
 
+## V1.5A
+
+Thư viện tiếng Anh giữ kiểu chữ và nút V1.4D. Thẻ bài mở đầu dùng minh họa gốc của thư viện mẫu, nền xanh nhạt và nhãn cấp độ. Danh sách từ đặt cạnh phần soạn bài trên desktop và chuyển xuống một cột trên điện thoại. Lựa chọn từ được giữ khi đổi bộ lọc hoặc trang. Các tệp phát âm có sẵn mang nhãn Audio tổng hợp, và tệp tải lên đi qua MediaInput cùng bucket riêng tư.
+
 **Prompt môi trường**
 
 > An exact 4 column by 2 row 8 panel game background atlas, wide landscape image, no gaps, even equal rectangles. Original premium illustrated picture-book art for a Vietnamese children's English arcade; tactile paper and gouache, brightly lit, clear silhouettes, composed like game level backgrounds with spacious center. Row 1 panels left to right: aerial emerald jungle maze ruins with turquoise stream, peach-orange golden orchard with flying leaves, deep blue airplane sky with fluffy clouds and sandstone canyons, purple sunset festival with balloons at the edges. Row 2 left to right: green garden with soft grassy earth, aqua classroom recycling workshop, navy and violet art-deco quiz stage with spotlights, cream and coral paper textures. No words, numbers, watermarks, humans, interface, borders or dividing lines. Each panel independently designed to be used as an illustrated game stage.

@@ -1,6 +1,6 @@
 import { test, expect } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 
 test("migration provisions accounts, locks teacher rows and allows one authoritative completion", async () => {
   const db = new PGlite();
@@ -90,6 +90,31 @@ test("migration provisions accounts, locks teacher rows and allows one authorita
     expect(await guess(null)).toBe("BDEFGH");
     await db.query("update assignments set closed=true where id=$1", [assignment]);
     expect(await guess(null)).toBeNull();
+    await db.exec("reset role");
+    const migrationFiles = await readdir("supabase/migrations");
+    const libraryMigration = migrationFiles.find(file => file.endsWith("_english_learning_library.sql"))!;
+    await db.exec(await readFile("supabase/migrations/" + libraryMigration, "utf8"));
+    await session(owner);
+    expect((await db.query("select vocabulary_lesson_id from activities where id=$1", [activity])).rows[0])
+      .toEqual({ vocabulary_lesson_id: null });
+    const word = (await db.query<{ id: string }>(
+      "insert into vocabulary_entries(word,meaning,level,topic) values ('book','sách','Kids','School') returning id")).rows[0].id;
+    const lesson = (await db.query<{ id: string }>(
+      "insert into vocabulary_lessons(title,level,skill,topic,unit,difficulty,entry_keys) values ('Read','Kids','Vocabulary','School','Unit 1','gentle',array[$1::text]) returning id",
+      [word])).rows[0].id;
+    await db.query("insert into activities(title,template,content,vocabulary_lesson_id) values ('Read','quiz','[]',$1)", [lesson]);
+    await expect(db.query("update activities set vocabulary_lesson_id=$1 where id=$2", [lesson, activity])).rejects.toThrow(/permission denied/);
+    await expect(db.query("update vocabulary_entries set uk=$1", [other + "/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa.wav"])).rejects.toThrow(/check constraint/);
+    await session(other);
+    expect((await db.query("select id from vocabulary_entries")).rows).toHaveLength(0);
+    expect((await db.query("select id from vocabulary_lessons")).rows).toHaveLength(0);
+    await expect(db.query("insert into activities(title,template,content,vocabulary_lesson_id) values ('Test','quiz','[]',$1)", [lesson]))
+      .rejects.toThrow(/foreign key/);
+    await session(student);
+    await expect(db.query("insert into vocabulary_entries(word,meaning,level,topic) values ('book','sách','Kids','School')"))
+      .rejects.toThrow(/row-level security/);
+    await db.exec("reset role; set role anon;");
+    await expect(db.query("select id from vocabulary_entries")).rejects.toThrow(/permission denied/);
   } finally {
     await db.close();
   }

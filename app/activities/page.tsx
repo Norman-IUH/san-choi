@@ -47,6 +47,7 @@ export default async function Activities({ searchParams }: { searchParams: Promi
   };
   return <div className="dashboard">
     <aside className="sidebar"><strong>Thư viện của tôi</strong>
+      <Link href="/library"><Library size={18}/> Thư viện tiếng Anh</Link>
       <nav aria-label="Thư viện">{views.map(([key, label, Icon]) => <Link aria-current={key === view && !folder ? "page" : undefined} href={href({ view: key, folder: undefined })} key={key}><Icon size={18}/>{label}</Link>)}</nav>
       {folders.length > 0 && <nav aria-label="Thư mục">{folders.map(entry => <Link href={href({ view: "folder", folder: entry.id })} key={entry.id}
         aria-current={folder === entry.id ? "page" : undefined}><Folder size={17} color={entry.color}/>{folderLabel(entry.id)}</Link>)}</nav>}

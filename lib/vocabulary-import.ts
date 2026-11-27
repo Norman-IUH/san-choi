@@ -26,15 +26,19 @@ export function vocabularyItems(rows: readonly unknown[][]): Item[] {
   });
 }
 
-export async function importVocabulary(file: File) {
+export async function readVocabularyRows(file: File) {
   if (!file.size || file.size > 512 * 1024) throw new Error("Tệp từ vựng phải dưới 512 KiB.");
   if (/\.csv$/i.test(file.name)) {
     const { parse } = await import("csv-parse/browser/esm/sync");
-    return vocabularyItems(parse(await file.text(), { bom: true, skip_empty_lines: true, max_record_size: 3000 }));
+    return parse(await file.text(), { bom: true, skip_empty_lines: true, max_record_size: 3000 }) as unknown[][];
   }
   if (/\.xlsx$/i.test(file.name)) {
     const { readSheet } = await import("read-excel-file/browser");
-    return vocabularyItems(await readSheet(file, 1));
+    return await readSheet(file, 1);
   }
   throw new Error("Chọn tệp CSV hoặc XLSX.");
+}
+
+export async function importVocabulary(file: File) {
+  return vocabularyItems(await readVocabularyRows(file));
 }

@@ -76,6 +76,7 @@ export async function changeActivity(id: string, command: string, form: FormData
     const { data, error: insertError } = await db.from("activities").insert({
       title: (row.title.slice(0, 109) + " (bản sao)"), template: target, content: row.content,
       description: row.description, tags: row.tags, grade: row.grade, subject: row.subject, folder_id: row.folder_id,
+      ...(row.vocabulary_lesson_id ? { vocabulary_lesson_id: row.vocabulary_lesson_id } : {}),
     }).select("id").single();
     check(insertError, "copy_activity");
     redirect(`/activities/${data!.id}?saved=1`);
