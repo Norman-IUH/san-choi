@@ -4,6 +4,7 @@ import { contentSchema, grade, makePlayItems } from "../lib/game";
 import { cambridgeCounts, moverPartNames, type StarterPaper } from "../lib/games/starters";
 import { builtInMediaUrls, itemMediaPaths } from "../lib/media";
 import { moverPaper } from "../lib/movers-paper";
+import { localPlay } from "../lib/local-play";
 
 function checkPaper(paper: StarterPaper) {
   const mock = moverPaper(paper)!;
@@ -51,10 +52,11 @@ test("Movers Reading & Writing holds 33 automatic marks and two open questions f
 
 test("Movers Speaking uses two comparison pictures, four story scenes and four sets of four images", () => {
   checkPaper("speaking");
-  const { items } = moverPaper("speaking")!;
+  const { items, template } = moverPaper("speaking")!;
   expect(items[0].practice?.starters?.visuals).toHaveLength(2);
   expect(items[1].practice?.starters?.visuals).toHaveLength(4);
   expect(items[2].practice?.starters?.groups?.map(group => group.length)).toEqual([4, 4, 4, 4]);
   expect(items[0].practice?.production?.rubric).toHaveLength(5);
   expect(items.every(item => item.practice?.starters?.teacher)).toBe(true);
+  expect(JSON.stringify(localPlay(template, items))).not.toMatch(/"teacher"|"rubric"|Contrast the roof colour/);
 });

@@ -320,7 +320,11 @@ export function Player({ title, description, backHref, template, initialItems = 
       {assignment && requireName && <label>Biệt danh<input value={nickname} onChange={event => setNickname(event.target.value)} maxLength={80} required /></label>}
       {assignment && <p className="hint">Nếu đã bắt đầu, em có thể tiếp tục sau khi tải lại trong cùng thẻ trình duyệt.</p>}
       <button ref={bindFocus} className="button primary game-start" disabled={!ready || busy}><Play size={20} aria-hidden="true"/>{busy ? "Đang mở…" : "Bắt đầu"}</button>
-    </form></div> : reading ? <div className="reading-layout">
+    </form></div> : mock?.seconds === 0 ? <div className="starter-sheet">
+      <h2>Đã hết thời gian</h2>
+      <button className="button primary" type="button" disabled={busy || !error}
+        onClick={() => void submit(answers)}>{busy || !error ? "Đang nộp bài…" : "Nộp lại"}</button>
+    </div> : reading ? <div className="reading-layout">
       <details className="reading-source" open><summary>Ngữ liệu đọc</summary>
         <LessonMedia media={{ image: reading.stimulusImage }} assets={assets} label="Hình ngữ liệu đọc"/>
         {reading.stimulus && <p lang="en">{reading.stimulus}</p>}

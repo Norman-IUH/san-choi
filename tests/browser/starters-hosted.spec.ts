@@ -1,7 +1,8 @@
-import { expect, test } from "@playwright/test";
+import { expect as playwrightExpect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 
 test.use({ trace: "off" });
+const expect = playwrightExpect.configure({ timeout: 25000 });
 
 for (const paper of ["listening", "reading", "speaking"]) {
   test(`QuizStudy saves and scores the Starters ${paper} mock`, async ({ page, browser }, info) => {

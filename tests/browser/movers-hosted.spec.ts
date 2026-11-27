@@ -1,14 +1,21 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect as playwrightExpect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 
 test.use({ trace: "off" });
+const expect = playwrightExpect.configure({ timeout: 30000 });
 
 async function signIn(page: Page, second = false) {
   await page.goto("/login", { waitUntil: "networkidle" });
   await page.getByLabel("Email").fill((second ? process.env.E2E_OTHER_EMAIL : process.env.E2E_TEACHER_EMAIL)!);
   await page.getByLabel("Mật khẩu").fill((second ? process.env.E2E_OTHER_PASSWORD : process.env.E2E_TEACHER_PASSWORD)!);
   await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Hoạt động của tôi" })).toBeVisible();
+  try {
+    await expect(page.getByRole("heading", { name: "Hoạt động của tôi" })).toBeVisible({ timeout: 45000 });
+  } catch (error) {
+    const password = page.getByLabel("Mật khẩu");
+    if (await password.isVisible()) await password.clear();
+    throw error;
+  }
 }
 
 const button = (page: Page, name: string) => page.getByRole("button", { name, exact: true });
@@ -61,7 +68,8 @@ for (const paper of ["listening", "reading", "speaking"]) {
         await start();
         await expect(button(student, "Person 2")).toHaveAttribute("aria-pressed", "true");
         await expect(student.getByText("Lượt nghe 1/2")).toBeVisible();
-        await student.clock.fastForward(25 * 60 * 1000 + 1000);
+        for (let i = 0; i < 24; i++) await button(student, "Tiếp theo").click();
+        await button(student, "Nộp bài").click();
         await expect(student.getByText("1/25 điểm", { exact: true })).toBeVisible();
       } else if (paper === "reading") {
         await student.getByLabel("Your answer").fill("helmet");

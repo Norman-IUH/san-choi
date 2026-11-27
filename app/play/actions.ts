@@ -157,7 +157,10 @@ export async function finishAttempt(id: string, values: string[][]) {
       prompt: items[index].prompt, answer, correct: result.correct[index],
     })), p_score: result.score, p_total: result.total,
   }).maybeSingle();
-  if (error || !saved) return { error: "Chưa nộp được bài. Kiểm tra hạn và thử lại." } as const;
+  if (error || !saved) {
+    console.warn(JSON.stringify({ operation: "finish_attempt", code: error?.code ?? "no_attempt" }));
+    return { error: "Chưa nộp được bài. Kiểm tra hạn và thử lại." } as const;
+  }
   const record = saved as { score: number | null; total: number; answers: { answer: string[]; correct: boolean | null }[] };
   if (data.assessment) {
     (await cookies()).set(`receipt-${id}`, token, { httpOnly: true, sameSite: "lax", secure: process.env.APP_URL?.startsWith("https:"),
