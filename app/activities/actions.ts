@@ -165,6 +165,7 @@ export async function createAssignment(id: string, form: FormData) {
   const template = templateSchema.parse(activity.template);
   const content = contentSchema(template).parse(activity.content);
   const assignment = await insertAssignment({ owner_id: user.id, activity_id: id, title: activity.title, template, content, level: activity.grade }, form);
+  if (assignment === "classroom") redirect(`/activities/${id}?invalid=classroom#giao-bai`);
   if (!assignment || assignment === "draft") redirect(`/activities/${id}?invalid=1`);
   redirect(`/assignments/${assignment}`);
 }

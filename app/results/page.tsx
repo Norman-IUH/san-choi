@@ -15,7 +15,7 @@ export default async function Results({ searchParams }: { searchParams: Promise<
   const level = z.enum(levels).safeParse(query.level).data;
   const lesson = z.uuid().safeParse(query.lesson).data;
   const assignment = z.uuid().safeParse(query.assignment).data;
-  let queue = db.from("attempts").select("id,nickname,completed_at,assignments!inner(id,title,assessment,lesson_id),manual_reviews!inner(state,total)")
+  let queue = db.from("attempts").select("id,nickname,completed_at,assignments!inner(id,title,assessment,lesson_id),manual_reviews!inner(state,total),students(id,name)")
     .not("completed_at", "is", null).order("completed_at", { ascending: false }).limit(100);
   if (state) queue = queue.eq("manual_reviews.state", state);
   if (skill) queue = queue.eq("assignments.assessment->>skill", skill);
@@ -27,7 +27,7 @@ export default async function Results({ searchParams }: { searchParams: Promise<
     db.from("attempts").select("id", { count: "exact", head: true }).not("completed_at", "is", null),
     db.from("assignments").select("id", { count: "exact", head: true }),
     queue.overrideTypes<{ id: string; nickname: string; assignments: { title: string; assessment: { skill: string } };
-      manual_reviews: Pick<ManualReview, "state"> }[], { merge: false }>(),
+      manual_reviews: Pick<ManualReview, "state">; students: { id: string; name: string } | null }[], { merge: false }>(),
     db.from("vocabulary_lessons").select("id,title").order("title"),
   ]);
   check(assignments.error, "results_list"); check(complete.error, "complete_count"); check(count.error, "assignment_count");
@@ -64,7 +64,7 @@ export default async function Results({ searchParams }: { searchParams: Promise<
           {assignments.data?.map(row => <option key={row.id} value={row.id}>{row.title}</option>)}</select></label>
       </div><button className="button">Lọc bài cần chấm</button></form>
       {reviewQueue.data?.length ? <ul className="assignment-list">{reviewQueue.data.map(row => <li key={row.id}>
-        <Link href={`/results/${row.id}`}>{row.nickname} · {row.assignments.title}</Link>
+        <Link href={`/results/${row.id}`}>{row.students ? `${row.students.name} · ${row.students.id.slice(0, 8)}` : row.nickname} · {row.assignments.title}</Link>
         <span>{row.assignments.assessment?.skill} · {states[row.manual_reviews.state]}</span>
       </li>)}</ul> : <p>Chưa có bài phù hợp với bộ lọc.</p>}
     </section>

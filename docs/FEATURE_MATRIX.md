@@ -166,3 +166,13 @@ Xem [kết quả kiểm thử](TEST_RESULTS.md) và [các phần còn thiếu](L
 | PDF | Xem trước, tải phiếu học sinh, đáp án riêng, giáo án và transcript khi có. Hỗ trợ khổ A4/Letter, màu/xám, tiếng Việt, tiếng Anh, IPA và hình ảnh. |
 | QR | Link theo domain đang mở, sao chép, tải PNG/SVG, bản in tên hoạt động và chế độ trình chiếu. Mã giữ nguyên URL và quy tắc truy cập bài giao. |
 | Excel | Ba sheet Tổng quan, Kết quả và Chi tiết trả lời. Lọc nhiều bài giao, ngày bắt đầu và dữ liệu theo chủ bài. Tách điểm, trạng thái rubric, tỷ lệ nộp, điểm trung bình và câu thường sai. Ô chữ được ghi dưới dạng văn bản. CSV vẫn có trên trang bài giao. |
+
+## V1.6B Classroom và Student Progress
+
+| Hạng mục | Phạm vi |
+|---|---|
+| Lớp và hồ sơ | Bốn cấp độ, lịch học, khóa học, ghi chú, tìm và lọc. Tạo, sửa, nhân bản và lưu trữ lớp. Hồ sơ có ID riêng, nhập CSV/XLSX, có thể tham gia nhiều lớp, chuyển lớp hoặc lưu trữ. |
+| Mã cá nhân | Mã ngẫu nhiên, hiển thị khi cấp và kiểm tra phía server. Thu hồi, cấp lại và giới hạn yêu cầu. Hồ sơ và kết quả thuộc giáo viên. |
+| Bài giao | Cả lớp hoặc học sinh được chọn từ hoạt động đã lưu, giáo án hoặc Cambridge nhập vào thư viện. Link, QR, thời hạn và số lần làm. Giữ snapshot nội dung và người nhận. |
+| Tiến độ | Phân biệt chưa làm, đang làm, đã nộp, chờ chấm, đã chấm và điểm 0. Biểu đồ theo thời gian, kỹ năng, Part Cambridge, lượt luyện từ và câu cần ôn. |
+| Báo cáo | PDF giáo viên và PDF riêng từng học sinh cho phụ huynh. Excel ba sheet có danh sách, bảng điểm từng lượt và tiến độ. Lọc theo lớp, học sinh, ngày giao và kỹ năng. |

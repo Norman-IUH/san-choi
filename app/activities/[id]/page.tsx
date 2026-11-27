@@ -42,7 +42,8 @@ export default async function Activity({ params, searchParams }: {
         </Link>}
       </div>}</div>
     {query.saved && <p className="notice" role="status">Đã lưu thay đổi.</p>}
-    {(query.invalid || query.incompatible) && <p className="notice error" role="alert">{query.incompatible ? "Mẫu đích không thể giữ toàn bộ nội dung." : "Kiểm tra thông tin trước khi lưu."}</p>}
+    {(query.invalid || query.incompatible) && <p className="notice error" role="alert">{query.incompatible ? "Mẫu đích không thể giữ toàn bộ nội dung." :
+      query.invalid === "classroom" ? "Kiểm tra lớp đang hoạt động, người nhận và số lượt làm." : "Kiểm tra thông tin trước khi lưu."}</p>}
     {activity.deleted_at ? <div className="inline-actions">
       <form action={changeActivity.bind(null, id, "restore")}><button className="button primary">Khôi phục</button></form>
       <form action={changeActivity.bind(null, id, "purge")}><ConfirmButton message="Xóa vĩnh viễn hoạt động này?">Xóa vĩnh viễn</ConfirmButton></form></div>

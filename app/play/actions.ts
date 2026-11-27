@@ -10,12 +10,14 @@ import { hangmanPattern } from "@/lib/games/word-puzzles";
 import type { Item } from "@/lib/game";
 import { isProductive } from "@/lib/games/productive";
 import { attemptLimit } from "@/lib/attempt-rate";
+import { joinCodeSchema } from "@/lib/classroom";
+import { studentCodeHash } from "@/lib/student-code";
 
 const studentMedia = (items: Item[]) => items.map(item =>
   item.practice ? { ...item, english: undefined, optionMedia: item.practice.pictureChoices
     ? item.optionMedia?.map(({ option, image }) => ({ option, image })) : item.optionMedia } : item);
 
-export async function guessAssignmentLetter(id: string, index: number, letter: string | null) {
+export async function guessAssignmentLetter(id: string, index: number, letter: string | null, expectedDraftId?: string) {
   if (!serverConfigured || !z.uuid().safeParse(id).success ||
     !z.number().int().min(0).max(59).safeParse(index).success ||
     !z.string().length(1).regex(/^[A-Z]$/).nullable().safeParse(letter).success) return null;
@@ -23,6 +25,7 @@ export async function guessAssignmentLetter(id: string, index: number, letter: s
   if (!token || !z.uuid().safeParse(token).success) return null;
   const assignment = await getAssignment(id);
   if (!assignment || assignment.template !== "hangman" || !assignment.items[index]) return null;
+  if (assignment.data.classroom_id && (expectedDraftId !== draftIdFor(token) || !await validateClassroomAttempt(assignment, token))) return null;
   if (await attemptLimit(assignment.db, id, "finish", "hangman:" + token)) return null;
   const { data } = await assignment.db.rpc("hangman_guess", { p_assignment: id, p_attempt: token, p_index: index, p_letter: letter });
   if (typeof data !== "string") return null;
@@ -51,13 +54,14 @@ export async function refreshLessonMedia(source: "assignment" | "activity" | "re
     const assignment = await getAssignment(id);
     if (!assignment) return null;
     const { db, data, items } = assignment;
+    if (data.classroom_id && !await validateClassroomAttempt(assignment, token!)) return null;
     const attempt = await db.from("attempts").select("id").eq("assignment_id", id).eq("id", token!).is("completed_at", null).maybeSingle();
     if (!attempt.data || await attemptLimit(db, id, "media", "assignment:" + token)) return null;
     const fresh = await mediaUrls(studentMedia(items), data.owner_id, 900);
     const stillOpen = await getAssignment(id);
     const stillInProgress = await db.from("attempts").select("id").eq("assignment_id", id)
       .eq("id", token!).is("completed_at", null).maybeSingle();
-    return stillOpen && stillInProgress.data ? fresh : null;
+    return stillOpen && stillInProgress.data && (!data.classroom_id || await validateClassroomAttempt(assignment, token!)) ? fresh : null;
   }
   if (source !== "activity" && source !== "resource") return null;
   const db = source === "activity" ? await database() : privilegedDatabase();
@@ -78,11 +82,16 @@ export async function refreshLessonMedia(source: "assignment" | "activity" | "re
 
 const draftIdFor = (token: string) => createHash("sha256").update(token).digest("hex");
 const resumeError = "Không tìm thấy phiên của bản nháp trong thẻ này. Câu trả lời vẫn được giữ trong trình duyệt.";
+type ActiveAssignment = NonNullable<Awaited<ReturnType<typeof getAssignment>>>;
+async function validateClassroomAttempt(assignment: ActiveAssignment, token: string) {
+  const { data, error } = await assignment.db.rpc("valid_classroom_attempt", { p_assignment: assignment.data.id, p_token: token });
+  return !error && data === true;
+}
 
-async function submittedResult(id: string, token: string, assignment: NonNullable<Awaited<ReturnType<typeof getAssignment>>>,
+async function submittedResult(id: string, token: string, assignment: ActiveAssignment,
   record: { score: number | null; total: number | null; answers: unknown }) {
   const { data, items } = assignment;
-  if (data.assessment) {
+  if (data.assessment && !data.classroom_id) {
     (await cookies()).set(`receipt-${id}`, token, { httpOnly: true, sameSite: "lax", secure: process.env.APP_URL?.startsWith("https:"),
       path: `/play/${id}/review`, maxAge: 30 * 86400 });
   }
@@ -91,12 +100,12 @@ async function submittedResult(id: string, token: string, assignment: NonNullabl
     pendingReview: Boolean(data.assessment), ...(data.show_review && { review: missedReview(items, answers) }) };
 }
 
-export async function startAttempt(id: string, nickname: string, resumeDraftId?: string) {
+export async function startAttempt(id: string, nickname: string, resumeDraftId?: string, studentCode?: string) {
   const assignment = await getAssignment(id);
   if (!assignment) return { error: "Bài tập đã đóng hoặc hết hạn." } as const;
   const { db, data, template, items } = assignment;
   if (resumeDraftId !== undefined && !items[0]?.practice?.starters?.mock) return { error: resumeError } as const;
-  const limitError = await attemptLimit(db, id, "start");
+  const limitError = await attemptLimit(db, id, data.classroom_id ? "student-code" : "start");
   if (limitError) return { error: limitError } as const;
   const name = z.string().trim().min(1).max(80).safeParse(data.require_name ? nickname : "Ẩn danh");
   if (!name.success) return { error: "Nhập biệt danh từ 1 đến 80 ký tự." } as const;
@@ -104,8 +113,26 @@ export async function startAttempt(id: string, nickname: string, resumeDraftId?:
   const cookie = `attempt-${id}`;
   let token = jar.get(cookie)?.value;
   if (!z.uuid().safeParse(token).success) token = undefined;
-  if (resumeDraftId !== undefined && (!token || draftIdFor(token) !== resumeDraftId)) return { error: resumeError } as const;
-  if (token) {
+  if (data.classroom_id) {
+    const code = joinCodeSchema.safeParse(studentCode);
+    const denied = { error: "Mã cá nhân không hợp lệ cho bài này. Hãy liên hệ giáo viên." } as const;
+    if (!code.success) return denied;
+    const resume = !!token && resumeDraftId !== undefined && draftIdFor(token) === resumeDraftId;
+    const { data: opened, error } = await db.rpc("open_classroom_attempt", { p_assignment: id, p_code_hash: studentCodeHash(code.data),
+      p_token: token ?? null, p_resume: resume }).maybeSingle()
+      .overrideTypes<{ attempt_id: string | null; issue: string | null; already_completed: boolean }, { merge: false }>();
+    if (error) return { error: "Chưa bắt đầu được bài làm. Hãy thử lại." } as const;
+    if (opened?.issue === "tries") return { error: "Em đã dùng hết số lượt làm bài." } as const;
+    if (opened?.issue === "closed") return { error: "Bài tập đã đóng hoặc hết hạn." } as const;
+    if (!opened?.attempt_id) return denied;
+    token = opened.attempt_id;
+    if (opened.already_completed) {
+      const { data: previous } = await db.from("attempts").select("score,total,answers").eq("assignment_id", id).eq("id", token).maybeSingle();
+      if (!previous || !await validateClassroomAttempt(assignment, token)) return denied;
+      return { items: makePlayItems(template, items), submission: await submittedResult(id, token, assignment, previous) };
+    }
+  } else if (resumeDraftId !== undefined && (!token || draftIdFor(token) !== resumeDraftId)) return { error: resumeError } as const;
+  else if (token) {
     const { data: previous, error } = await db.from("attempts").select("completed_at,score,total,answers")
       .eq("assignment_id", id).eq("id", token).maybeSingle();
     if (error) return { error: "Chưa đọc được phiên làm bài. Hãy thử lại." } as const;
@@ -119,8 +146,8 @@ export async function startAttempt(id: string, nickname: string, resumeDraftId?:
     token = crypto.randomUUID();
     const { error } = await db.from("attempts").insert({ id: token, assignment_id: id, nickname: name.data });
     if (error) return { error: "Chưa bắt đầu được bài làm. Hãy thử lại." } as const;
-    jar.set(cookie, token, { httpOnly: true, sameSite: "lax", secure: process.env.APP_URL?.startsWith("https:"), path: "/", maxAge: 86400 });
   }
+  jar.set(cookie, token, { httpOnly: true, sameSite: "lax", secure: process.env.VERCEL === "1" || process.env.APP_URL?.startsWith("https:"), path: "/", maxAge: 86400 });
   const projected = makePlayItems(template, items);
   if (template === "hangman") {
     const history = await db.rpc("hangman_history", { p_attempt: token });
@@ -147,7 +174,10 @@ export async function finishAttempt(id: string, values: string[][], expectedDraf
   if (expectedDraftId !== undefined && draftIdFor(token) !== expectedDraftId) return { error: resumeError } as const;
   const assignment = await getAssignment(id);
   if (!assignment) return { error: "Bài tập đã đóng hoặc hết hạn." } as const;
-  const { db, template, items } = assignment;
+  const { db, data, template, items } = assignment;
+  if (data.classroom_id && (expectedDraftId !== draftIdFor(token) || !await validateClassroomAttempt(assignment, token))) {
+    return { error: "Phiên làm bài không còn hiệu lực. Hãy kiểm tra mã với giáo viên." } as const;
+  }
   const limitError = await attemptLimit(db, id, "finish");
   if (limitError) return { error: limitError } as const;
   if (parsed.data.length !== items.length) return { error: "Hãy hoàn thành tất cả các mục trước khi nộp." } as const;

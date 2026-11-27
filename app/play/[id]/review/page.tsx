@@ -12,11 +12,11 @@ export default async function PublishedReview({ params }: { params: Promise<{ id
   const receipt = (await cookies()).get(`receipt-${id}`)?.value;
   if (!z.uuid().safeParse(receipt).success) notFound();
   const { data } = await privilegedDatabase().from("attempts")
-    .select("score,total,assignments!inner(owner_id,title,assessment,show_score),manual_reviews!inner(state,scores,total,feedback,published_at)")
+    .select("score,total,assignments!inner(owner_id,title,assessment,show_score,classroom_id),manual_reviews!inner(state,scores,total,feedback,published_at)")
     .eq("id", receipt!).eq("assignment_id", id).not("completed_at", "is", null).maybeSingle()
-    .overrideTypes<{ score: number | null; total: number; assignments: { owner_id: string; title: string; assessment: unknown; show_score: boolean };
+    .overrideTypes<{ score: number | null; total: number; assignments: { owner_id: string; title: string; assessment: unknown; show_score: boolean; classroom_id: string | null };
       manual_reviews: ManualReview }, { merge: false }>();
-  if (!data || !allowedTeacher(data.assignments?.owner_id)) notFound();
+  if (!data || data.assignments.classroom_id || !allowedTeacher(data.assignments?.owner_id)) notFound();
   const snapshot = assessmentSchema.safeParse(data.assignments.assessment);
   if (!snapshot.success) notFound();
   const review = data.manual_reviews;

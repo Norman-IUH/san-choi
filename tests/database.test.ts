@@ -197,6 +197,57 @@ test("migration provisions accounts, locks teacher rows and allows one authorita
     await session(owner);
     await db.query("update vocabulary_entries set meaning='cuốn sách' where id=$1", [word]);
     expect((await db.query("select state, note from vocabulary_reviews")).rows).toEqual([{ state: "pending", note: "QA reviewed" }]);
+    await db.exec("reset role");
+    await db.exec(await readFile("supabase/migrations/20261126122018_assignment_answer_review.sql", "utf8"));
+    for (const file of migrationFiles.filter(file => file.endsWith("_classroom_roster.sql") || file.endsWith("_classroom_assignments.sql")).sort()) {
+      await db.exec(await readFile("supabase/migrations/" + file, "utf8"));
+    }
+    await session(owner);
+    const room = (await db.query<{ id: string }>("insert into classrooms(name,level) values ('Synthetic','Movers') returning id")).rows[0].id;
+    await db.query("select import_classroom_students($1,array['Same name','Same name'])", [room]);
+    const ids = (await db.query<{ id: string }>("select id from students order by id")).rows.map(row => row.id);
+    expect(ids).toHaveLength(2);
+    expect(ids[0]).not.toBe(ids[1]);
+    const cloned = (await db.query<{ id: string }>("select clone_classroom($1,true) as id", [room])).rows[0].id;
+    expect((await db.query("select student_id from classroom_members where classroom_id=$1", [cloned])).rows).toHaveLength(2);
+    await session(other);
+    expect((await db.query("select id from classrooms")).rows).toHaveLength(0);
+    expect((await db.query("select id from students")).rows).toHaveLength(0);
+    await expect(db.query("select code_hash from students")).rejects.toThrow(/permission denied/);
+    await expect(db.query("select import_classroom_students($1,array['Unowned'])", [room])).rejects.toThrow(/no rows/);
+    await db.exec("reset role; set role service_role");
+    const firstCode = "b".repeat(64), secondCode = "c".repeat(64);
+    await db.query("update students set code_hash=$1 where id=$2", [firstCode, ids[0]]);
+    await db.query("update students set code_hash=$1 where id=$2", [secondCode, ids[1]]);
+    const snapshot = JSON.stringify({ title: "Class snapshot", template: "quiz", content: [], show_score: true, show_review: false });
+    const classAssignment = (await db.query<{ id: string }>("select assign_classroom($1,$2,array[$3::uuid],2,$4) as id",
+      [owner, room, ids[0], snapshot])).rows[0].id;
+    const start = async (code: string) => (await db.query<{ attempt_id: string | null; issue: string | null }>(
+      "select * from open_classroom_attempt($1,$2,null,false)", [classAssignment, code])).rows[0];
+    await db.query("update classroom_members set removed_at=now() where classroom_id=$1 and student_id=$2", [room, ids[0]]);
+    expect((await start(secondCode)).issue).toBe("code");
+    await expect(db.query("insert into attempts(id,assignment_id,nickname) values (gen_random_uuid(),$1,'No code')",
+      [classAssignment])).rejects.toThrow(/classroom identity required/);
+    const first = (await start(firstCode)).attempt_id;
+    expect(first).toBeTruthy();
+    expect((await start(firstCode)).attempt_id).toBe(first);
+    await db.query("select * from finish_attempt($1,$2,'[]',0,1)", [classAssignment, first]);
+    const second = (await start(firstCode)).attempt_id;
+    expect(second).not.toBe(first);
+    await db.query("select * from finish_attempt($1,$2,'[]',1,1)", [classAssignment, second]);
+    expect((await start(firstCode)).issue).toBe("tries");
+    await db.query("update assignments set deadline=now()-interval '1 second' where id=$1", [classAssignment]);
+    expect((await start(firstCode)).issue).toBe("closed");
+    await db.query("update assignments set deadline=null where id=$1", [classAssignment]);
+    const codeScope = "e".repeat(64);
+    expect((await db.query("select consume_attempt_limit('student-code',$1) as allowed", [codeScope])).rows).toEqual([{ allowed: true }]);
+    await db.query("update private.attempt_rate_limits set hits=60 where operation='student-code' and scope=$1", [codeScope]);
+    expect((await db.query("select consume_attempt_limit('student-code',$1) as allowed", [codeScope])).rows).toEqual([{ allowed: false }]);
+    await db.query("update students set code_hash=null,code_version=gen_random_uuid() where id=$1", [ids[0]]);
+    expect((await start(firstCode)).issue).toBe("code");
+    expect((await db.query("select valid_classroom_attempt($1,$2) as valid", [classAssignment, second])).rows).toEqual([{ valid: false }]);
+    await db.query("delete from students where id=$1", [ids[0]]);
+    expect((await db.query("select student_id from attempts where assignment_id=$1", [classAssignment])).rows).toHaveLength(0);
   } finally {
     await db.close();
   }

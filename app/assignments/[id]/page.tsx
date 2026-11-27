@@ -6,13 +6,15 @@ import { addClassroomSubmission } from "@/app/results/review-actions";
 import { AssignmentShare } from "@/components/AssignmentShare";
 import { account, check, urlFor } from "@/lib/supabase";
 import { printableTemplates } from "@/lib/worksheet";
+import { classroomData } from "@/lib/classroom-server";
+import { ProgressHistory } from "@/app/classrooms/progress";
 
 export default async function Assignment({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{saved?: string; review?: string}> }) {
   const [{ id }, { db }, { saved, review }] = await Promise.all([params, account(true), searchParams]);
   if (!z.uuid().safeParse(id).success) notFound();
   const [assignment, attempts] = await Promise.all([
-    db.from("assignments").select("id,title,template,deadline,closed,assessment").eq("id", id).maybeSingle(),
-    db.from("attempts").select("id,nickname,score,total,started_at,completed_at,manual_reviews(state,total)").eq("assignment_id", id).not("completed_at", "is", null).order("completed_at", { ascending: false }).limit(100)
+    db.from("assignments").select("id,title,template,deadline,closed,assessment,classroom_id,attempt_cap").eq("id", id).maybeSingle(),
+    db.from("attempts").select("id,nickname,score,total,started_at,completed_at,manual_reviews(state,total)").eq("assignment_id", id).is("student_id", null).not("completed_at", "is", null).order("completed_at", { ascending: false }).limit(100)
       .overrideTypes<{ id: string; nickname: string; score: number | null; total: number; started_at: string;
         completed_at: string; manual_reviews: { state: string; total: number | null } | null }[], { merge: false }>(),
   ]);
@@ -20,23 +22,28 @@ export default async function Assignment({ params, searchParams }: { params: Pro
   check(attempts.error, "attempts");
   if (!assignment.data) notFound();
   const row = assignment.data;
+  const classData = row.classroom_id ? await classroomData({ classroom: row.classroom_id, assignment: id }) : null;
   const completed = attempts.data ?? [];
   return <div className="narrow wide stack"><Link className="back" href="/results">← Kết quả</Link>
     <h1>{row.title}</h1>{saved && <p className="notice" role="status">Đã lưu thay đổi.</p>}
     <section className="panel stack"><h2>Link giao bài</h2>
       <AssignmentShare path={`/play/${id}`} fallback={urlFor(`/play/${id}`)} title={row.title}/>
+      {classData && <p><Link href={`/classrooms/${row.classroom_id}`}>{classData.classroom?.name}</Link> · {row.attempt_cap} lượt làm tối đa. Học sinh dùng mã cá nhân.</p>}
       {printableTemplates.some(template => template === row.template) &&
         <div className="inline-actions"><Link className="button" href={`/teaching/print/assignment/${id}`}>In đề đã giao</Link></div>}
       <p>{row.closed ? "Đã đóng" : row.deadline ? `Hạn nộp ${new Date(row.deadline).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}` : "Đang mở · Không giới hạn thời gian"}</p>
       <form action={setAssignmentClosed.bind(null, id, !row.closed)}><button className="button">{row.closed ? "Mở lại bài tập" : "Đóng bài tập"}</button></form>
     </section>
-    {row.assessment?.skill === "Speaking" && <details className="panel"><summary>Chấm trực tiếp trên lớp</summary>
+    {!classData && row.assessment?.skill === "Speaking" && <details className="panel"><summary>Chấm trực tiếp trên lớp</summary>
       <form action={addClassroomSubmission.bind(null, id)} className="stack">
         {review === "invalid" && <p role="alert">Kiểm tra biệt danh.</p>}
         <label>Biệt danh để chấm trực tiếp<input name="nickname" required maxLength={80}/></label>
         <button className="button">Mở rubric chấm trực tiếp</button>
       </form></details>}
-    <section className="panel stack"><div className="section-head"><h2>Bài đã nộp gần đây</h2>
+    {classData ? <><div className="inline-actions">
+      <a className="button" href={`/classrooms/export?classroom=${row.classroom_id}&assignment=${id}&format=xlsx`}>Tải bảng điểm Excel</a>
+      <a className="button" href={`/classrooms/export?classroom=${row.classroom_id}&assignment=${id}&format=pdf`}>Tải bảng điểm PDF</a>
+    </div><ProgressHistory data={classData}/></> : <section className="panel stack"><div className="section-head"><h2>Bài đã nộp gần đây</h2>
       <div className="inline-actions"><a className="button" href={`/results/export/xlsx?assignment=${id}`}>Tải XLSX</a>
         <a className="button" href={`/results/export?assignment=${id}`}>Tải CSV</a></div></div>
       {!completed.length ? <p>Chưa có bài nộp.</p> : <div className="table-wrap"><table><thead><tr><th>Biệt danh</th><th>Điểm</th><th>Thời gian</th></tr></thead><tbody>
@@ -44,5 +51,5 @@ export default async function Assignment({ params, searchParams }: { params: Pro
           <td>{attempt.manual_reviews && attempt.score !== null && `${attempt.score}/${attempt.total} tự động · `}
             {attempt.manual_reviews ? (attempt.manual_reviews.total == null ? "Chờ chấm" : `${attempt.manual_reviews.total} · ${attempt.manual_reviews.state === "published" ? "Đã công bố" : "Đã chấm"}`) : attempt.score === null ? "—" : `${attempt.score}/${attempt.total}`}</td>
           <td>{Math.max(0, Math.round((Date.parse(attempt.completed_at) - Date.parse(attempt.started_at)) / 1000))} giây</td></tr>)}</tbody></table></div>}
-    </section></div>;
+    </section>}</div>;
 }

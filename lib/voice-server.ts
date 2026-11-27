@@ -31,7 +31,7 @@ export async function recordingSession(id: string, index: number) {
   if (!token || !z.uuid().safeParse(token).success) return null;
   const db = privilegedDatabase();
   const { data: attempt } = await db.from("attempts").select("id,assignments!inner(owner_id,closed,deadline,content)")
-    .eq("id", token).eq("assignment_id", id).is("completed_at", null).maybeSingle()
+    .eq("id", token).eq("assignment_id", id).is("completed_at", null).is("student_id", null).maybeSingle()
     .overrideTypes<{ id: string; assignments: { owner_id: string; closed: boolean; deadline: string | null; content: unknown[] } }, { merge: false }>();
   if (!attempt) return null;
   const { owner_id: owner, closed, deadline, content } = attempt.assignments;
