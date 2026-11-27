@@ -62,3 +62,11 @@ Khối đọc dùng nền giấy vàng nhạt `#fffae6`, chữ mực `#212b43` v
 Thẻ Listening chỉ hiện hình có nhãn số trung tính khi giáo viên bật chế độ ảnh. Hình táo, sách, thước và tranh vùng tô được vẽ cho Sân Chơi, xuất WebP với tên tệp trung tính. Vùng tô có đường viền, số và trạng thái chọn. Bảng ghép hiển thị clip đã nối và khóa thẻ đã dùng ở clip khác. Nút và vùng tô có thể thao tác bằng bàn phím hoặc chạm.
 
 Giáo án dùng một danh sách thứ tự có nhãn giai đoạn và số phút, cùng nút lên/xuống bên cạnh tay nắm kéo. Màn trình chiếu giữ tiêu đề, tiến độ bài và nút trước/sau. Mỗi game dùng chế độ toàn màn hình hiện có. Ghi chú riêng xuất hiện trong trình soạn của chủ giáo án.
+
+## V1.5B3 — Nói, viết và chấm bài
+
+Khối hướng dẫn dùng nền xanh giấy `#eff8fb` và chữ `#182849`. Cặp ảnh đặt cạnh nhau khi đủ chiều rộng và xếp dọc ở khung hẹp. Từ gợi ý và câu mẫu có thể mở theo nhu cầu. Hai đồng hồ Speaking khởi động theo thao tác của người học. Ảnh so sánh hai bàn học do Sân Chơi vẽ, với khác biệt về đồ trên bàn, màu ghế và vị trí quả bóng.
+
+Writing hiển thị số ký tự ở cạnh ô trả lời. Màn chấm đặt nội dung gốc bên trên rubric, từng tiêu chí có mô tả và giới hạn điểm. Nút công bố được bật khi đủ điểm tiêu chí. Trang nhận xét dùng biên nhận phiên trình duyệt và hiện điểm sau khi giáo viên công bố. Rubric dùng trong lớp học của Sân Chơi.
+
+Ghi âm có nút xin microphone riêng, đồng hồ ghi, phát lại, lưu và xóa. Endpoint phát và tải kiểm tra quyền mỗi lần và dùng URL Storage ký ngắn hạn ở phía máy chủ. Bài tập trực tiếp trên lớp dùng cùng Player và rubric. Trình soạn giáo án vẫn dùng danh sách bước hiện có.

@@ -1,7 +1,6 @@
 export const vocabularyBatchB2 = {
   source: "Sân Chơi, câu ví dụ biên soạn riêng. IPA và audio tổng hợp từ eSpeak NG 1.0.2.",
   rights: "Học liệu gốc Sân Chơi. Chỉ phát hành clip tổng hợp, giữ dẫn nguồn công cụ.",
-  review: "pending",
   entries: [
     ["catalog/kids/jam","/dʒæm/","I spread jam on my toast."],
     ["catalog/kids/kite","/kaɪt/","Our kite is high in the sky."],
@@ -199,6 +198,3 @@ export const vocabularyBatchB2 = {
     ["catalog/starters/dolphin","/ˈdɒlfɪn/","A dolphin jumped out of the sea."]
   ],
 } as const;
-
-/** Record a dated approval only after checking meaning, example and pronunciation in context. */
-export const vocabularyTeacherReviews: Record<string, { reviewer: string; date: string; note: string }> = {};

@@ -14,8 +14,7 @@ export const bankWordSchema = z.object({
   part: optional(40), ipa: optional(100), example: optional(400), related: optional(240),
   image: z.union([image, sampleImagePath]).nullish(), uk: z.union([audio, sampleAudioPath]).nullish(), us: z.union([audio, sampleAudioPath]).nullish(),
 });
-export type BankWord = z.infer<typeof bankWordSchema> & { id: string; archived_at?: string | null;
-  review?: "pending" | "teacher-reviewed" };
+export type BankWord = z.infer<typeof bankWordSchema> & { id: string; archived_at?: string | null };
 
 export const lessonSchema = z.object({
   title: required(100), level: z.enum(levels), skill: z.enum(skills), topic: required(80), unit: required(80),

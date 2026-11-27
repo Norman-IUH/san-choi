@@ -81,4 +81,12 @@ B1 tập trung vào luyện nghe và phonics. B2 thêm Reading, Grammar, giáo �
 4. Chạy lại build, unit test, hồi quy đủ 34 mẫu và E2E QuizStudy trên ứng viên cuối. Kiểm tra bài giao cũ, Reading dùng snapshot, quyền của giáo viên thứ hai và ghi chú riêng. Sau phê duyệt production, đối chiếu deployment với SHA đã duyệt và chạy smoke test luồng tạo, giao, nộp và xem kết quả.
 5. Nếu cần quay lại, dùng deployment đã kiểm chứng trước đó. Schema additive giữ tương thích với ứng dụng cũ. Lưu dữ liệu giáo án và bài nộp ở nguyên trạng.
 
-Ứng viên này ở trạng thái review. Giáo viên vẫn cần duyệt học liệu IPA, ví dụ và audio tổng hợp mới. Speaking, Writing và Cambridge Exam Practice nằm ngoài V1.5B2.
+Ứng viên B2 ở trạng thái review. Giáo viên vẫn cần duyệt học liệu IPA, ví dụ và audio tổng hợp mới.
+
+## Ứng viên phát hành V1.5B3
+
+- PR #7 giữ nguyên nhánh đích trước khi review chuỗi PR #1–#7. Ngày 27/11, GitHub báo `MERGEABLE` và `CLEAN` với base của PR #6. Kiểm tra lại SHA, base và diff sau từng lần tích hợp vì thông tin merge thay đổi khi nhánh đích cập nhật.
+- Trước khi phát hành, xác nhận bản sao lưu cho database và Storage. Kiểm tra migration theo thứ tự manual assessment, voice recording và vocabulary review. Đối chiếu lịch sử từng môi trường để tránh áp dụng lặp. Xác minh quyền owner, hàng chờ chấm và bài giao cũ sau migration.
+- Nếu cần rollback ứng dụng, dùng deployment trước và giữ các migration additive. Tạm ngưng nhận bản ghi bằng `VOICE_RECORDING_ENABLED=0`. Kết quả, nhận xét và bản ghi đã lưu cần được quản lý theo thời hạn hiện hành.
+- Luồng ghi âm mặc định tắt. Chỉ đặt cả `VOICE_RECORDING_ENABLED=1` và `VOICE_RECORDING_RELEASE_APPROVED=1` sau khi giải quyết cổng bảo mật và được chủ dự án duyệt. QA localhost dùng SHA-256 fixture tổng hợp. `VOICE_RECORDING_RETENTION_DAYS` nhận từ 1 đến 30, mặc định 14. URL ký tối đa 90 giây. Tác vụ Dọn bản ghi ở Kết quả xóa clip hết hạn và tệp rời đủ một ngày, theo từng lô. Cần chạy tác vụ định kỳ khi vận hành ghi âm.
+- Giới hạn lượt nghe thuộc phiên tab. Vùng Listen and Colour cấu hình qua tâm và kích thước khung chữ nhật rồi hiển thị dạng vùng bầu dục. V1.5C Cambridge Exam Practice là đợt riêng. Rủi ro Secret Key từng lộ còn mở và phát hành production chờ phê duyệt.

@@ -197,3 +197,17 @@ Hai tài khoản QA dùng biệt danh và bài giao tổng hợp. Ảnh Playwrig
 Trong lượt chạy tổng hợp ban đầu, một số kiểm thử bắt được thay đổi cấu trúc DOM của Player và lỗi focus khi nạp renderer. Bộ hồi quy trên đã chạy lại sau khi sửa cấu trúc. WebKit trên máy Windows thử nghiệm thiếu `AudioContext`, nên nút âm hiệu được vô hiệu hóa. Audio bài nghe qua trình phát HTML đã phát được trong Dictation. Bảng ghép trên WebKit được kiểm tra bằng chọn thẻ, chạm và bàn phím.
 
 Chất lượng IPA, ví dụ, clip tổng hợp và phát âm Phonics cần lượt duyệt của giáo viên. Đánh giá trên phần cứng lớp học và thiết bị thật chưa chạy. Rủi ro khóa bí mật đã lộ tiếp tục là cổng phát hành.
+
+## V1.5B3 — Speaking, Writing và chấm thủ công · 27/11/2026
+
+| Hạng mục | Kết quả |
+|---|---|
+| Kiểm tra mã | 75 Vitest, lint, typecheck, production build và kiểm tra độ phủ đều đạt. `npm audit --omit=dev` ghi nhận 0 cảnh báo. Audit toàn bộ báo 7 mục moderate trên chuỗi `minimatch` của ESLint. Cùng kết quả xuất hiện khi audit lockfile tại baseline `31831db`. |
+| Hồi quy game | 180 lượt đạt cho 34 mẫu trên Chromium desktop, mobile, tablet, WebKit desktop và iPhone mô phỏng. |
+| Writing và chấm thủ công | Chromium và WebKit đạt luồng tự lưu nháp, nộp bài, giữ rubric gốc sau sửa nguồn, lưu riêng nhận xét, công bố, sửa điểm từ 20/20 xuống 18/20 và kiểm tra quyền giáo viên thứ hai. Chromium chấm đúng biến thể, câu sai và câu trống. PostgreSQL nhúng xác nhận nộp trùng giữ câu trả lời gốc. |
+| Speaking và Storage | Chromium và WebKit đạt upload fixture WAV, chặn tệp giả MIME và quá 2 MB, loại phiên không hợp lệ, tải lại, xóa và chấm trực tiếp. Endpoint phát được kiểm tra với yêu cầu Range và chặn yêu cầu mới sau khi xóa. Fixture WebM Opus, MP4 AAC và MP4 Opus được tạo từ tín hiệu tổng hợp bằng Chromium và qua parser trong Vitest. |
+| Duyệt từ vựng | Chromium đạt tạo mục riêng, ghi nhận xét, đổi trạng thái, lọc và hủy trạng thái duyệt sau khi sửa ví dụ. Giáo viên thứ hai không đọc được mục riêng. Báo cáo repo giữ số liệu độ phủ kỹ thuật. |
+| Giáo án | Vitest kiểm tra tám bộ mẫu, gồm bốn mẫu Speaking và Writing. Chromium kiểm tra trình chiếu đề hai ảnh, đồng hồ chuẩn bị, chặn giao bài ở bản nháp và tạo assignment khi giáo án đã sẵn sàng. |
+| QuizStudy | Ba migration `20261127071851`, `20261127072702` và `20261127111628` đã vào lịch sử. Kiểm tra xác nhận ba bảng mới bật RLS, bucket `practice-voice` ở chế độ riêng tư, và guest và giáo viên bị giới hạn theo quyền trực tiếp đã thiết kế. |
+
+Tổng cộng bảy lượt E2E QuizStudy đạt qua lần chạy lại và ca giáo án kiểm tra riêng. Ba lượt WebKit được skip vì các ca Writing khách quan, duyệt từ vựng và tích hợp giáo án chạy theo profile Chromium. Tất cả dữ liệu kiểm thử là tổng hợp. Kiểm thử microphone vật lý và xác nhận sau đăng nhập trên Vercel Preview vẫn chờ. Ghi âm cho học sinh thật mặc định tắt.

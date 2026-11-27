@@ -45,6 +45,7 @@ export default async function Library({ searchParams }: { searchParams: Promise<
       <div><Link className="back" href="/activities">← Hoạt động của tôi</Link><h1>Thư viện tiếng Anh</h1></div>
       <div className="inline-actions"><Link className="button primary" href="/library/words/new">Thêm từ</Link>
         <Link className="button" href="/library/new">Tạo giáo án</Link>
+        <Link className="button" href="/library/review">Duyệt học liệu</Link>
         <Link className="button" href="/library/export" prefetch={false} download>Tải CSV</Link>
         <Link className="button" href="/activities/new#english-practice">Tạo bài luyện</Link></div>
     </header>

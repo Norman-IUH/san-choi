@@ -3,9 +3,11 @@ import { vocabularyCatalog } from "./vocabulary-catalog";
 import { vocabularyGame, type VocabularyLesson } from "./vocabulary-bank";
 import { grammarSample } from "./grammar-samples";
 import { readingSample } from "./reading-samples";
+import { productiveSample } from "./productive-samples";
+import type { ProductiveMode } from "./games/productive";
 type LessonActivity = { title: string; template: Template; items: Item[] };
 
-export const samplePlans = {
+const basePlans = {
   classroom: { title: "Colours and Classroom Objects", level: levels[0], topic: "Classroom objects", words: ["book", "pencil", "ruler", "red", "blue"],
     objectives: "Name three classroom objects. Describe an object using a colour and a simple sentence.",
     homework: "Draw two classroom objects and say their names and colours.", reading: "picture-reading", grammar: "colours-numbers", game: "match-up" },
@@ -20,22 +22,38 @@ export const samplePlans = {
     homework: "Write two plans for a trip using ‘going to’. Include one item you will pack.", reading: "story-sequencing", grammar: "future", game: "true-false" },
 } as const;
 
+const skillPlans = {
+  "classroom-skills": { base: "classroom", title: "Show and Spell", speaking: "speaking-cards", writing: "complete-word",
+    objectives: "Name classroom objects aloud and spell two familiar words.", homework: "Label two objects at home and say one sentence about each." },
+  "pets-skills": { base: "pets", title: "Pets We Like", speaking: "personal-questions", writing: "sentence-building",
+    objectives: "Answer a personal question about a pet and build two short English sentences.", homework: "Describe a pet you like in one sentence." },
+  "routine-skills": { base: "routine", title: "Before the Bell", speaking: "picture-differences", writing: "picture-writing",
+    objectives: "Compare familiar scenes aloud and write two sentences about a classroom routine.", homework: "Write two things you do before your first lesson." },
+  "travel-skills": { base: "travel", title: "The Road to the Coast", speaking: "storytelling", writing: "short-paragraph",
+    objectives: "Tell a three-part story and write a short paragraph with a clear ending.", homework: "Read your paragraph aloud and check the sequence of events." },
+} as const satisfies Record<string, { base: keyof typeof basePlans; title: string; speaking: ProductiveMode; writing: ProductiveMode; objectives: string; homework: string }>;
+
+export const samplePlans = { ...basePlans, ...Object.fromEntries(Object.entries(skillPlans).map(([key, plan]) =>
+  [key, { title: plan.title, level: basePlans[plan.base].level }])) };
+
 export function samplePlan(key: string) {
-  if (!Object.hasOwn(samplePlans, key)) return null;
-  const sample = samplePlans[key as keyof typeof samplePlans];
+  const skills = Object.hasOwn(skillPlans, key) ? skillPlans[key as keyof typeof skillPlans] : null;
+  const baseKey = skills?.base ?? key;
+  if (!Object.hasOwn(basePlans, baseKey)) return null;
+  const sample = basePlans[baseKey as keyof typeof basePlans];
   const words = sample.words.flatMap(word => vocabularyCatalog.find(entry => entry.level === sample.level && entry.word === word) ?? []);
-  const lesson: VocabularyLesson = { title: sample.title, level: sample.level, skill: "Vocabulary", topic: sample.topic,
+  const lesson: VocabularyLesson = { title: skills?.title ?? sample.title, level: sample.level, skill: skills ? "Speaking" : "Vocabulary", topic: sample.topic,
     unit: "Unit 1", difficulty: "gentle", entry_keys: words.map(word => word.id) };
   const reading = readingSample(sample.reading);
   const grammar = grammarSample(sample.grammar)!;
   const activities: LessonActivity[] = [
     { title: "Warm-up", template: "open-box", items: words.map(word => ({ prompt: `Point, draw or act: ${word.word}`, answers: [], options: [] })) },
     { title: "Introduce the words", template: "flash-cards", items: vocabularyGame("flash-cards", words, "Vocabulary", "gentle") ?? [] },
-    reading,
+    skills ? productiveSample(skills.speaking) : reading,
     { title: "Vocabulary game", template: sample.game, items: vocabularyGame(sample.game, words, "Vocabulary", "gentle") ?? [] },
-    grammar,
+    skills ? productiveSample(skills.writing) : grammar,
   ];
-  return { lesson, activities, objectives: sample.objectives, homework: sample.homework };
+  return { lesson, activities, objectives: skills?.objectives ?? sample.objectives, homework: skills?.homework ?? sample.homework };
 }
 
 export function sampleStep(source: string) {

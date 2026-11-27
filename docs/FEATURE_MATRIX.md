@@ -121,3 +121,14 @@ Xem [kết quả kiểm thử](TEST_RESULTS.md) và [các phần còn thiếu](L
 | Giáo án | Mở rộng Vocabulary Lesson. Có thông tin tiết dạy, ghi chú riêng, bản nháp, thứ tự kéo thả và bàn phím, nhân bản, xem trước, trình chiếu và giao bài từng bước. Xem điểm theo từng bài giao chấm được. |
 | Giáo án mẫu | Colours and Classroom Objects, Animals and Pets, My Daily Routine, Travel and Adventures. Mỗi bộ có năm hoạt động gốc kèm từ vựng, mục tiêu, thời lượng và bài về nhà. |
 | Học liệu | 220/220 mục Kids và Starters có IPA và câu ví dụ. Dấu chờ duyệt và nhật ký duyệt phân biệt độ phủ dữ liệu với chất lượng giảng dạy. [Số liệu và quy trình](VOCABULARY_COVERAGE.md) |
+
+## V1.5B3
+
+| Hạng mục | Phạm vi |
+|---|---|
+| Speaking | Personal Questions, Describe the Picture, Picture Differences, Storytelling, Speaking Cards và Guided Conversation. Hỗ trợ ảnh, audio hướng dẫn, từ gợi ý, câu mẫu, đồng hồ tùy chọn và chấm trực tiếp trên lớp. |
+| Writing | Complete the Word, Sentence Building, Picture-based Writing, Short Answers, Short Paragraph và Story Completion. Dạng khách quan nhận đáp án thay thế đã khai báo. Dạng mở vào hàng chờ chấm. Bản nháp chữ tự lưu trong phiên tab. |
+| Chấm thủ công | Rubric tùy chỉnh được chụp lúc giao bài. Bài nộp, điểm tự động và đánh giá thủ công được lưu riêng. Có lưu đánh giá, công bố, sửa điểm và lọc theo trạng thái, kỹ năng, giáo án, bài giao hoặc cấp độ. |
+| Bản ghi | Cờ mặc định tắt. Khi có quyền, bắt đầu và dừng chủ động, nghe lại, xóa và gửi tệp. Storage riêng tư và URL ký theo phiên hợp lệ hoặc chủ bài. |
+| Duyệt từ vựng | Ghi trạng thái, ngày và nhận xét trong database theo giáo viên. Chỉnh mục trong kho riêng đưa mục về Chưa duyệt. Danh mục mẫu giữ nguồn gốc để sao chép. |
+| Giáo án | Thêm bốn giáo án Speaking và Writing, mỗi cấp một bộ. Mỗi giáo án có năm bước. Giáo án ở trạng thái sẵn sàng mới giao hoạt động được. |

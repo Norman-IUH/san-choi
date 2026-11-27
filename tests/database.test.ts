@@ -143,6 +143,60 @@ test("migration provisions accounts, locks teacher rows and allows one authorita
     await db.query("update assignments set lesson_id=$1, lesson_step=$2 where id=$3", [planId, attempt, assignment]);
     expect((await db.query("select lesson_id, lesson_step from assignments where id=$1", [assignment])).rows)
       .toEqual([{ lesson_id: planId, lesson_step: attempt }]);
+    await db.exec("reset role");
+    const assessmentMigration = migrationFiles.find(file => file.endsWith("_manual_assessment.sql"))!;
+    await db.exec(await readFile("supabase/migrations/" + assessmentMigration, "utf8"));
+    const manualId = "77777777-7777-4777-8777-777777777777";
+    const submission = "88888888-8888-4888-8888-888888888888";
+    const rubric = { version: 1, skill: "Writing", level: "Kids", rubric: [{ title: "Words", max: 4, description: "Clear words" }] };
+    const createAssessment = () => db.query("insert into assignments(id,owner_id,title,template,content,lesson_id,lesson_step,assessment) values ($1,$2,'Writing','speaking','[]',$3,$4,$5)",
+      [manualId, owner, planId, attempt, JSON.stringify(rubric)]);
+    await db.exec("set role service_role");
+    await expect(createAssessment()).rejects.toThrow(/lesson draft/);
+    await db.query("update vocabulary_lessons set plan = plan || '{\"draft\":false}' where id=$1", [planId]);
+    await createAssessment();
+    await db.query("insert into attempts(id,assignment_id,nickname) values ($1,$2,'Synthetic')", [submission, manualId]);
+    expect((await db.query("select state from manual_reviews")).rows).toHaveLength(0);
+    await db.query("select * from finish_attempt($1,$2,'[]',null,0)", [manualId, submission]);
+    await db.query("select * from finish_attempt($1,$2,'[{\"answer\":[\"replacement\"]}]',null,0)", [manualId, submission]);
+    await session(owner);
+    expect((await db.query("select state from manual_reviews")).rows).toEqual([{ state: "pending" }]);
+    expect((await db.query("select answers from attempts where id=$1", [submission])).rows).toEqual([{ answers: [] }]);
+    await expect(db.query("update manual_reviews set total=4")).rejects.toThrow(/permission denied/);
+    await session(other);
+    expect((await db.query("select * from manual_reviews")).rows).toHaveLength(0);
+    await db.exec("reset role; set role anon");
+    await expect(db.query("select * from manual_reviews")).rejects.toThrow(/permission denied/);
+    await db.exec(`reset role;
+      create schema storage;
+      create table storage.buckets (id text primary key, name text, public boolean, file_size_limit integer, allowed_mime_types text[]);`);
+    const voiceMigration = migrationFiles.find(file => file.endsWith("_voice_recording.sql"))!;
+    await db.exec(await readFile("supabase/migrations/" + voiceMigration, "utf8"));
+    expect((await db.query("select public,file_size_limit from storage.buckets where id='practice-voice'")).rows)
+      .toEqual([{ public: false, file_size_limit: 2097152 }]);
+    await db.query("update assignments set assessment = assessment || '{\"skill\":\"Speaking\"}', content='[{\"practice\":{\"production\":{}}}]' where id=$1", [manualId]);
+    const openAttempt = "99999999-9999-4999-8999-999999999999";
+    await db.query("insert into attempts(id,assignment_id,nickname) values ($1,$2,'Voice QA')", [openAttempt, manualId]);
+    const attached = (target: string, index = 0) => db.query("select attach_voice_clip($1,$2,$3,$4,$5,4,now()+interval '1 day') as attached",
+      [manualId, target, index, `${owner}/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa.wav`, "f".repeat(64)]);
+    await session(owner);
+    await expect(attached(openAttempt)).rejects.toThrow(/permission denied/);
+    await expect(db.query("select * from voice_recordings")).rejects.toThrow(/permission denied/);
+    await db.exec("reset role; set role service_role");
+    expect((await attached(submission)).rows).toEqual([{ attached: false }]);
+    expect((await attached(openAttempt, 1)).rows).toEqual([{ attached: false }]);
+    expect((await attached(openAttempt)).rows).toEqual([{ attached: true }]);
+    expect((await attached(openAttempt)).rows).toEqual([{ attached: false }]);
+    await db.exec("reset role");
+    const vocabularyReview = migrationFiles.find(file => file.endsWith("_vocabulary_review.sql"))!;
+    await db.exec(await readFile("supabase/migrations/" + vocabularyReview, "utf8"));
+    await session(owner);
+    await db.query("insert into vocabulary_reviews(entry_key,state,signature,note) values ($1,'approved',$2,'QA reviewed')", [word, "a".repeat(64)]);
+    await session(other);
+    expect((await db.query("select state from vocabulary_reviews")).rows).toHaveLength(0);
+    await session(owner);
+    await db.query("update vocabulary_entries set meaning='cuốn sách' where id=$1", [word]);
+    expect((await db.query("select state, note from vocabulary_reviews")).rows).toEqual([{ state: "pending", note: "QA reviewed" }]);
   } finally {
     await db.close();
   }

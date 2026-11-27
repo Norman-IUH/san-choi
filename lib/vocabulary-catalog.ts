@@ -1,6 +1,6 @@
 import { deckIds, englishDeckContent, englishDecks, type DeckId } from "./english-samples";
 import type { BankWord } from "./vocabulary-bank";
-import { vocabularyBatchB2, vocabularyTeacherReviews } from "./vocabulary-batch-b2";
+import { vocabularyBatchB2 } from "./vocabulary-batch-b2";
 
 type Topic = [name: string, part: string, entries: string];
 const topics: Record<DeckId, Topic[]> = {
@@ -90,6 +90,6 @@ export const vocabularyCatalog = vocabularyBase.map((word): BankWord => {
   const draft = enrichment.get(word.id as typeof vocabularyBatchB2.entries[number][0]);
   if (!draft) return word;
   const [, ipa, example, audio] = draft;
-  return { ...word, ipa, example, review: vocabularyTeacherReviews[word.id] ? "teacher-reviewed" : "pending",
+  return { ...word, ipa, example,
     ...(audio && { uk: `/audio/vocabulary/${word.word}-uk.wav`, us: `/audio/vocabulary/${word.word}-us.wav` }) };
 });

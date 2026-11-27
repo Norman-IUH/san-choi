@@ -56,7 +56,6 @@ export function VocabularyLibrary({ words, initial }: { words: BankWord[]; initi
             <span><strong lang="en">{word.word}</strong><span>{word.meaning}</span></span>
           </label>
           <small>{word.topic}{word.ipa ? " · " + word.ipa : ""}</small>
-          {word.review && <small className="muted">{word.review === "pending" ? "IPA và ví dụ chờ giáo viên duyệt" : "Giáo viên đã duyệt"}</small>}
           <Link className="bank-edit" href={word.id.startsWith("catalog/") ? "/library/words/new?" + new URLSearchParams({ copy: word.id }) : `/library/words/${word.id}`}>
             {word.id.startsWith("catalog/") ? "Sao chép" : "Sửa"}<span className="sr-only"> {word.word}</span>
           </Link>
