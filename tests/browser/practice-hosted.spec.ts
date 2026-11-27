@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import sharp from "sharp";
 import { practiceSample } from "../../lib/practice-samples";
 import { isPhonics, listeningModes, type AudioPracticeMode } from "../../lib/games/practice";
 
@@ -18,6 +19,16 @@ for (const mode of Object.keys(listeningModes) as AudioPracticeMode[]) {
     await page.goto("/activities/new?practice=" + mode);
     await page.getByLabel("Tên hoạt động").fill("[TEST B1] " + mode);
     await page.getByLabel("Số lượt nghe tối đa (0 là không giới hạn)").first().fill("1");
+    if (mode === "listen") {
+      const picture = await sharp("public/illustrations/practice/4b1c28ffa960.webp").png()
+        .withExif({ IFD0: { ImageDescription: "PRIVATE IMAGE DESCRIPTION" } }).toBuffer();
+      await page.getByText("Học liệu tiếng Anh và tệp", { exact: true }).click();
+      const apple = page.getByText("Tệp cho phương án apple", { exact: true });
+      await apple.click();
+      const field = apple.locator("..");
+      await field.getByLabel("Ảnh phương án", { exact: true }).setInputFiles({ name: "private-answer-apple.png", mimeType: "image/png", buffer: picture });
+      await expect(field.locator('img[src*="/object/sign/"]')).toBeVisible();
+    }
     if (isPhonics(mode)) {
       await page.getByRole("button", { name: "Xuất bản", exact: true }).click();
       await expect(page.getByRole("alert").filter({ hasText: "Kiểm tra clip" })).toBeVisible();
@@ -46,6 +57,7 @@ for (const mode of Object.keys(listeningModes) as AudioPracticeMode[]) {
       if (startResponse) {
         const startBody = await (await startResponse).text();
         expect(startBody.includes('"answers"')).toBe(false);
+        if (mode === "listen") expect(startBody.includes("apple") || startBody.includes("PRIVATE IMAGE DESCRIPTION")).toBe(false);
         if (mode === "dictation") expect(startBody.includes(sample.answers[0])).toBe(false);
         if (sample.practice?.transcript) expect(startBody.includes(sample.practice.transcript)).toBe(false);
       }
@@ -75,7 +87,10 @@ for (const mode of Object.keys(listeningModes) as AudioPracticeMode[]) {
       expect(await student.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
       if (mode === "dictation") await student.getByRole("textbox", { name: "Câu trả lời" }).fill("I have two red cups");
       else if (mode === "listen") {
-        const picture = student.locator(".options .option").filter({ has: student.locator('img[src$="4b1c28ffa960.webp"]') });
+        const picture = student.locator(".options .option").filter({ has: student.locator('img[src*="/object/sign/"]') });
+        const bytes = await picture.locator("img").evaluate(async (element: HTMLImageElement) =>
+          Array.from(new Uint8Array(await (await fetch(element.src)).arrayBuffer())));
+        expect((await sharp(Buffer.from(bytes)).metadata()).exif).toBeUndefined();
         await picture.click();
         await expect(student.getByRole("button", { name: "apple", exact: true })).toHaveCount(0);
       } else if (mode === "listen-match") {
@@ -83,7 +98,10 @@ for (const mode of Object.keys(listeningModes) as AudioPracticeMode[]) {
         await student.getByRole("button", { name: "Clip 2", exact: true }).click();
         await expect(student.getByRole("button", { name: "kite", exact: true })).toBeDisabled();
         await student.getByRole("button", { name: "apple", exact: true }).click();
-      } else await student.getByRole("button", { name: mode === "dialogue" ? "Soup" : sample.answers[0], exact: true }).click();
+      } else {
+        if (mode === "colour") await student.getByRole("button", { name: "Vùng 1", exact: true }).click();
+        await student.getByRole("button", { name: mode === "dialogue" ? "Soup" : sample.answers[0], exact: true }).click();
+      }
       await student.getByRole("button", { name: "Hoàn thành", exact: true }).click();
       const score = mode === "dialogue" ? "0/1" : mode === "listen-match" ? "2/2" : "1/1";
       await expect(student.getByText(score + " điểm", { exact: true })).toBeVisible({ timeout: 30000 });

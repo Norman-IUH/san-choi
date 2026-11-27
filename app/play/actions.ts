@@ -10,7 +10,8 @@ import { hangmanPattern } from "@/lib/games/word-puzzles";
 import type { Item } from "@/lib/game";
 
 const studentMedia = (items: Item[]) => items.map(item =>
-  item.practice ? { ...item, english: undefined, optionMedia: item.optionMedia?.map(({ option, image }) => ({ option, image })) } : item);
+  item.practice ? { ...item, english: undefined, optionMedia: item.practice.pictureChoices
+    ? item.optionMedia?.map(({ option, image }) => ({ option, image })) : item.optionMedia } : item);
 
 async function attemptLimit(db: ReturnType<typeof privilegedDatabase>, id: string, operation: "start" | "finish" | "media", attempt?: string) {
   const ip = process.env.VERCEL === "1" ? (await headers()).get("x-vercel-forwarded-for")?.trim() ?? "" : "";

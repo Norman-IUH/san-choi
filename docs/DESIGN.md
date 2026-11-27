@@ -54,3 +54,11 @@ Thư viện tiếng Anh giữ kiểu chữ và nút V1.4D. Thẻ bài mở đầ
 Màn bài luyện dùng chung HUD và hiển thị nút Nghe, Dừng, Nghe lại cùng tốc độ 0,75× hoặc 1×. Giáo viên có thể đặt giới hạn theo clip trong lượt làm. Trình duyệt lưu lượt nghe của phiên hiện tại, kể cả khi tải lại cùng tab. Giới hạn hướng dẫn luyện tập, còn quyền mở tệp do Storage quản lý.
 
 Audio mẫu được gắn nhãn tổng hợp. Mẫu phonics cung cấp câu hỏi gốc và yêu cầu giáo viên kiểm tra bản ghi trước khi xuất bản. Listen and Colour tô lên hình quyển sách vẽ cho Sân Chơi và có nhãn màu bằng chữ. Listen and Match ghép từng clip với một thẻ. Transcript chỉ hiện trong Dialogue khi giáo viên bật.
+
+## V1.5B2 — Bài đọc, ngữ pháp và giáo án
+
+Khối đọc dùng nền giấy vàng nhạt `#fffae6`, chữ mực `#212b43` và Georgia cho đoạn văn tiếng Anh. Trên màn hình rộng, ngữ liệu ở cột trái và câu hỏi ở cột phải. Trên điện thoại, học sinh mở hoặc gấp ngữ liệu phía trên câu hỏi. Khối ngữ liệu giữ vị trí khi chuyển câu. Ví dụ Grammar nằm cạnh câu hỏi với đường viền tím của giao diện luyện tập.
+
+Thẻ Listening chỉ hiện hình có nhãn số trung tính khi giáo viên bật chế độ ảnh. Hình táo, sách, thước và tranh vùng tô được vẽ cho Sân Chơi, xuất WebP với tên tệp trung tính. Vùng tô có đường viền, số và trạng thái chọn. Bảng ghép hiển thị clip đã nối và khóa thẻ đã dùng ở clip khác. Nút và vùng tô có thể thao tác bằng bàn phím hoặc chạm.
+
+Giáo án dùng một danh sách thứ tự có nhãn giai đoạn và số phút, cùng nút lên/xuống bên cạnh tay nắm kéo. Màn trình chiếu giữ tiêu đề, tiến độ bài và nút trước/sau. Mỗi game dùng chế độ toàn màn hình hiện có. Ghi chú riêng xuất hiện trong trình soạn của chủ giáo án.

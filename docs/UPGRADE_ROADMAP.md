@@ -71,4 +71,14 @@ V1.5A dùng nhánh review dựa trên V1.4D. Chỉ phát hành sau khi chủ d�
 
 Chuỗi nhánh đang review là PR #1 → #2 → #3 → #4 → #5 → #6 → B1. Khi có phê duyệt, tích hợp từng PR từ đầu chuỗi. Với mỗi PR kế tiếp, đổi base về nhánh đích đã tích hợp, xác nhận diff chỉ còn phần riêng của PR, rồi kiểm tra build, migration tương ứng và Vercel Preview. Giữ các nhánh nguồn cho đến khi PR phụ thuộc đã đổi base.
 
-B1 tập trung vào luyện nghe, phonics và độ phủ học liệu Kids/Starters. B2 dành cho đọc, ngữ pháp và Lesson Builder nhiều bước. B3 dành cho nói, viết, rubric và nhận xét. V1.5C sẽ bắt đầu bằng đối chiếu đặc tả Cambridge hiện hành. Khóa bí mật từng lộ vẫn là rủi ro chưa xử lý.
+B1 tập trung vào luyện nghe và phonics. B2 thêm Reading, Grammar, giáo án nhiều hoạt động và quy trình học liệu theo lô trên cùng PR #7. B3 dành cho nói, viết, rubric và nhận xét. V1.5C sẽ bắt đầu bằng đối chiếu đặc tả Cambridge hiện hành. Khóa bí mật từng lộ vẫn là rủi ro chưa xử lý.
+
+## Tích hợp ứng viên phát hành V1.5B2
+
+1. Dùng đầu nhánh `codex/v15b-english-skills` ở [PR #7](https://github.com/Norman-IUH/san-choi/pull/7) làm ứng viên tổng hợp. Preview của nhánh này chứa code từ cả bảy PR. Khi bắt đầu nghiệm thu phát hành, ghi lại SHA ứng viên và xác minh Preview đúng SHA đó.
+2. Kiểm tra các migration theo thứ tự trong `supabase/migrations`. QuizStudy đã có `20261127064352_lesson_builder.sql`. Môi trường đích khác cần kiểm tra lịch sử, bản sao lưu và chạy dry run trước khi áp dụng. Migration giữ bảng lesson hiện có và thêm cột kế hoạch, liên kết bài giao và index. Bản app cũ vẫn đọc và ghi các cột lesson cũ.
+3. Xử lý cổng bảo mật và xin chủ dự án phê duyệt trước khi tích hợp. Review PR #1 đến #7 theo thứ tự. Sau mỗi lần merge, xác nhận PR kế tiếp có base và diff đúng với phần thay đổi của nó. Giữ nhánh nguồn đến khi đã kiểm tra các PR phụ thuộc.
+4. Chạy lại build, unit test, hồi quy đủ 34 mẫu và E2E QuizStudy trên ứng viên cuối. Kiểm tra bài giao cũ, Reading dùng snapshot, quyền của giáo viên thứ hai và ghi chú riêng. Sau phê duyệt production, đối chiếu deployment với SHA đã duyệt và chạy smoke test luồng tạo, giao, nộp và xem kết quả.
+5. Nếu cần quay lại, dùng deployment đã kiểm chứng trước đó. Schema additive giữ tương thích với ứng dụng cũ. Lưu dữ liệu giáo án và bài nộp ở nguyên trạng.
+
+Ứng viên này ở trạng thái review. Giáo viên vẫn cần duyệt học liệu IPA, ví dụ và audio tổng hợp mới. Speaking, Writing và Cambridge Exam Practice nằm ngoài V1.5B2.

@@ -1,6 +1,7 @@
 import "server-only";
 import { contentSchema, isTemplate } from "./game";
-import { sampleStep, type LessonStep } from "./lesson-plan";
+import { sampleStep } from "./lesson-plan-samples";
+import type { LessonStep } from "./lesson-plan";
 import { check, type database } from "./supabase";
 
 export async function lessonActivity(db: Awaited<ReturnType<typeof database>>, owner: string, step: LessonStep) {

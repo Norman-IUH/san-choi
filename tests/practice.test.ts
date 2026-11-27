@@ -19,7 +19,8 @@ test("listening modes use real assets and hide keys and transcripts from student
     expect(view).not.toHaveProperty("alternatives");
     expect(view.practice?.transcript).toBeUndefined();
     const answer = item.practice?.pictureChoices ? pictureToken(item.options.indexOf(item.answers[0])) : item.answers[0];
-    expect(grade(template, [item], [[answer]]).score).toBe(1);
+    const response = item.practice?.correctRegion ? [answer, `Vùng ${item.practice.correctRegion}`] : [answer];
+    expect(grade(template, [item], [response]).score).toBe(1);
     expect(grade(template, [item], [[]]).score).toBe(0);
     expect(grade(template, [item], [["Wrong"]]).score).toBe(0);
     for (const path of Object.values(builtInMediaUrls([item]))) expect(existsSync("public" + path)).toBe(true);
@@ -46,6 +47,7 @@ test("picture responses use neutral tokens and colour needs both the region and 
   const matching = practiceSample("listen-match").items;
   expect(contentSchema("quiz").safeParse(matching).success).toBe(true);
   expect(grade("quiz", matching, [["kite"], ["apple"]]).score).toBe(2);
+  expect(grade("quiz", matching, [["kite"], ["kite"]]).score).toBe(0);
 });
 
 test("phonics requires a teacher-reviewed clip and the only opt-in transcript is dialogue", () => {

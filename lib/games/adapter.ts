@@ -38,7 +38,8 @@ export function makePlayItems(template: Template, items: Item[]): PlayItem[] {
     media: item.media,
     optionMedia: item.practice ? item.optionMedia?.flatMap(entry => {
       const position = item.options.findIndex(option => normalize(option) === normalize(entry.option));
-      return position >= 0 && entry.image ? [{ image: entry.image,
+      const audio = item.practice?.pictureChoices ? undefined : entry.audio;
+      return position >= 0 && (entry.image || audio) ? [{ image: entry.image, audio,
         option: item.practice?.pictureChoices ? pictureToken(position) : item.options[position] }] : [];
     }) : item.optionMedia?.map(entry => ({
       ...entry, option: item.options.find(option => normalize(option) === normalize(entry.option)) ?? entry.option,

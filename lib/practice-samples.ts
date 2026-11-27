@@ -28,10 +28,11 @@ export function practiceSample(mode: AudioPracticeMode) {
       { option: "ruler", image: "/illustrations/practice/0ea031c679b5.webp" },
     ] } : {}),
     english: { level: mode === "dialogue" ? levels[2] : levels[0], skill: phonics ? "Phonics" : "Listening" },
-    media: { audio: clip ? `/audio/practice/${clip}.wav` : undefined, image: mode === "colour" ? "/illustrations/practice/book.png" : undefined },
+    media: { audio: clip ? `/audio/practice/${clip}.wav` : undefined, image: mode === "colour" ? "/illustrations/practice/61fc3680dae2.webp" : undefined },
     practice: {
       version: 1, mode, maxPlays: 0, showTranscript: false, reviewedAudio: false,
       ...(mode === "listen" && { pictureChoices: true }),
+      ...(mode === "colour" && { regions: [{ x: 27, y: 50, width: 35, height: 79 }, { x: 68, y: 50, width: 35, height: 79 }], correctRegion: 1 }),
       ...(mode === "dialogue" ? { transcript: "Mia: What do you want for lunch, Eli? Eli: A cheese sandwich, please. Mia: Would you like some water? Eli: Yes, please." } : {}),
     },
   };

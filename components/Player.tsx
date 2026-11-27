@@ -142,7 +142,7 @@ export function Player({ title, description, backHref, template, initialItems = 
       if (!started.items?.length) { setError("Hoạt động chưa có nội dung."); return; }
       const indexes = started.items.map((_, i) => i);
       draftId.current = "draftId" in started ? started.draftId ?? null : null;
-      setPracticeSession(draftId.current ?? undefined);
+      setPracticeSession(draftId.current ?? (started.items.some(item => item.practice) ? crypto.randomUUID() : undefined));
       let draft: { id: string; order: number[]; turn: number; answers: Record<number, string[]> } | null = null;
       if (draftKey && draftId.current) {
         try {
@@ -213,6 +213,11 @@ export function Player({ title, description, backHref, template, initialItems = 
     setError("Tệp học liệu chưa tải được. Em vẫn có thể tiếp tục làm bài.");
   }
 
+  const round = <GameRound key={turn} {...{ template, items, order, turn, index, answers, setAnswers, assets, reveals, busy, bindFocus, next, submit, hudTools, practiceSession }}
+    playHit={arcade ? () => chime(null) : undefined}
+    guess={template === "hangman" ? async (letter, guesses) => assignment ? guessAssignmentLetter(assignment, index, letter)
+      : localContent?.[index] ? { ...hangmanPattern(localContent[index].answers[0], guesses), guesses } : null : undefined}/>;
+
   return <RefreshLessonMedia.Provider value={renewMedia}><section ref={panelRef} className={`player game-stage game-${template} ${arcade ? "arcade-stage" : ""} ${template === "gameshow" ? "gameshow" : ""} ${classroomFallback ? "classroom-fallback" : ""}`}>
     <div className="player-top"><div className="game-identity">
       {backHref && <Link className="icon-button game-back" aria-label={backHref === "/#mau" ? "Tất cả mẫu" : "Quay lại học liệu"} href={backHref}><ArrowLeft size={20}/></Link>}
@@ -226,7 +231,7 @@ export function Player({ title, description, backHref, template, initialItems = 
           panelRef.current?.querySelectorAll("audio").forEach(audio => audio.pause());
           pauseDialog.current?.showModal();
         }}><Pause size={19} aria-hidden="true"/></button>}
-        <button type="button" className="icon-button" aria-label="Âm thanh phản hồi" aria-pressed={sound} onClick={() => void toggleSound()}>
+        <button type="button" className="icon-button" aria-label="Âm thanh phản hồi" aria-pressed={sound} disabled={!ready} onClick={() => void toggleSound()}>
           {sound ? <Volume2 size={19}/> : <VolumeX size={19}/>}
         </button>
         <button type="button" className="icon-button" aria-label={fullscreen || classroomFallback ? "Thoát toàn màn hình" : "Toàn màn hình"}
@@ -270,18 +275,17 @@ export function Player({ title, description, backHref, template, initialItems = 
       {assignment && requireName && <label>Biệt danh<input value={nickname} onChange={event => setNickname(event.target.value)} maxLength={80} required /></label>}
       {assignment && <p className="hint">Nếu đã bắt đầu, em có thể tiếp tục sau khi tải lại trong cùng thẻ trình duyệt.</p>}
       <button ref={bindFocus} className="button primary game-start" disabled={!ready || busy}><Play size={20} aria-hidden="true"/>{busy ? "Đang mở…" : "Bắt đầu"}</button>
-    </form></div> : <div className={reading ? "reading-layout" : "game-round-flow"}>
-      {reading && <details className="reading-source" open><summary>Ngữ liệu đọc</summary>
+    </form></div> : reading ? <div className="reading-layout">
+      <details className="reading-source" open><summary>Ngữ liệu đọc</summary>
         <LessonMedia media={{ image: reading.stimulusImage }} assets={assets} label="Hình ngữ liệu đọc"/>
         {reading.stimulus && <p lang="en">{reading.stimulus}</p>}
-      </details>}
+      </details>
+      {round}
+    </div> : <>
       {items[index]?.practice?.mode === "grammar" && items[index].practice?.stimulus &&
         <p className="grammar-example">Ví dụ <span lang="en">{items[index].practice.stimulus}</span></p>}
-      <GameRound key={turn} {...{ template, items, order, turn, index, answers, setAnswers, assets, reveals, busy, bindFocus, next, submit, hudTools, practiceSession }}
-      playHit={arcade ? () => chime(null) : undefined}
-      guess={template === "hangman" ? async (letter, guesses) => assignment ? guessAssignmentLetter(assignment, index, letter)
-        : localContent?.[index] ? { ...hangmanPattern(localContent[index].answers[0], guesses), guesses } : null : undefined}/>
-    </div>}
+      {round}
+    </>}
     {active && !result && !arcade && <dialog ref={pauseDialog} className="game-pause-dialog" aria-label="Tạm dừng trò chơi">
       <h2>Đang tạm dừng</h2>
       <form method="dialog"><button className="button primary">Tiếp tục chơi</button></form>

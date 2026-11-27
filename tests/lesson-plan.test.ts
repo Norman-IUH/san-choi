@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { contentSchema } from "../lib/game";
-import { emptyPlan, lessonPlanSchema, samplePlan, samplePlans } from "../lib/lesson-plan";
+import { emptyPlan, lessonPlanSchema } from "../lib/lesson-plan";
+import { samplePlan, samplePlans } from "../lib/lesson-plan-samples";
 
 test("four original plans each link five valid activities and five bank entries", () => {
   expect(Object.keys(samplePlans)).toHaveLength(4);

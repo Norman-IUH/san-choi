@@ -42,6 +42,8 @@ export function grade(template: Template, items: Item[], responses: string[][], 
       if (response.length !== 2 || response[1] !== `Vùng ${item.practice.correctRegion}`) return false;
       response = response.slice(0, 1);
     }
+    if (items.length > 1 && item.practice?.mode === "listen-match" && response[0] && responses.some((other, row) =>
+      row !== index && other[0] && normalize(other[0]) === normalize(response[0]))) return false;
     if (template === "maths-generator") return Boolean(item.math && response.length === 1 &&
       /^-?\d+$/.test(response[0].trim()) && Number(response[0]) === Number(mathProblem(item.math, offset + index).answer));
     const actual = (index === doubleIndex || index === riskIndex ? response.slice(0, -1) : response).map(normalize);

@@ -44,7 +44,8 @@ export function contentSchema(template: Template, draft = false) {
         (practice.mode === "colour" && (!media?.image || options.some(option => !Object.hasOwn(colourPalette, normalize(option))))) ||
         (practice.showTranscript && (practice.mode !== "dialogue" || !practice.transcript)) ||
         (practice.regions && (practice.mode !== "colour" || !practice.correctRegion || practice.correctRegion > practice.regions.length ||
-          new Set(practice.regions.map(({ x, y }) => `${x},${y}`)).size !== practice.regions.length)) ||
+          new Set(practice.regions.map(({ x, y }) => `${x},${y}`)).size !== practice.regions.length ||
+          practice.regions.some(({ x, y, width, height }) => x < width / 2 || 100 - x < width / 2 || y < height / 2 || 100 - y < height / 2))) ||
         (practice.correctRegion && !practice.regions) || exposesDictation)) {
         context.addIssue({ code: "custom", path: [index], message: `Kiểm tra clip, đáp án và tùy chọn của bài luyện mục ${index + 1}.` });
       }

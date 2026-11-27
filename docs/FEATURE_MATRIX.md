@@ -109,3 +109,15 @@ Xem [kết quả kiểm thử](TEST_RESULTS.md) và [các phần còn thiếu](L
 | Phonics | Letter Sounds, Beginning Sounds, Ending Sounds, Blending, Rhyming Words, Sound Discrimination. Mỗi mẫu yêu cầu clip do giáo viên kiểm tra |
 | Kho từ | Từ đang lưu trữ được lọc khỏi nguồn chọn mới và CSV. Lesson đã lưu vẫn đọc được. [Độ phủ từ vựng](VOCABULARY_COVERAGE.md) |
 | Đợt tiếp theo | Reading, Grammar và Lesson Builder thuộc B2. Speaking, Writing và chấm thủ công thuộc B3 |
+
+## V1.5B2
+
+| Hạng mục | Phạm vi |
+|---|---|
+| Listening | Dùng ảnh phương án, gồm chế độ chỉ hiện ảnh với nhãn trung tính. Ghép 2–8 clip với bộ thẻ chung. Listen and Colour hỗ trợ vùng bầu dục do giáo viên đặt. |
+| Media và bảo mật | Ảnh tải mới được chuyển WebP để bỏ metadata và lưu với tên ngẫu nhiên. Học sinh nhận URL ngắn hạn, mã phương án ảnh và dữ liệu cần để làm bài. Không gửi đáp án, giải thích hoặc transcript đã ẩn trước khi nộp. |
+| Reading | Sentence Matching, Picture Comprehension, Short Passage Comprehension, Story Sequencing, Gap Filling và Multiple Choice. Dùng một ngữ liệu chung, chấm ở server và giữ nguyên bản chụp bài đã giao. |
+| Grammar | 21 chủ điểm nội bộ có ví dụ ngữ cảnh và giải thích cho câu sai khi cho phép xem lại. Dạng nhập chữ nhận các biến thể đã khai báo. Dùng Quiz, Unjumble, Word Magnets, Complete the Sentence và Type the Answer. |
+| Giáo án | Mở rộng Vocabulary Lesson. Có thông tin tiết dạy, ghi chú riêng, bản nháp, thứ tự kéo thả và bàn phím, nhân bản, xem trước, trình chiếu và giao bài từng bước. Xem điểm theo từng bài giao chấm được. |
+| Giáo án mẫu | Colours and Classroom Objects, Animals and Pets, My Daily Routine, Travel and Adventures. Mỗi bộ có năm hoạt động gốc kèm từ vựng, mục tiêu, thời lượng và bài về nhà. |
+| Học liệu | 220/220 mục Kids và Starters có IPA và câu ví dụ. Dấu chờ duyệt và nhật ký duyệt phân biệt độ phủ dữ liệu với chất lượng giảng dạy. [Số liệu và quy trình](VOCABULARY_COVERAGE.md) |

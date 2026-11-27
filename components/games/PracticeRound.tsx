@@ -37,12 +37,11 @@ function PracticeQuestion({ items, index, turn, assets, busy, bindFocus, next, p
   const source = path && assets[path];
   const image = item.media?.image && assets[item.media.image];
   // shortcut: the practice limit survives reloads in this tab; enforce delivery on the server if a stricter policy is needed.
-  const key = practiceSession && path ? `san-choi-listens:${practiceSession}:${path}` : undefined;
+  const key = practiceSession && path ? `san-choi-listens:${practiceSession}:${index}:${path}` : undefined;
   const [plays, setPlays] = useState(() => storedPlays(key));
   const [speed, setSpeed] = useState(1);
   const [answer, setAnswer] = useState(paired ?? "");
   const [region, setRegion] = useState<number>();
-  const [paints, setPaints] = useState<Record<number, string>>({});
   const [error, setError] = useState(false);
   const [playing, setPlaying] = useState(false);
   const audio = useRef<HTMLAudioElement>(null);
@@ -81,7 +80,7 @@ function PracticeQuestion({ items, index, turn, assets, busy, bindFocus, next, p
       {!practice.regions && colour && <span className="practice-overlay" aria-hidden="true" style={{ backgroundColor: colour, maskImage: `url("${image}")` }}/>}
       {practice.regions?.map(({ x, y, width, height }, index) => <button type="button" key={index} className="practice-region"
         aria-pressed={region === index + 1} onClick={() => { setRegion(index + 1); setAnswer(""); }}
-        style={{ left: `${x}%`, top: `${y}%`, width: `${width}%`, height: `${height}%`, backgroundColor: paints[index + 1] }}>
+        style={{ left: `${x}%`, top: `${y}%`, width: `${width}%`, height: `${height}%`, backgroundColor: region === index + 1 && colour ? colour + "b3" : undefined }}>
         <span>{`Vùng ${index + 1}`}</span></button>)}
     </div>}
     <div className="inline-actions">
@@ -107,17 +106,18 @@ function PracticeQuestion({ items, index, turn, assets, busy, bindFocus, next, p
       {practice.mode === "dictation" ?
         <label>Câu trả lời<input lang="en" value={answer} onChange={event => setAnswer(event.target.value)}
           autoComplete="off" spellCheck={false} maxLength={400}/></label> :
-        <div className="options" role="group" aria-label="Phương án bài luyện">{(choices ?? item.options).map((option, position) =>
-          <button className="option" key={option} type="button" aria-label={practice.pictureChoices ? `Hình ${position + 1}` : undefined}
+        <div className="options" role="group" aria-label="Phương án bài luyện">{(choices ?? item.options).map((option, position) => {
+          const media = item.optionMedia?.find(entry => entry.option === option);
+          return <div className="option-with-media" key={option}><button className="option" type="button" aria-label={practice.pictureChoices ? `Hình ${position + 1}` : undefined}
             aria-pressed={answer === option} disabled={taken?.includes(option) || Boolean(practice.regions && !region)} onClick={() => {
             setAnswer(option);
             if (choices) next([option]);
-            if (region) setPaints({ ...paints, [region]: colourPalette[normalize(option)] });
           }}>
-            <LessonMedia media={item.optionMedia?.find(entry => entry.option === option)} assets={assets} label={`Hình ${position + 1}`}/>
+            <LessonMedia media={{ image: media?.image }} assets={assets} label={`Hình ${position + 1}`}/>
             {practice.mode === "colour" && <span className="practice-swatch" aria-hidden="true" style={{ backgroundColor: colourPalette[normalize(option)] }}/>}
             {practice.pictureChoices ? <span>Hình {position + 1}</span> : option}
-          </button>)}</div>}
+          </button>{media?.audio && <LessonMedia media={{ audio: media.audio }} assets={assets} label={`Nghe phương án ${position + 1}`}/>}</div>;
+        })}</div>}
       {!choices && <div className="inline-actions">
         {answer.trim() ? <button className="button primary" disabled={busy}>{turn + 1 === items.length ? "Hoàn thành" : "Tiếp theo"}</button> :
           <button className="button" disabled={busy}>{turn + 1 === items.length ? "Nộp và để trống" : "Bỏ qua câu này"}</button>}

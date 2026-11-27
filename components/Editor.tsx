@@ -57,7 +57,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
   const kind = templates[template].kind;
   const alternatives = kind === "blank" || template === "type-answer";
   const wordPuzzle = ["spell-word", "wordsearch", "hangman", "crossword"].includes(template);
-  const maxItems = template === "crossword" ? 10 : template === "matching-pairs" ? 12 : 60;
+  const maxItems = mode === "listen-match" ? 8 : template === "crossword" ? 10 : template === "matching-pairs" ? 12 : 60;
   const answerLabel = template === "group-sort" ? "Nhóm" : kind === "pair" ? "Mặt sau / giá trị ghép" :
     kind === "sequence" ? "Các từ theo thứ tự đúng, mỗi dòng một từ hoặc cụm từ" :
     kind === "choice" ? "Đáp án đúng, mỗi dòng một đáp án có trong phương án" : "Đáp án";
@@ -84,7 +84,8 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
   return <form className="stack editor" onSubmit={handleSubmit((data, event) => {
     if (structureBusy) return;
     const draft = (event?.nativeEvent as SubmitEvent)?.submitter?.getAttribute("value") !== "publish";
-    const entries = data.content.map(({ prompt, answers, options, alternatives, explanation, english, media, optionMedia, secondary, pin, math, practice, arcade: settings }, index) => {
+    const source = draft && reading ? data.content.filter(item => item.prompt.trim()) : data.content;
+    const entries = source.map(({ prompt, answers, options, alternatives, explanation, english, media, optionMedia, secondary, pin, math, practice, arcade: settings }, index) => {
       const lexical = english && {
         level: english.level || undefined, skill: english.skill || undefined, meaning: english.meaning?.trim() || undefined,
         ipa: english.ipa?.trim() || undefined, example: english.example?.trim() || undefined, uk: english.uk, us: english.us,
@@ -134,7 +135,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
       {template === "crossword" && " Nhập 2–10 từ có chữ cái giao nhau."}
       {template === "matching-pairs" && " Nhập 2–12 cặp, mỗi mặt sau khác nhau."}
     </p>}
-    {(template === "flash-cards" || template === "match-up" || template === "find-match") && <div className="panel stack">
+    {!mode && (template === "flash-cards" || template === "match-up" || template === "find-match") && <div className="panel stack">
       <label>Nhập từ vựng CSV hoặc XLSX<input type="file" accept=".csv,.xlsx" disabled={structureBusy} onChange={event => {
         const file = event.target.files?.[0]; event.target.value = ""; if (file) void importFile(file);
       }}/></label><p className="muted">Cột bắt buộc: word, meaning. Cột tùy chọn: ipa, example, level.</p>
@@ -238,7 +239,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
           })}
         </div>
         {kind === "choice" && options.slice(0, 8).map(option => <details key={option} className="lesson-details"><summary>Tệp cho phương án {option}</summary>
-          <div className="form-grid">{(["image", "audio"] as const).map(kind => {
+          <div className="form-grid">{(["image", "audio"] as const).filter(kind => !item?.practice?.pictureChoices || kind === "image").map(kind => {
             const path = item?.optionMedia?.find(media => media.option === option)?.[kind];
             return <MediaInput key={kind} label={kind === "image" ? "Ảnh phương án" : "Âm thanh phương án"} kind={kind}
               path={path} url={path && assets[path]} onBusy={trackUpload} onChange={(path, url) => {

@@ -8,7 +8,7 @@ import { starterLessons, vocabularyCatalog } from "@/lib/vocabulary-catalog";
 import { listBankWords } from "@/lib/vocabulary-server";
 import { difficultyLabels, lessonSchema } from "@/lib/vocabulary-bank";
 import { importBank } from "./actions";
-import { samplePlans } from "@/lib/lesson-plan";
+import { samplePlans } from "@/lib/lesson-plan-samples";
 
 export const metadata = { title: "Thư viện tiếng Anh" };
 type Query = { lesson?: string; copy?: string; starter?: string; saved?: string; problem?: string; filter?: string;
