@@ -38,7 +38,8 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
   const mode = practiceMode ?? content.find(item => item.practice)?.practice?.mode;
   const reading = mode && isReading(mode);
   const productive = Boolean(mode && isProductive(mode));
-  const speaking = Boolean(mode && isSpeaking(mode));
+  const starters = mode === "starters";
+  const speaking = Boolean(mode && (isSpeaking(mode) || content[0]?.practice?.starters?.paper === "speaking"));
   const objective = productive && template === "type-answer";
   const [rubric, setRubric] = useState(() => content[0]?.practice?.production?.rubric ?? defaultRubric(speaking ? "Speaking" : "Writing"));
   const [stimulus, setStimulus] = useState(() => {
@@ -126,7 +127,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
         <label>Thẻ<input {...register("tags")} maxLength={250}/></label>
         <label>Quyền xem<select {...register("visibility")}><option value="private">Riêng tư</option>{!mode && <><option value="unlisted">Có link</option><option value="public">Công khai</option></>}</select></label></div>
     </div>
-    {productive && !objective && <section className="panel stack"><h2>Rubric nội bộ</h2>
+    {(productive || starters && speaking) && !objective && <section className="panel stack"><h2>Rubric nội bộ</h2>
       {rubric.map((row, index) => <fieldset className="form-grid" key={index}><legend>Tiêu chí {index + 1}</legend>
         <label>Tên tiêu chí<input required maxLength={60} value={row.title} onChange={event => {
           const title = event.target.value; setRubric(previous => previous.map((item, i) => i === index ? { ...item, title } : item));
@@ -187,7 +188,8 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
             remember(path, url); setValue(`content.${i}.practice.stimulusImage`, path);
           }}/>}
       </section>}
-      {item?.practice && !reading && !productive && item.practice.mode !== "grammar" && <section className="stack">
+      {item?.practice?.starters?.teacher && <label>Hướng dẫn giáo viên<textarea lang="en" {...register(`content.${i}.practice.starters.teacher`)} maxLength={1200}/></label>}
+      {item?.practice && !starters && !reading && !productive && item.practice.mode !== "grammar" && <section className="stack">
         <strong>{practiceModes[item.practice.mode]}</strong>
         <label>Hướng dẫn hoặc ngữ cảnh hiển thị<textarea {...register(`content.${i}.practice.stimulus`)} maxLength={1000}/></label>
         <label>Số lượt nghe tối đa (0 là không giới hạn)<input type="number" min={0} max={10} {...register(`content.${i}.practice.maxPlays`, { valueAsNumber: true })}/></label>
@@ -289,13 +291,13 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
               }}/>;
           })}</div></details>)}
       </div></details>
-      <div className="inline-actions">
+      {!starters && <div className="inline-actions">
         <button type="button" className="icon-button" aria-label={`Đưa mục ${i + 1} lên`} disabled={structureBusy || !i} onClick={() => move(i, i - 1)}><ArrowUp size={16}/></button>
         <button type="button" className="icon-button" aria-label={`Đưa mục ${i + 1} xuống`} disabled={structureBusy || i === fields.length - 1} onClick={() => move(i, i + 1)}><ArrowDown size={16}/></button>
         <button type="button" className="icon-button" aria-label={`Xóa mục ${i + 1}`} disabled={structureBusy} onClick={() => remove(i)}><Trash2 size={16}/></button>
-      </div>
+      </div>}
     </fieldset>; })}
-    <button type="button" className="button" disabled={structureBusy || fields.length >= maxItems} onClick={() => append(defaultEntry)}><Plus size={16}/> Thêm mục</button>
+    {!starters && <button type="button" className="button" disabled={structureBusy || fields.length >= maxItems} onClick={() => append(defaultEntry)}><Plus size={16}/> Thêm mục</button>}
     {error && <p className="notice error" role="alert">{error}</p>}
     <div className="inline-actions editor-actions"><button className="button primary" value="publish" disabled={structureBusy}>Xuất bản</button>
       <button className="button" value="draft" disabled={structureBusy}>Lưu nháp</button>{pending && <span role="status">Đang lưu…</span>}</div>

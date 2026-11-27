@@ -19,6 +19,6 @@ export const starterConfig = z.object({
 });
 export const starterSeconds: Record<StarterPaper, number> = { listening: 1200, reading: 1200, speaking: 300 };
 export function starterProjection(config: z.infer<typeof starterConfig>) {
-  const { teacher, guide, ...publicFields } = config;
-  return { ...publicFields, guide: config.mock ? undefined : guide };
+  const { paper, part, mock, scene, passage, letters, cards, targets, guide } = config;
+  return { paper, part, mock, scene, passage, letters, cards, targets, guide: mock ? undefined : guide };
 }

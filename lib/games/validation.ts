@@ -8,7 +8,7 @@ import { pairOptions } from "./puzzle-templates";
 import { doubleMarker } from "./scoring";
 import { colourPalette, grammarTemplates, isAudioPractice, isPhonics, isReading, practiceTemplate, samplePracticeAudio } from "./practice";
 import { isProductive, isSpeaking } from "./productive";
-import { starterPartNames } from "./starters";
+import { starterAudio, starterPartNames } from "./starters";
 
 export function contentSchema(template: Template, draft = false) {
   return z.array(itemSchema).min(draft ? 0 : 1).max(60).superRefine((items, context) => {
@@ -19,11 +19,11 @@ export function contentSchema(template: Template, draft = false) {
       const speaking = starters?.paper === "speaking";
       const count = starters?.mock ? starterPartNames[starters.paper].length * (speaking ? 1 : 5) : speaking ? 1 : 5;
       if (!starters || items.length !== count || template !== (speaking ? "speaking" : "type-answer") ||
-        (speaking && !items[0].practice?.production?.rubric) || items.some((item, index) => {
+        (speaking && (!items[0].practice?.production?.rubric || items[0].practice.production.objective)) || items.some((item, index) => {
           const config = item.practice?.starters;
           return item.practice?.mode !== "starters" || !config || config.paper !== starters.paper || config.mock !== starters.mock ||
             config.part > starterPartNames[starters.paper].length || config.part !== (starters.mock ? Math.floor(index / (speaking ? 1 : 5)) + 1 : starters.part) ||
-            item.answers.length !== (speaking ? 0 : 1) || (config.paper === "listening" && !item.media?.audio);
+            item.answers.length !== (speaking ? 0 : 1) || (config.paper === "listening" && !starterAudio.safeParse(item.media?.audio).success);
         })) context.addIssue({ code: "custom", message: "Kiểm tra cấu trúc đề Starters và học liệu từng phần." });
       return;
     }

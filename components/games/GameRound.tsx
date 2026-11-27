@@ -13,9 +13,11 @@ const PuzzleRound = dynamic(() => import("./PuzzleRound"));
 const ArcadeRound = dynamic(() => import("./ArcadeRound"), { ssr: false });
 const PracticeRound = dynamic(() => import("./PracticeRound"));
 const ProductiveRound = dynamic(() => import("./ProductiveRound"));
+const StartersRound = dynamic(() => import("./StartersRound"));
 
 export function GameRound(props: RoundProps) {
   const practice = props.items[props.index]?.practice;
+  if (practice?.starters) return <StartersRound {...props}/>;
   if (practice && isAudioPractice(practice.mode)) return <PracticeRound {...props}/>;
   if (practice?.production && isProductive(practice.mode)) return <ProductiveRound {...props}/>;
   if (isArcadeTemplate(props.template)) return <ArcadeRound {...props}/>;

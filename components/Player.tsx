@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useEffectEvent, useId, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ArrowLeft, Maximize, Minimize, Pause, Play, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { finishAttempt, guessAssignmentLetter, refreshLessonMedia, startAttempt } from "@/app/play/actions";
@@ -13,6 +13,8 @@ import { isWordTemplate } from "@/lib/games/word-templates";
 import { isPuzzleTemplate } from "@/lib/games/puzzle-templates";
 import { isArcadeTemplate } from "@/lib/games/arcade-templates";
 import { gameTheme } from "./games/game-themes";
+import { starterSeconds } from "@/lib/games/starters";
+import { StartersAudio } from "./games/StartersAudio";
 
 type Props = { title: string; description?: string; backHref?: string; template: Template; initialItems?: PlayItem[]; reveals?: string[];
   localContent?: Item[]; assignment?: string; requireName?: boolean; assets?: Record<string, string>;
@@ -39,6 +41,8 @@ export function Player({ title, description, backHref, template, initialItems = 
   const [classroomFallback, setClassroomFallback] = useState(false);
   const [practiceSession, setPracticeSession] = useState<string>();
   const [hudTools, setHudTools] = useState<HTMLDivElement | null>(null);
+  const [mock, setMock] = useState<{ deadline: number; seconds: number } | null>(null);
+  const expired = useRef(false);
   const draftId = useRef<string | null>(null);
   const lastMediaRefresh = useRef(0);
   const audioContext = useRef<AudioContext | null>(null);
@@ -65,6 +69,9 @@ export function Player({ title, description, backHref, template, initialItems = 
   const defaultArcadePractice = arcade && !assignment && !!localContent && localContent.every(item => !item.arcade?.timed);
   const index = order[turn] ?? 0;
   const practice = items[0]?.practice;
+  const starters = practice?.starters;
+  const starterAudio = starters && items[index]?.media?.audio;
+  const deadline = mock?.deadline;
   const reading = practice && isReading(practice.mode) ? practice : undefined;
   const rows = template === "match-up" || template === "group-sort";
   const board = rows || template === "open-box" || template === "flip-tiles" || template === "matching-pairs";
@@ -104,9 +111,9 @@ export function Player({ title, description, backHref, template, initialItems = 
     // shortcut: drafts survive a reload in this tab, cross-device drafts require server storage.
     try {
       if (result) sessionStorage.removeItem(draftKey);
-      else sessionStorage.setItem(draftKey, JSON.stringify({ id: draftId.current, order, turn, answers }));
+      else sessionStorage.setItem(draftKey, JSON.stringify({ id: draftId.current, order, turn, answers, deadline }));
     } catch { /* The browser may disable session storage. */ }
-  }, [active, draftKey, result, order, turn, answers]);
+  }, [active, draftKey, result, order, turn, answers, deadline]);
 
   async function toggleClassroom() {
     if (classroomFallback) { setClassroomFallback(false); return; }
@@ -154,7 +161,7 @@ export function Player({ title, description, backHref, template, initialItems = 
       const indexes = started.items.map((_, i) => i);
       draftId.current = "draftId" in started ? started.draftId ?? null : null;
       setPracticeSession(draftId.current ?? (started.items.some(item => item.practice) ? crypto.randomUUID() : undefined));
-      let draft: { id: string; order: number[]; turn: number; answers: Record<number, string[]> } | null = null;
+      let draft: { id: string; order: number[]; turn: number; answers: Record<number, string[]>; deadline?: number } | null = null;
       if (draftKey && draftId.current) {
         try {
           const saved = JSON.parse(sessionStorage.getItem(draftKey) ?? "null");
@@ -172,6 +179,11 @@ export function Player({ title, description, backHref, template, initialItems = 
       setAnswers(draft?.answers ?? {});
       setResult(null);
       setFeedback("");
+      const config = started.items[0].practice?.starters;
+      const seconds = config?.mock ? starterSeconds[config.paper] : 0;
+      const deadline = Math.min(typeof draft?.deadline === "number" ? draft.deadline : Infinity, Date.now() + seconds * 1000);
+      expired.current = false;
+      setMock(seconds ? { deadline, seconds: Math.max(0, Math.ceil((deadline - Date.now()) / 1000)) } : null);
       setActive(true);
     } catch { setError("Không kết nối được. Hãy thử lại."); }
     finally { setBusy(false); }
@@ -182,7 +194,7 @@ export function Player({ title, description, backHref, template, initialItems = 
     setBusy(true);
     setError("");
     try {
-      const ordered = items.map((_, i) => responses[i] ?? []);
+      const ordered = items.map((_, i) => starters?.paper === "speaking" ? [] : responses[i] ?? []);
       const local = assignment ? null : grade(template, localContent ?? [], ordered);
       const response = local ?? await finishAttempt(assignment!, ordered);
       if ("error" in response && response.error) { setError(response.error); return; }
@@ -196,9 +208,23 @@ export function Player({ title, description, backHref, template, initialItems = 
     finally { setBusy(false); }
   }
 
+  const mockTick = useEffectEvent((deadline: number) => {
+    const seconds = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+    setMock(previous => previous?.seconds === seconds ? previous : { deadline, seconds });
+    if (seconds === 0 && !busy && !expired.current) {
+      expired.current = true;
+      void submit(answers);
+    }
+  });
+  useEffect(() => {
+    if (!active || result || deadline === undefined) return;
+    const interval = window.setInterval(() => mockTick(deadline), 250);
+    return () => window.clearInterval(interval);
+  }, [active, result, deadline]);
+
   function next(answer: string[]) {
     const updated = { ...answers, [index]: answer };
-    if (!assignment && localContent) {
+    if (!assignment && localContent && !starters?.mock) {
       const { correct } = grade(template, [localContent[index]], [answer], index);
       if (correct[0] !== null) {
         chime(correct[0]);
@@ -233,13 +259,16 @@ export function Player({ title, description, backHref, template, initialItems = 
   return <RefreshLessonMedia.Provider value={renewMedia}><section ref={panelRef} className={`player game-stage game-${template} ${arcade ? "arcade-stage" : ""} ${template === "gameshow" ? "gameshow" : ""} ${classroomFallback ? "classroom-fallback" : ""}`}>
     <div className="player-top"><div className="game-identity">
       {backHref && <Link className="icon-button game-back" aria-label={backHref === "/#mau" ? "Tất cả mẫu" : "Quay lại học liệu"} href={backHref}><ArrowLeft size={20}/></Link>}
-      <span className={`template-tag ${meta.color}`}>{meta.title}</span>
+      <span className={`template-tag ${meta.color}`}>{starters ? "Pre A1 Starters" : meta.title}</span>
     </div>
       {active && !result && template !== "crossword" && <Progress value={board ? Object.keys(answers).length : turn + 1} total={items.length}/>}
       {stageScore !== null && <div className="game-scoreboard"><span>{arcade ? "Điểm luyện tập" : "Điểm sân khấu"}</span><strong key={stageScore} aria-live="polite">{stageScore}</strong></div>}
       <div className="game-tools">
         <div ref={setHudTools} className="game-round-tools"/>
-        {active && !result && !arcade && <button type="button" className="icon-button" aria-label="Tạm dừng" onClick={() => {
+        {active && !result && mock && <span role="timer" className="starter-clock" aria-label="Thời gian còn lại">
+          {Math.floor(mock.seconds / 60)}:{String(mock.seconds % 60).padStart(2, "0")}
+        </span>}
+        {active && !result && !arcade && !mock && <button type="button" className="icon-button" aria-label="Tạm dừng" onClick={() => {
           panelRef.current?.querySelectorAll("audio").forEach(audio => audio.pause());
           pauseDialog.current?.showModal();
         }}><Pause size={19} aria-hidden="true"/></button>}
@@ -283,7 +312,7 @@ export function Player({ title, description, backHref, template, initialItems = 
         style={artStyle}/>
       <form onSubmit={event => { event.preventDefault(); void start(); }}>
       <h1>{title}</h1>
-      <p>{theme.instruction}</p>
+      <p>{starters ? (starters.mock ? "Thi thử theo phần thi. Em có thể quay lại câu trước trong thời gian quy định." : "Luyện từng Part theo nhịp của em.") : theme.instruction}</p>
       {description && <p className="hint">{description}</p>}
       {defaultArcadePractice && <p className="hint">Luyện tập không giới hạn thời gian</p>}
       {assignment && requireName && <label>Biệt danh<input value={nickname} onChange={event => setNickname(event.target.value)} maxLength={80} required /></label>}
@@ -296,9 +325,12 @@ export function Player({ title, description, backHref, template, initialItems = 
       </details>
       {round}
     </div> : <>
+      {starterAudio && <StartersAudio key={starterAudio} url={assets[starterAudio] ?? starterAudio} mock={!!starters.mock} session={practiceSession}/>}
       {items[index]?.practice?.mode === "grammar" && items[index].practice?.stimulus &&
         <p className="grammar-example">Ví dụ <span lang="en">{items[index].practice.stimulus}</span></p>}
       {round}
+      {starters && turn > 0 && <button className="button starter-previous" type="button" disabled={busy}
+        onClick={() => { setFeedback(""); setTurn(turn - 1); }}>Câu trước</button>}
     </>}
     {active && !result && !arcade && <dialog ref={pauseDialog} className="game-pause-dialog" aria-label="Tạm dừng trò chơi">
       <h2>Đang tạm dừng</h2>

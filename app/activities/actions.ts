@@ -7,8 +7,23 @@ import { compatible, contentSchema, templateSchema, type Item } from "@/lib/game
 import { demoContent, demos } from "@/lib/demo";
 import { itemMediaPaths } from "@/lib/media";
 import { englishDeckContent, englishDecks, isDeckId } from "@/lib/english-samples";
+import { starterPaperSchema } from "@/lib/games/starters";
+import { starterPaper } from "@/lib/starters-paper";
 
 const uuid = z.uuid();
+
+export async function importStarter(paper: string, part: number | undefined) {
+  const { db } = await account(true);
+  const parsed = starterPaperSchema.safeParse(paper);
+  const material = parsed.success && starterPaper(parsed.data, part);
+  if (!material) notFound();
+  const { data, error } = await db.from("activities").insert({
+    title: material.title, description: material.label, subject: "English", grade: "Pre A1 Starters", tags: "Starters",
+    visibility: "private", draft: false, template: material.template, content: contentSchema(material.template).parse(material.items),
+  }).select("id").single();
+  check(error, "import_starters");
+  redirect(`/activities/${data!.id}?saved=1`);
+}
 
 export async function importEnglishDeck(form: FormData) {
   const { db } = await account(true);
