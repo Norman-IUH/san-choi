@@ -10,6 +10,7 @@ for (const template of ["quiz", "flip-tiles", "maze-chase"] as const) {
     await expect(shell.getByRole("link", { name: "Tất cả mẫu" })).toBeVisible();
     await expect(shell.getByRole("button", { name: "Âm thanh phản hồi" })).toHaveAttribute("aria-pressed", "false");
     expect((await start.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await expect(start).toBeEnabled();
     await start.press("Enter");
     await expect(shell.locator(".play-stack")).toBeVisible();
     await expect(shell.locator(".player-top").getByRole("progressbar")).toBeVisible();

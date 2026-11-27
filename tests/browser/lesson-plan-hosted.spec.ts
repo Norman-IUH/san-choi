@@ -30,7 +30,14 @@ test("lesson plan saves, reorders, presents and grades a Reading snapshot", asyn
   await page.getByLabel("Hoạt động từ thư viện").selectOption({ label: name });
   await page.getByRole("button", { name: "Thêm hoạt động", exact: true }).click();
   await page.getByRole("button", { name: "Đưa hoạt động 5 lên", exact: true }).press("Enter");
-  await expect(page.locator(".lesson-timeline > li").nth(3)).toContainText(name);
+  const steps = page.locator(".lesson-timeline > li");
+  await expect(steps.nth(3)).toContainText(name);
+  if (info.project.name === "desktop") {
+    await steps.nth(3).locator(".lesson-drag").dragTo(steps.nth(2));
+    await expect(steps.nth(2)).toContainText(name);
+    await page.getByRole("button", { name: "Đưa hoạt động 3 xuống", exact: true }).press("Enter");
+    await expect(steps.nth(3)).toContainText(name);
+  }
   await page.getByRole("button", { name: "Lưu nháp giáo án", exact: true }).click();
   await expect(page.getByText("Đã lưu giáo án.")).toBeVisible();
   const lessonUrl = page.url();
@@ -51,7 +58,8 @@ test("lesson plan saves, reorders, presents and grades a Reading snapshot", asyn
   await expect(page.locator("body")).not.toContainText("PRIVATE TEACHER PLAN NOTE");
   await stage.getByRole("link", { name: /Hoạt động tiếp theo/ }).click();
   await expect(stage.getByText("2 / 5", { exact: false })).toBeVisible();
-  await expect(stage.getByRole("button", { name: "Toàn màn hình" })).toBeVisible();
+  await stage.getByRole("button", { name: "Toàn màn hình", exact: true }).click();
+  await stage.getByRole("button", { name: "Thoát toàn màn hình", exact: true }).click();
   await page.screenshot({ path: info.outputPath("presentation.png") });
   await stage.getByRole("link", { name: /Hoạt động trước/ }).click();
   await expect(stage.getByText("1 / 5", { exact: false })).toBeVisible();

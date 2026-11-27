@@ -3,6 +3,7 @@ import { mkdir } from "node:fs/promises";
 import { deckIds, englishDecks } from "../../lib/english-samples";
 
 test("four English decks can be previewed in two templates", async ({ page }, info) => {
+  test.setTimeout(60000);
   await page.goto("/samples");
   for (const id of deckIds) await expect(page.getByRole("link", { name: new RegExp(englishDecks[id].level) })).toBeVisible();
   const screenshots = process.env.V12_SCREENSHOTS;

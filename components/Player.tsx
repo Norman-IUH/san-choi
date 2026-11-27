@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ArrowLeft, Maximize, Minimize, Pause, Play, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { finishAttempt, guessAssignmentLetter, refreshLessonMedia, startAttempt } from "@/app/play/actions";
@@ -45,10 +45,18 @@ export function Player({ title, description, backHref, template, initialItems = 
   const panelRef = useRef<HTMLElement | null>(null);
   const pauseDialog = useRef<HTMLDialogElement | null>(null);
   const focusTarget = useRef<HTMLElement | null>(null);
+  const pendingFocus = useRef(false);
   const replayPending = useRef(false);
   const outcomeId = useId();
   const draftKey = assignment ? `san-choi-draft:${assignment}` : null;
-  const bindFocus = (node: HTMLElement | null) => { focusTarget.current = node; };
+  const bindFocus = useCallback((node: HTMLElement | null) => {
+    focusTarget.current = node;
+    if (node && pendingFocus.current) {
+      pendingFocus.current = false;
+      node.focus();
+    }
+  }, []);
+  const soundSupported = ready && typeof window.AudioContext === "function";
   const meta = templates[template];
   const theme = gameTheme(template);
   const arcade = isArcadeTemplate(template);
@@ -84,7 +92,10 @@ export function Player({ title, description, backHref, template, initialItems = 
   useEffect(() => () => { void audioContext.current?.close().catch(() => {}); }, []);
 
   useEffect(() => {
-    if (active || replayPending.current) focusTarget.current?.focus();
+    if (active || replayPending.current) {
+      pendingFocus.current = !focusTarget.current;
+      focusTarget.current?.focus();
+    }
     replayPending.current = false;
   }, [active, turn, result]);
 
@@ -231,7 +242,8 @@ export function Player({ title, description, backHref, template, initialItems = 
           panelRef.current?.querySelectorAll("audio").forEach(audio => audio.pause());
           pauseDialog.current?.showModal();
         }}><Pause size={19} aria-hidden="true"/></button>}
-        <button type="button" className="icon-button" aria-label="Âm thanh phản hồi" aria-pressed={sound} disabled={!ready} onClick={() => void toggleSound()}>
+        <button type="button" className="icon-button" aria-label="Âm thanh phản hồi" aria-pressed={sound} disabled={!soundSupported}
+          title={ready && !soundSupported ? "Trình duyệt không hỗ trợ âm thanh phản hồi" : undefined} onClick={() => void toggleSound()}>
           {sound ? <Volume2 size={19}/> : <VolumeX size={19}/>}
         </button>
         <button type="button" className="icon-button" aria-label={fullscreen || classroomFallback ? "Thoát toàn màn hình" : "Toàn màn hình"}
