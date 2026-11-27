@@ -410,3 +410,16 @@ ol.memory-strip{padding-left:1.8rem;gap:1.5rem}
 .productive-round textarea, .assessment-panel textarea { white-space: pre-wrap; }
 .assessment-response { overflow-wrap: anywhere; white-space: pre-wrap; }
 .worksheet-preview{width:100%;height:min(72vh,850px);min-height:360px;border:1px solid var(--line);border-radius:12px;background:#f4f6f7}
+.assignment-qr-print{margin:0;padding:1rem;border:1px solid var(--line);border-radius:12px;background:white;width:min(100%,34rem);text-align:center;color:#17283d}
+.assignment-qr-print img,.assignment-qr-show img{display:block;max-width:100%;height:auto;margin-inline:auto}
+.assignment-qr-print figcaption{font-weight:750}
+.assignment-qr-print p,.assignment-qr-show p{font-size:.875rem;overflow-wrap:anywhere}
+.assignment-qr-show{margin:0;padding:1.25rem;max-width:none;max-height:none;width:100%;height:100%;border:0;background:white;color:#17283d;overflow:auto;text-align:center}
+.assignment-qr-show[open]{display:grid;justify-items:center;align-content:center;gap:.75rem}
+.assignment-qr-show img{width:min(68dvh,82dvw);object-fit:contain}
+@media print {
+  body[data-print-assignment-qr] *:not(:has(.assignment-qr-print)):not(.assignment-qr-print):not(.assignment-qr-print *){display:none!important}
+  body[data-print-assignment-qr] .assignment-qr-print{width:100%;max-width:none;border:0;margin:1cm auto}
+  body[data-print-assignment-qr] .assignment-qr-print img{width:9cm}
+  body[data-print-assignment-qr] .panel{border:0;box-shadow:none}
+}

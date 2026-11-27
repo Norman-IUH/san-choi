@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 import { setAssignmentClosed } from "@/app/activities/actions";
 import { addClassroomSubmission } from "@/app/results/review-actions";
-import { CopyLink } from "@/components/CopyLink";
+import { AssignmentShare } from "@/components/AssignmentShare";
 import { account, check, urlFor } from "@/lib/supabase";
 import { printableTemplates } from "@/lib/worksheet";
 
@@ -24,7 +24,7 @@ export default async function Assignment({ params, searchParams }: { params: Pro
   return <div className="narrow wide stack"><Link className="back" href="/results">← Kết quả</Link>
     <h1>{row.title}</h1>{saved && <p className="notice" role="status">Đã lưu thay đổi.</p>}
     <section className="panel stack"><h2>Link giao bài</h2>
-      <CopyLink url={urlFor(`/play/${id}`)}/>
+      <AssignmentShare path={`/play/${id}`} fallback={urlFor(`/play/${id}`)} title={row.title}/>
       {printableTemplates.some(template => template === row.template) &&
         <div className="inline-actions"><Link className="button" href={`/teaching/print/assignment/${id}`}>In đề đã giao</Link></div>}
       <p>{row.closed ? "Đã đóng" : row.deadline ? `Hạn nộp ${new Date(row.deadline).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}` : "Đang mở · Không giới hạn thời gian"}</p>
