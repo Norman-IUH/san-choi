@@ -16,6 +16,10 @@ export const practiceSchema = z.object({
   transcript: z.string().trim().min(1).max(1000).optional(),
   showTranscript: z.boolean().default(false),
   reviewedAudio: z.boolean().default(false),
+  pictureChoices: z.boolean().optional(),
+  regions: z.array(z.object({ x: z.number().min(0).max(100), y: z.number().min(0).max(100),
+    width: z.number().min(1).max(100).default(15), height: z.number().min(1).max(100).default(15) })).min(2).max(8).optional(),
+  correctRegion: z.number().int().min(1).max(8).optional(),
 });
 export type Practice = z.infer<typeof practiceSchema>;
 
@@ -30,6 +34,8 @@ export const colourPalette: Record<string, string> = {
 };
 
 export function publicPractice(practice: Practice) {
-  const { version, mode, maxPlays, stimulus, transcript, showTranscript } = practice;
-  return { version, mode, maxPlays, stimulus, transcript: showTranscript && mode === "dialogue" ? transcript : undefined };
+  const { version, mode, maxPlays, stimulus, transcript, showTranscript, pictureChoices, regions } = practice;
+  return { version, mode, maxPlays, stimulus, pictureChoices, regions, transcript: showTranscript && mode === "dialogue" ? transcript : undefined };
 }
+
+export const pictureToken = (index: number) => `image-${index + 1}`;

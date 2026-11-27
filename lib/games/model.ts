@@ -11,7 +11,7 @@ export const mediaPath = z.string().regex(/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(png|j
 const imagePath = mediaPath.refine(path => /\.(png|jpg|webp)$/.test(path));
 const audioPath = mediaPath.refine(path => /\.(mp3|wav|ogg)$/.test(path));
 export const sampleAudioPath = z.string().regex(/^\/audio\/vocabulary\/[a-z]+-(uk|us)\.wav$/);
-export const sampleImagePath = z.string().regex(/^\/illustrations\/(puzzles\/(classroom|book|pencil|bag)\.webp|practice\/book\.png)$/);
+export const sampleImagePath = z.string().regex(/^\/illustrations\/(puzzles\/(classroom|book|pencil|bag)\.webp|practice\/(book\.png|[a-f0-9]{12}\.webp))$/);
 const mediaSchema = z.object({ image: z.union([imagePath, sampleImagePath]).optional(), audio: z.union([audioPath, samplePracticeAudio]).optional() });
 const englishSchema = z.object({
   level: z.enum(levels).optional(),

@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { practiceSample } from "../../lib/practice-samples";
-import type { PracticeMode } from "../../lib/games/practice";
+import { isPhonics, practiceModeSchema } from "../../lib/games/practice";
 
 test.use({ trace: "off" });
-for (const mode of ["listen", "listen-match", "colour", "dialogue", "dictation", "rhymes"] as PracticeMode[]) {
+for (const mode of practiceModeSchema.options) {
   test(mode + " audio practice saves a server result on QuizStudy", async ({ page, browser }, info) => {
     const email = process.env.E2E_TEACHER_EMAIL;
     const password = process.env.E2E_TEACHER_PASSWORD;
@@ -17,11 +17,12 @@ for (const mode of ["listen", "listen-match", "colour", "dialogue", "dictation",
     await expect(page.getByRole("heading", { name: "Hoạt động của tôi" })).toBeVisible({ timeout: 45000 });
     await page.goto("/activities/new?practice=" + mode);
     await page.getByLabel("Tên hoạt động").fill("[TEST B1] " + mode);
-    await page.getByLabel("Số lượt nghe tối đa (0 là không giới hạn)").fill("1");
-    if (mode === "rhymes") {
+    await page.getByLabel("Số lượt nghe tối đa (0 là không giới hạn)").first().fill("1");
+    if (isPhonics(mode)) {
       await page.getByRole("button", { name: "Xuất bản", exact: true }).click();
       await expect(page.getByRole("alert").filter({ hasText: "Kiểm tra clip" })).toBeVisible();
       await page.getByText("Học liệu tiếng Anh và tệp", { exact: true }).click();
+      // This fixture verifies upload, author confirmation, playback and score persistence.
       await page.getByLabel("Âm thanh câu hỏi", { exact: true }).setInputFiles("public/audio/vocabulary/cat-us.wav");
       await expect(page.locator('audio[aria-label="Âm thanh câu hỏi"]')).toBeVisible();
       await page.getByRole("checkbox", { name: /đã nghe và kiểm tra/ }).check();
@@ -73,9 +74,18 @@ for (const mode of ["listen", "listen-match", "colour", "dialogue", "dictation",
       await expect(student.getByRole("button", { name: "Nghe lại", exact: true })).toBeDisabled({ timeout: 18000 });
       expect(await student.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
       if (mode === "dictation") await student.getByRole("textbox", { name: "Câu trả lời" }).fill("I have two red cups");
-      else await student.getByRole("button", { name: mode === "dialogue" ? "Soup" : sample.answers[0], exact: true }).click();
+      else if (mode === "listen") {
+        const picture = student.locator(".options .option").filter({ has: student.locator('img[src$="4b1c28ffa960.webp"]') });
+        await picture.click();
+        await expect(student.getByRole("button", { name: "apple", exact: true })).toHaveCount(0);
+      } else if (mode === "listen-match") {
+        await student.getByRole("button", { name: "kite", exact: true }).click();
+        await student.getByRole("button", { name: "Clip 2", exact: true }).click();
+        await expect(student.getByRole("button", { name: "kite", exact: true })).toBeDisabled();
+        await student.getByRole("button", { name: "apple", exact: true }).click();
+      } else await student.getByRole("button", { name: mode === "dialogue" ? "Soup" : sample.answers[0], exact: true }).click();
       await student.getByRole("button", { name: "Hoàn thành", exact: true }).click();
-      const score = mode === "dialogue" ? "0/1" : "1/1";
+      const score = mode === "dialogue" ? "0/1" : mode === "listen-match" ? "2/2" : "1/1";
       await expect(student.getByText(score + " điểm", { exact: true })).toBeVisible({ timeout: 30000 });
       await page.reload();
       await expect(page.getByRole("row").filter({ hasText: "Kiểm thử B1" })).toContainText(score);

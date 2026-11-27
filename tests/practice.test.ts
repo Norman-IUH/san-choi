@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { expect, test } from "vitest";
 import { contentSchema, grade, makePlayItems } from "../lib/game";
 import { practiceSample } from "../lib/practice-samples";
-import { isPhonics, practiceModeSchema, practiceTemplate } from "../lib/games/practice";
+import { isPhonics, pictureToken, practiceModeSchema, practiceTemplate } from "../lib/games/practice";
 import { builtInMediaUrls } from "../lib/media";
 import { vocabularyCatalog } from "../lib/vocabulary-catalog";
 
@@ -15,7 +15,8 @@ test("listening modes use real assets and hide keys and transcripts from student
     expect(view).not.toHaveProperty("answers");
     expect(view).not.toHaveProperty("alternatives");
     expect(view.practice?.transcript).toBeUndefined();
-    expect(grade(template, [item], [[item.answers[0]]]).score).toBe(1);
+    const answer = item.practice?.pictureChoices ? pictureToken(item.options.indexOf(item.answers[0])) : item.answers[0];
+    expect(grade(template, [item], [[answer]]).score).toBe(1);
     expect(grade(template, [item], [[]]).score).toBe(0);
     expect(grade(template, [item], [["Wrong"]]).score).toBe(0);
     for (const path of Object.values(builtInMediaUrls([item]))) expect(existsSync("public" + path)).toBe(true);
@@ -25,6 +26,23 @@ test("listening modes use real assets and hide keys and transcripts from student
   expect(JSON.stringify(makePlayItems("type-answer", [dictation]))).not.toContain(dictation.answers[0]);
   dictation.practice!.stimulus = dictation.alternatives![0];
   expect(contentSchema("type-answer").safeParse([dictation]).success).toBe(false);
+});
+
+test("picture responses use neutral tokens and colour needs both the region and colour", () => {
+  const picture = practiceSample("listen").item;
+  const view = makePlayItems("quiz", [picture])[0];
+  expect(view.options).toEqual(expect.arrayContaining(["image-1", "image-2", "image-3"]));
+  expect(JSON.stringify(view)).not.toMatch(/apple|ruler|book/);
+  expect(grade("quiz", [picture], [["apple"]]).score).toBe(0);
+  const colour = practiceSample("colour").item;
+  Object.assign(colour.practice!, { regions: [{ x: 25, y: 25, width: 15, height: 15 }, { x: 75, y: 75, width: 15, height: 15 }], correctRegion: 2 });
+  expect(contentSchema("quiz").safeParse([colour]).success).toBe(true);
+  expect(makePlayItems("quiz", [colour])[0].practice).not.toHaveProperty("correctRegion");
+  expect(grade("quiz", [colour], [["blue", "Vùng 1"]]).score).toBe(0);
+  expect(grade("quiz", [colour], [["blue", "Vùng 2"]]).score).toBe(1);
+  const matching = practiceSample("listen-match").items;
+  expect(contentSchema("quiz").safeParse(matching).success).toBe(true);
+  expect(grade("quiz", matching, [["kite"], ["apple"]]).score).toBe(2);
 });
 
 test("phonics requires a teacher-reviewed clip and the only opt-in transcript is dialogue", () => {

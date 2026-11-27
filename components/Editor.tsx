@@ -133,6 +133,27 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
         <strong>{practiceModes[item.practice.mode]}</strong>
         <label>Hướng dẫn hoặc ngữ cảnh hiển thị<textarea {...register(`content.${i}.practice.stimulus`)} maxLength={1000}/></label>
         <label>Số lượt nghe tối đa (0 là không giới hạn)<input type="number" min={0} max={10} {...register(`content.${i}.practice.maxPlays`, { valueAsNumber: true })}/></label>
+        <p className="hint">Giới hạn lượt nghe áp dụng trong phiên của tab trình duyệt.</p>
+        {item.practice.mode === "listen" && <label className="check"><input type="checkbox" {...register(`content.${i}.practice.pictureChoices`)}/> Chỉ hiển thị ảnh phương án</label>}
+        {item.practice.mode === "listen-match" && <p className="hint">Dùng cùng một bộ phương án cho 2–8 clip và đặt một đáp án riêng cho mỗi clip.</p>}
+        {item.practice.mode === "colour" && <details><summary>Vùng tô trên ảnh</summary><div className="stack">
+          <p>Mỗi vùng là một hình bầu dục. Nhập tâm, chiều rộng và chiều cao theo phần trăm ảnh.</p>
+          {item.practice.regions?.map((_, region) => <fieldset className="form-grid" key={region}><legend>Vùng {region + 1}</legend>
+            {([ ["x", "Tâm ngang"], ["y", "Tâm dọc"], ["width", "Rộng"], ["height", "Cao"] ] as const).map(([axis, label]) =>
+              <label key={axis}>{label}<input type="number" min={axis.length === 1 ? 0 : 1} max={100}
+                {...register(`content.${i}.practice.regions.${region}.${axis}`, { valueAsNumber: true })}/></label>)}</fieldset>)}
+          {item.practice.regions && <label>Vùng đúng<input type="number" min={1} max={item.practice.regions.length}
+            {...register(`content.${i}.practice.correctRegion`, { valueAsNumber: true })}/></label>}
+          <div className="inline-actions"><button type="button" className="button" disabled={(item.practice.regions?.length ?? 0) >= 8}
+            onClick={() => {
+              const region = { x: 35, y: 50, width: 20, height: 25 };
+              setValue(`content.${i}.practice.regions`, item.practice?.regions ? [...item.practice.regions, { ...region, x: 65 }] : [region, { ...region, x: 65 }]);
+              if (!item.practice?.regions) setValue(`content.${i}.practice.correctRegion`, 1);
+            }}>Thêm vùng</button>
+            {item.practice.regions && <button className="button" type="button" onClick={() => {
+              setValue(`content.${i}.practice.regions`, undefined); setValue(`content.${i}.practice.correctRegion`, undefined);
+            }}>Bỏ các vùng</button>}</div>
+        </div></details>}
         {item.practice.mode === "dialogue" && <>
           <label>Transcript<textarea {...register(`content.${i}.practice.transcript`)} maxLength={1000}/></label>
           <label className="check"><input type="checkbox" {...register(`content.${i}.practice.showTranscript`)}/> Hiện transcript cho học sinh</label>

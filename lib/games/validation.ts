@@ -20,6 +20,14 @@ export function contentSchema(template: Template, draft = false) {
       new Set(items.map(item => normalize(item.answers[0] ?? ""))).size !== items.length)) {
       context.addIssue({ code: "custom", message: "Cần 2–12 cặp có mặt sau khác nhau." });
     }
+    const matching = items.filter(item => item.practice?.mode === "listen-match");
+    if (matching.length > 1 && (matching.length !== items.length || matching.length > 8 ||
+      new Set(matching.map(item => normalize(item.answers[0] ?? ""))).size !== matching.length ||
+      matching.some(item => item.practice?.pictureChoices || item.options.length !== matching[0].options.length ||
+        !matching[0].options.every(option => item.options.includes(option)) || matching.some(row =>
+          !item.options.some(option => normalize(option) === normalize(row.answers[0] ?? "")))))) {
+      context.addIssue({ code: "custom", message: "Bảng ghép cần 2–8 clip, mỗi clip có đáp án riêng và chọn từ cùng bộ thẻ." });
+    }
     items.forEach(({ answers, options, prompt, alternatives, optionMedia, media, pin, secondary, math, arcade, practice }, index) => {
       const unique = new Set(options.map(normalize));
       const exposesDictation = practice?.mode === "dictation" && [...answers, ...(alternatives ?? [])]
@@ -28,7 +36,9 @@ export function contentSchema(template: Template, draft = false) {
         (isPhonics(practice.mode) && (!practice.reviewedAudio || samplePracticeAudio.safeParse(media.audio).success)) ||
         (practice.mode === "colour" && (!media.image || options.some(option => !Object.hasOwn(colourPalette, normalize(option))))) ||
         (practice.showTranscript && (practice.mode !== "dialogue" || !practice.transcript)) ||
-        exposesDictation)) {
+        (practice.regions && (practice.mode !== "colour" || !practice.correctRegion || practice.correctRegion > practice.regions.length ||
+          new Set(practice.regions.map(({ x, y }) => `${x},${y}`)).size !== practice.regions.length)) ||
+        (practice.correctRegion && !practice.regions) || exposesDictation)) {
         context.addIssue({ code: "custom", path: [index], message: `Kiểm tra clip, đáp án và tùy chọn của bài luyện mục ${index + 1}.` });
       }
       const valid = template === "maths-generator"
@@ -41,8 +51,9 @@ export function contentSchema(template: Template, draft = false) {
           : kind === "sequence" ? answers.length >= 2
           : answers.length === 1 && (kind !== "word" || /^[\p{L}\p{M}]{2,20}$/u.test(answers[0]))
             && (kind !== "blank" || prompt.includes("___")));
-      const requiresPicture = template === "image-quiz" && options.some(option =>
-        !optionMedia?.some(entry => entry.image && normalize(entry.option) === normalize(option)));
+      const requiresPicture = (template === "image-quiz" || practice?.pictureChoices) && options.some(option =>
+        !optionMedia?.some(entry => entry.image && normalize(entry.option) === normalize(option) &&
+          (!practice?.pictureChoices || !entry.image.startsWith("/") || /^\/illustrations\/practice\/[a-f0-9]{12}\.webp$/.test(entry.image))));
       const invalidDiagram = template === "labelled-diagram" && (!pin || !media?.image || answers.length !== 1);
       const invalidPair = template === "pair-or-no-pair" && (!secondary || answers.length !== 1 || options.length !== 2 ||
         !pairOptions.every(option => unique.has(normalize(option))));

@@ -12,12 +12,12 @@ export default async function Create({ searchParams }: { searchParams: Promise<{
   const { template, practice } = await searchParams;
   const mode = practiceModeSchema.safeParse(practice);
   if (mode.success) {
-    const { title, item } = practiceSample(mode.data);
+    const { title, item, items } = practiceSample(mode.data);
     return <div className="narrow wide stack"><Link className="back" href="/activities/new#english-practice">← Chọn bài luyện</Link>
       <h1 lang="en">{title}</h1>
       {isPhonics(mode.data) && <p className="notice">Đính kèm clip đã kiểm tra. Dùng âm của chữ cái, âm đầu hoặc âm cuối theo câu hỏi.</p>}
-      <Editor id={null} template={practiceTemplate(mode.data)} practiceMode={mode.data} content={[item]}
-        assets={builtInMediaUrls([item])} initial={{ title, subject: "English", description: "", grade: item.english!.level!,
+      <Editor id={null} template={practiceTemplate(mode.data)} practiceMode={mode.data} content={items}
+        assets={builtInMediaUrls(items)} initial={{ title, subject: "English", description: "", grade: item.english!.level!,
           tags: item.english!.skill!, visibility: "private" }}/></div>;
   }
   return <div className={template ? "narrow wide" : "page"}><Link className="back" href="/activities">← Hoạt động của tôi</Link>

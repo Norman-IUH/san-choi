@@ -22,12 +22,22 @@ export function practiceSample(mode: PracticeMode) {
   const item: Item = {
     version: 2, prompt, answers: [answer], options: distractors.length ? [answer, ...distractors] : [],
     ...(mode === "dictation" ? { alternatives: ["I have two red cups"] } : {}),
+    ...(mode === "listen" ? { optionMedia: [
+      { option: "apple", image: "/illustrations/practice/4b1c28ffa960.webp" },
+      { option: "book", image: "/illustrations/practice/7350d77ab6ed.webp" },
+      { option: "ruler", image: "/illustrations/practice/0ea031c679b5.webp" },
+    ] } : {}),
     english: { level: mode === "dialogue" ? levels[2] : levels[0], skill: phonics ? "Phonics" : "Listening" },
     media: { audio: clip ? `/audio/practice/${clip}.wav` : undefined, image: mode === "colour" ? "/illustrations/practice/book.png" : undefined },
     practice: {
       version: 1, mode, maxPlays: 0, showTranscript: false, reviewedAudio: false,
+      ...(mode === "listen" && { pictureChoices: true }),
       ...(mode === "dialogue" ? { transcript: "Mia: What do you want for lunch, Eli? Eli: A cheese sandwich, please. Mia: Would you like some water? Eli: Yes, please." } : {}),
     },
   };
-  return { title: practiceModes[mode], item };
+  const items = mode === "listen-match" ? [
+    { ...item, prompt: "Nghe clip và ghép với thẻ đúng.", options: ["apple", "kite"] },
+    { ...item, prompt: "Nghe clip và ghép với thẻ đúng.", answers: ["apple"], options: ["apple", "kite"], media: { audio: "/audio/practice/aa1000000001.wav" } },
+  ] : [item];
+  return { title: practiceModes[mode], item, items };
 }
