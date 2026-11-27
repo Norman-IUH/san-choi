@@ -9,7 +9,7 @@ export default function Samples() {
     <p className="muted">Chọn cấp độ để chơi thử hoặc đưa bộ từ vựng vào thư viện cá nhân.</p>
     <section className="panel section-head">
       <div><h2>Cambridge Pre A1 Starters</h2><p>13 phần luyện tập và ba bài thi thử theo cấu trúc Paper-based.</p></div>
-      <Link className="button primary" href="/samples/starters">Mở bộ luyện Starters</Link>
+      <Link className="button primary" href="/samples/cambridge-starters">Mở bộ luyện Starters</Link>
     </section>
     <div className="template-grid">{deckIds.map(id => {
       const deck = englishDecks[id];

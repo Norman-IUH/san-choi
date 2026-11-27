@@ -14,9 +14,9 @@ export default function Starters() {
     <div className="starter-paper-grid">{starterPaperSchema.options.map(paper => <section className="panel stack" key={paper}>
       <h2 lang="en">{starterPapers[paper]}</h2>
       <ol>{starterPartNames[paper].map((label, i) => <li key={label}>
-        <Link href={`/samples/starters/${paper}?part=${i + 1}`}>Part {i + 1} · {label}</Link>
+        <Link href={`/samples/cambridge-starters/${paper}?part=${i + 1}`}>Part {i + 1} · {label}</Link>
       </li>)}</ol>
-      <Link className="button primary" href={`/samples/starters/${paper}`}>Thi thử · {starterSeconds[paper] / 60} phút</Link>
+      <Link className="button primary" href={`/samples/cambridge-starters/${paper}`}>Thi thử · {starterSeconds[paper] / 60} phút</Link>
     </section>)}</div>
     <p className="hint">Học liệu do Sân Chơi biên soạn. Điểm luyện tập được tính theo số câu đúng. Speaking dùng nhận xét của giáo viên.</p>
   </div>;

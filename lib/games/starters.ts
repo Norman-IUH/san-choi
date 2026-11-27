@@ -15,10 +15,11 @@ export const starterConfig = z.object({
   scene: starterImage.optional(), passage: z.string().max(1400).optional(), letters: z.string().max(16).optional(),
   cards: z.array(z.object({ value: z.string().max(30), image: starterImage })).max(8).optional(),
   targets: z.array(z.object({ id: z.string().max(12), x: z.number().min(0).max(100), y: z.number().min(0).max(100) })).max(8).optional(),
-  guide: z.string().trim().max(1200).optional(), teacher: z.string().trim().max(1200).optional(),
+  example: z.string().trim().max(350).optional(), guide: z.string().trim().max(1200).optional(),
+  teacher: z.string().trim().max(1200).optional(),
 });
 export const starterSeconds: Record<StarterPaper, number> = { listening: 1200, reading: 1200, speaking: 300 };
 export function starterProjection(config: z.infer<typeof starterConfig>) {
-  const { paper, part, mock, scene, passage, letters, cards, targets, guide } = config;
-  return { paper, part, mock, scene, passage, letters, cards, targets, guide: mock ? undefined : guide };
+  const { paper, part, mock, scene, passage, letters, cards, targets, example, guide } = config;
+  return { paper, part, mock, scene, passage, letters, cards, targets, example, guide: mock ? undefined : guide };
 }

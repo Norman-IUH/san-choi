@@ -6,7 +6,7 @@ const image = (id: string) => `/illustrations/starters/${id}.webp`;
 const cards = (values: string[], labels = values) => values.map((value, index) => ({ value: labels[index], image: image(value) }));
 const points = (locations: number[][]) => locations.map(([x, y], i) => ({ id: String(i + 1), x, y }));
 const park = image("park");
-const people = points([[14, 54], [29, 58], [45, 52], [61, 61], [76, 55], [89, 57]]);
+const people = points([[14, 76], [29, 80], [45, 74], [61, 83], [76, 77], [89, 79]]);
 const balls = points([[14, 46], [31, 41], [47, 55], [62, 36], [76, 56], [87, 39], [36, 75]]);
 type Config = NonNullable<NonNullable<Item["practice"]>["starters"]>;
 type Question = [prompt: string, answer?: string, config?: Partial<Config>, audio?: string];
@@ -30,7 +30,7 @@ const nouns = cards(["water", "bread", "ducks", "grass", "eggs", "book", "train"
 const facts = "Ducks\n\nYou can see ducks on a farm. Some ducks swim in (1) ___. At home, people eat (2) ___ for breakfast, but ducks can eat small plants. Baby (3) ___ can walk soon after they hatch. Ducks can walk on (4) ___ beside a pond. A mother duck lays (5) ___ in a nest.";
 const examples = {
   listening: ["Ví dụ: nghe ‘Alex is on the bike’ rồi nối Alex với người đi xe.", "Ví dụ: nghe ‘It's Ann. A. N. N.’ rồi viết Ann.", "Ví dụ: nếu em nghe ‘a pen’, chọn tranh vẽ một chiếc bút.", "Ví dụ: nghe ‘Colour the biggest ball pink’ rồi chọn quả bóng lớn nhất và màu hồng."],
-  reading: ["Ví dụ: thấy hình cái bút và câu ‘This is a pencil.’ thì chọn dấu ✓.", "Ví dụ: thấy một cái cây và đọc ‘There is a tree.’ thì viết yes.", "Ví dụ: hình cái bút với ba chữ n, p, e có đáp án pen.", "Tìm từ trong khung từ. Ví dụ trong câu ‘Cats drink ___.’, water hợp nghĩa.", "Ví dụ: thấy một chiếc mũ ở trên bàn thì điền table vào câu ‘It's on the ___.’"],
+  reading: ["Ví dụ: thấy hình cái bút và câu ‘This is a pencil.’ thì chọn dấu ✓.", "Ví dụ: thấy một cái cây và đọc ‘There is a tree.’ thì viết yes.", "Ví dụ: hình cái bút với ba chữ n, p, e có đáp án pen.", "Tìm từ trong khung từ. Ví dụ trong câu ‘I wear a ___ on my head.’, cap hợp nghĩa.", "Ví dụ: thấy một chiếc mũ ở trên bàn thì điền table vào câu ‘It's on the ___.’"],
   speaking: [],
 };
 const reading: Question[][] = [
@@ -66,13 +66,13 @@ export function starterPaper(paper: StarterPaper, part?: number) {
   const rows = { listening, reading, speaking }[paper];
   const mock = part === undefined;
   const indices = mock ? rows.map((_, index) => index) : [part - 1];
-  if (indices.some(index => !rows[index])) return null;
+  if (indices.some(index => !Number.isInteger(index) || !rows[index])) return null;
   const template: Template = paper === "speaking" ? "speaking" : "type-answer";
   const items: Item[] = indices.flatMap(index => rows[index].map(([prompt, answer, config, audio], question) => ({
     version: 2, prompt, answers: answer ? [answer] : [], options: [], english: { level: "Pre A1 Starters", skill: paper === "speaking" ? "Speaking" : paper === "listening" ? "Listening" : "Reading" },
     media: audio ? { audio: `/audio/starters/${audio}.wav` } : undefined,
     practice: { version: 1, mode: "starters", maxPlays: 0, showTranscript: false, reviewedAudio: false,
-      starters: { paper, part: index + 1, mock, guide: examples[paper][index], ...config },
+      starters: { paper, part: index + 1, mock, example: examples[paper][index], ...config },
       ...(paper === "speaking" && index === indices[0] && question === 0 ? { production: { objective: false, limit: 240,
         preparation: 0, duration: 0, rubric: defaultRubric("Speaking") } } : {}) },
   })));

@@ -263,7 +263,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
           <label>IPA<input {...register(`content.${i}.english.ipa`)} maxLength={100}/></label></div>
         <label>Câu ví dụ<textarea {...register(`content.${i}.english.example`)} maxLength={400}/></label>
         <label>Giải thích đáp án<textarea {...register(`content.${i}.explanation`)} maxLength={800}/></label>
-        <div className="form-grid">
+        {!starters && <div className="form-grid">
           {(["image", "audio"] as const).map(kind => {
             const path = item?.media?.[kind];
             return <MediaInput key={kind} label={kind === "image" ? "Ảnh câu hỏi" : "Âm thanh câu hỏi"} kind={kind}
@@ -278,7 +278,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
                 remember(path, url); setValue(`content.${i}.english.${accent}`, path);
               }}/>;
           })}
-        </div>
+        </div>}
         {kind === "choice" && options.slice(0, 8).map(option => <details key={option} className="lesson-details"><summary>Tệp cho phương án {option}</summary>
           <div className="form-grid">{(["image", "audio"] as const).filter(kind => !item?.practice?.pictureChoices || kind === "image").map(kind => {
             const path = item?.optionMedia?.find(media => media.option === option)?.[kind];

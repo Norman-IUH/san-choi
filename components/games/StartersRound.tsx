@@ -8,7 +8,7 @@ import type { RoundProps } from "./LegacyRound";
 export default function StartersRound({ items, index, turn, answers, assets, setAnswers, next, busy, bindFocus }: RoundProps) {
   const item = items[index];
   const config = item.practice!.starters!;
-  const { paper, part, scene, cards, targets, letters, passage, guide } = config;
+  const { paper, part, scene, cards, targets, letters, passage, guide, example } = config;
   const match = paper === "listening" && part === 1;
   const paint = paper === "listening" && part === 4;
   const speaking = paper === "speaking";
@@ -33,7 +33,9 @@ export default function StartersRound({ items, index, turn, answers, assets, set
       <p className="starter-label" lang="vi">Part {part} · {heading}</p>
       <h2 ref={bindFocus} tabIndex={-1}>{item.prompt}</h2>
     </div>
-    {guide && <details className="starter-guide" lang="vi"><summary>Gợi ý luyện tập</summary><p>{guide}</p></details>}
+    {(guide || example) && <details className="starter-guide" lang="vi">
+      <summary>{config.mock ? "Ví dụ mẫu" : "Gợi ý luyện tập"}</summary><p>{guide ?? example}</p>
+    </details>}
     {speaking && <p className="starter-guide" lang="vi">Làm phần này cùng giáo viên. Em có thể trả lời trực tiếp bằng lời.</p>}
     {passage && <div className="starter-passage">{passage}</div>}
     {scene && (targets ? <div className="starter-scene">
@@ -67,27 +69,29 @@ export default function StartersRound({ items, index, turn, answers, assets, set
         if (target) pick(target + ":" + colour);
       }}><span className="starter-swatch" aria-hidden="true" style={{ backgroundColor: colourPalette[colour] }}/>{colour}</button>)}
     </div>}
-    {cards && <div className="starter-cards">
-      {cards.map(entry => <div key={entry.value} className="starter-card">
-        <LessonMedia media={{ image: entry.image }} assets={assets} label={speaking ? entry.value : "Picture " + entry.value}/>
-        {(!speaking || part === 1) && <button type="button" aria-pressed={(speaking ? card : value) === entry.value} onClick={() => {
+    {cards && <div className={cards.length === 3 ? "starter-cards starter-three" : "starter-cards"}>
+      {cards.map(entry => {
+        const picture = <LessonMedia media={{ image: entry.image }} assets={assets} label={speaking ? entry.value : ""}/>;
+        return speaking && part !== 1 ? <div key={entry.value} className="starter-card">{picture}</div> :
+          <button key={entry.value} type="button" className="starter-card" aria-label={entry.value}
+            aria-pressed={(speaking ? card : value) === entry.value} onClick={() => {
           if (speaking) setCard(entry.value);
           else pick(entry.value);
-        }}>{entry.value}</button>}
-      </div>)}
+        }}>{picture}<span>{entry.value}</span></button>;
+      })}
     </div>}
     {tick && <div className="starter-buttons">
       <button type="button" aria-pressed={value === "tick"} onClick={() => pick("tick")}>✓ Tick</button>
       <button type="button" aria-pressed={value === "cross"} onClick={() => pick("cross")}>✗ Cross</button>
     </div>}
-    {letters && <div className="starter-buttons" aria-label="Letter tiles">
+    {letters && <div className="starter-buttons" aria-label={`Letter tiles, ${letters.length} letters`}>
       {[...letters].map((letter, n) => <button key={n} type="button"
         disabled={[...letters.slice(0, n + 1)].filter(tile => tile === letter).length <= [...value].filter(tile => tile === letter).length}
         onClick={() => pick(value + letter)}>{letter}</button>)}
       <button type="button" disabled={!value} onClick={() => pick(value.slice(0, -1))}>⌫</button>
     </div>}
     {typed && <label className="starter-answer">Your answer
-      <input value={value} onChange={event => pick(event.target.value)} autoComplete="off" autoCorrect="off"
+      <input value={value} onChange={event => pick(event.target.value)} placeholder={letters && "– ".repeat(letters.length).trim()} autoComplete="off" autoCorrect="off"
         autoCapitalize="off" spellCheck={false} maxLength={40}/>
     </label>}
     <button className="button primary" lang="vi" disabled={busy}>{turn + 1 === items.length ? "Nộp bài" : "Tiếp theo"}</button>

@@ -1,5 +1,18 @@
 # Ma trận tính năng
 
+## Cambridge Starters · V1.5C1
+
+| Phạm vi | Luồng thực hiện | Cách chấm |
+|---|---|---|
+| Listening · 4 Part, 20 câu | Nối tên, nghe viết, chọn hình, tô màu | 1 điểm mỗi câu |
+| Reading & Writing · 5 Part, 25 câu | Tick/cross, yes/no, xếp chữ, điền đoạn đọc, viết từ theo truyện | 1 điểm mỗi câu |
+| Speaking · 4 Part | Làm trực tiếp với giáo viên, chấm trong lớp hoặc nhận bài qua link | Rubric và nhận xét do giáo viên công bố |
+| Practice Mode | Chọn từng Part, xem ví dụ, luyện không giới hạn thời gian | Mẫu công khai phản hồi sau mỗi câu và tổng kết |
+| Mock Test Mode | Thi theo từng kỹ năng, đồng hồ, sửa câu trước và tối đa hai lượt bắt đầu phát mỗi clip | Chấm khi nộp. Giáo viên chọn quyền xem trên bài giao |
+| Nhập bộ đề và giao bài | Học liệu mẫu → lưu riêng tư → tạo link → xem kết quả và CSV | Snapshot và quyền giáo viên hiện có |
+
+[Đối chiếu từng Part và hướng dẫn sử dụng](STARTERS.md).
+
 | Tính năng | Màn hình | Vai trò | Ưu tiên | Nguồn xác minh | Độ khó | Phase / nghiệm thu |
 |---|---|---|---|---|---|---|
 | Landing, mẫu chơi | Trang chủ, player | Mọi người | P0 | Quan sát trang công khai | Vừa | 1–3 / browser |

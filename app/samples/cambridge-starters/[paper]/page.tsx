@@ -17,7 +17,7 @@ export default async function StarterPaper({ params, searchParams }: {
   const sample = starterPaper(result.data, number);
   if (!sample) notFound();
   return <div className="immersive-page stack">
-    <Player {...localPlay(sample.template, sample.items)} title={sample.title} description={number ? sample.label : undefined} backHref="/samples/starters"/>
+    <Player {...localPlay(sample.template, sample.items)} title={sample.title} description={number ? sample.label : undefined} backHref="/samples/cambridge-starters"/>
     <form className="starter-import" action={importStarter.bind(null, paper, number)}>
       <button className="button">Lưu vào thư viện giáo viên</button>
     </form>
