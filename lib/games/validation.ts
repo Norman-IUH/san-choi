@@ -8,11 +8,39 @@ import { pairOptions } from "./puzzle-templates";
 import { doubleMarker } from "./scoring";
 import { colourPalette, grammarTemplates, isAudioPractice, isPhonics, isReading, practiceTemplate, samplePracticeAudio } from "./practice";
 import { isProductive, isSpeaking } from "./productive";
+import { cambridgeCounts, starterAudio } from "./starters";
 
 export function contentSchema(template: Template, draft = false) {
   return z.array(itemSchema).min(draft ? 0 : 1).max(60).superRefine((items, context) => {
     if (draft) return;
     const kind = templates[template].kind;
+    const starters = items[0]?.practice?.starters;
+    if (items.some(item => item.practice?.mode === "starters")) {
+      const speaking = starters?.paper === "speaking";
+      const layout = starters ? cambridgeCounts(starters).flatMap((count, i) => starters.mock || starters.part === i + 1
+        ? Array.from({ length: count }, (_, offset) => ({ part: i + 1, offset })) : []) : [];
+      const writingPart = starters?.level === "flyers" ? 7 : starters?.level === "movers" ? 6 : null;
+      const writing = writingPart !== null && starters?.paper === "reading" && (starters.mock || starters.part === writingPart);
+      const rubric = items[0]?.practice?.production?.rubric;
+      if (!starters || items.length !== layout.length || template !== (speaking ? "speaking" : "type-answer") ||
+        Boolean(rubric) !== Boolean(speaking || writing) || (rubric && items[0].practice?.production?.objective) ||
+        (writing && starters.level === "movers" && (rubric?.length !== 2 || rubric.some(row => row.max !== 1))) || items.some((item, index) => {
+          const config = item.practice?.starters;
+          const expected = layout[index];
+          const open = Boolean(writing && expected.part === writingPart && (writingPart === 7 || expected.offset >= 4));
+          const collection = starters.level ?? "starters";
+          return item.practice?.mode !== "starters" || !config || config.paper !== starters.paper || config.mock !== starters.mock ||
+            config.level !== starters.level || config.part !== expected.part || Boolean(config.open) !== open ||
+            (index > 0 && Boolean(item.practice.production?.rubric)) || item.answers.length !== (speaking || open ? 0 : 1) ||
+            (config.choices && (new Set(config.choices.map(normalize)).size !== 3 ||
+              !config.choices.some(choice => normalize(choice) === normalize(item.answers[0] ?? "")))) ||
+            (config.wordBank && !config.wordBank.some(word => normalize(word) === normalize(item.answers[0] ?? ""))) ||
+            (config.responses && !/^[A-H]$/.test(item.answers[0] ?? "")) ||
+            ((speaking || open) && !!item.alternatives?.length) || (config.paper === "listening" &&
+              (!starterAudio.safeParse(item.media?.audio).success || !item.media?.audio?.startsWith(`/audio/${collection}/`)));
+        })) context.addIssue({ code: "custom", message: "Kiểm tra cấu trúc đề Cambridge và học liệu từng phần." });
+      return;
+    }
     const englishPuzzle = template === "wordsearch" || template === "spell-word" || template === "hangman" || template === "crossword";
     if (template === "crossword" && (items.length > 10 || !buildCrossword(items.map(item => item.answers[0] ?? "")))) {
       context.addIssue({ code: "custom", message: "Ô chữ cần 2–10 từ nối được với nhau theo thứ tự nhập." });

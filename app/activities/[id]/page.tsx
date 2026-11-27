@@ -45,6 +45,13 @@ export default async function Activity({ params, searchParams }: {
       subject: activity.subject, grade: activity.grade, tags: activity.tags, visibility: activity.visibility }} content={content} assets={assets}/>
     : <div className="stack">
       {contentSchema(template).safeParse(content).success && <Player key={preview ?? template} title={activity.title} mediaScope={{ source: "activity", id }} {...localPlay(preview ?? template, content, assets)}/>}
+      {content.some(item => item.practice?.starters?.teacher) && <details className="panel">
+        <summary>Hướng dẫn Speaking dành cho giáo viên</summary>
+        <ol>{content.map(item => item.practice?.starters?.teacher && <li key={item.practice.starters.part} lang="en">
+          <strong>Part {item.practice.starters.part}. </strong>{item.practice.starters.teacher}
+        </li>)}</ol>
+        <p>Dùng rubric Speaking và công bố nhận xét qua mục Kết quả.</p>
+      </details>}
       {preview && <form action={changeActivity.bind(null, id, "switch")}><input type="hidden" name="template" value={preview}/><button className="button primary">Lưu bản sao dùng mẫu {templates[preview].title}</button></form>}
       <section className="panel stack"><h2>Quản lý hoạt động</h2>
         <div className="inline-actions">

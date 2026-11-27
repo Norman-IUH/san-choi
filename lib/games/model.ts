@@ -3,6 +3,7 @@ import { difficultyLevels } from "./arcade-templates";
 import { mathOperations } from "./puzzle-templates";
 import type { WordSlot } from "./word-puzzles";
 import { practiceSchema, samplePracticeAudio, type publicPractice } from "./practice";
+import { starterAudio, starterImage } from "./starters";
 
 const text = z.string().trim().min(1).max(400);
 export const levels = ["Kids", "Pre A1 Starters", "A1 Movers", "A2 Flyers"] as const;
@@ -12,7 +13,7 @@ const imagePath = mediaPath.refine(path => /\.(png|jpg|webp)$/.test(path));
 const audioPath = mediaPath.refine(path => /\.(mp3|wav|ogg)$/.test(path));
 export const sampleAudioPath = z.string().regex(/^\/audio\/vocabulary\/[a-z]+-(uk|us)\.wav$/);
 export const sampleImagePath = z.string().regex(/^\/illustrations\/(puzzles\/(classroom|book|pencil|bag)\.webp|practice\/(book\.png|[a-f0-9]{12}\.webp))$/);
-const mediaSchema = z.object({ image: z.union([imagePath, sampleImagePath]).optional(), audio: z.union([audioPath, samplePracticeAudio]).optional() });
+const mediaSchema = z.object({ image: z.union([imagePath, sampleImagePath, starterImage]).optional(), audio: z.union([audioPath, samplePracticeAudio, starterAudio]).optional() });
 const englishSchema = z.object({
   level: z.enum(levels).optional(),
   skill: z.enum(skills).optional(),

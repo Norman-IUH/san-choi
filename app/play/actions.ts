@@ -1,4 +1,5 @@
 "use server";
+import { cambridgeResponseLimit } from "@/lib/games/starters";
 import { createHash } from "node:crypto";
 import { cookies } from "next/headers";
 import { z } from "zod";
@@ -75,10 +76,26 @@ export async function refreshLessonMedia(source: "assignment" | "activity" | "re
   return mediaUrls(items.data, data.owner_id, 900);
 }
 
-export async function startAttempt(id: string, nickname: string) {
+const draftIdFor = (token: string) => createHash("sha256").update(token).digest("hex");
+const resumeError = "Không tìm thấy phiên của bản nháp trong thẻ này. Câu trả lời vẫn được giữ trong trình duyệt.";
+
+async function submittedResult(id: string, token: string, assignment: NonNullable<Awaited<ReturnType<typeof getAssignment>>>,
+  record: { score: number | null; total: number | null; answers: unknown }) {
+  const { data, items } = assignment;
+  if (data.assessment) {
+    (await cookies()).set(`receipt-${id}`, token, { httpOnly: true, sameSite: "lax", secure: process.env.APP_URL?.startsWith("https:"),
+      path: `/play/${id}/review`, maxAge: 30 * 86400 });
+  }
+  const answers = record.answers as { answer: string[]; correct: boolean | null }[];
+  return { score: data.show_score ? record.score : null, total: record.total ?? 0,
+    pendingReview: Boolean(data.assessment), ...(data.show_review && { review: missedReview(items, answers) }) };
+}
+
+export async function startAttempt(id: string, nickname: string, resumeDraftId?: string) {
   const assignment = await getAssignment(id);
   if (!assignment) return { error: "Bài tập đã đóng hoặc hết hạn." } as const;
   const { db, data, template, items } = assignment;
+  if (resumeDraftId !== undefined && !items[0]?.practice?.starters?.mock) return { error: resumeError } as const;
   const limitError = await attemptLimit(db, id, "start");
   if (limitError) return { error: limitError } as const;
   const name = z.string().trim().min(1).max(80).safeParse(data.require_name ? nickname : "Ẩn danh");
@@ -86,9 +103,16 @@ export async function startAttempt(id: string, nickname: string) {
   const jar = await cookies();
   const cookie = `attempt-${id}`;
   let token = jar.get(cookie)?.value;
+  if (!z.uuid().safeParse(token).success) token = undefined;
+  if (resumeDraftId !== undefined && (!token || draftIdFor(token) !== resumeDraftId)) return { error: resumeError } as const;
   if (token) {
-    const { data: previous } = await db.from("attempts").select("completed_at")
+    const { data: previous, error } = await db.from("attempts").select("completed_at,score,total,answers")
       .eq("assignment_id", id).eq("id", token).maybeSingle();
+    if (error) return { error: "Chưa đọc được phiên làm bài. Hãy thử lại." } as const;
+    if (resumeDraftId !== undefined) {
+      if (!previous) return { error: resumeError } as const;
+      if (previous.completed_at) return { items: makePlayItems(template, items), submission: await submittedResult(id, token, assignment, previous) };
+    }
     if (!previous || previous.completed_at) token = undefined;
   }
   if (!token) {
@@ -108,26 +132,30 @@ export async function startAttempt(id: string, nickname: string) {
       projected[row.item_index].hangman = { ...hangmanPattern(item.answers[0], guesses), guesses };
     }
   }
-  return { draftId: createHash("sha256").update(token).digest("hex"),
+  return { draftId: draftIdFor(token),
     items: projected, assets: await mediaUrls(studentMedia(items), data.owner_id),
     reveals: template === "flash-cards" ? items.map(item => item.answers[0]) :
       template === "open-box" ? items.map(item => item.prompt) : [] };
 }
 
-export async function finishAttempt(id: string, values: string[][]) {
+export async function finishAttempt(id: string, values: string[][], expectedDraftId?: string) {
   if (!z.uuid().safeParse(id).success) return { error: "Bài tập không hợp lệ." } as const;
   const parsed = z.array(z.array(z.string().max(1200)).max(40)).min(1).max(60).safeParse(values);
   if (!parsed.success) return { error: "Bài làm không hợp lệ." } as const;
   const token = (await cookies()).get(`attempt-${id}`)?.value;
   if (!token || !z.uuid().safeParse(token).success) return { error: "Phiên đã hết hạn. Hãy tải lại bài tập." } as const;
+  if (expectedDraftId !== undefined && draftIdFor(token) !== expectedDraftId) return { error: resumeError } as const;
   const assignment = await getAssignment(id);
   if (!assignment) return { error: "Bài tập đã đóng hoặc hết hạn." } as const;
-  const { db, data, template, items } = assignment;
+  const { db, template, items } = assignment;
   const limitError = await attemptLimit(db, id, "finish");
   if (limitError) return { error: limitError } as const;
   if (parsed.data.length !== items.length) return { error: "Hãy hoàn thành tất cả các mục trước khi nộp." } as const;
   if (parsed.data.some((row, index) => {
     const practice = items[index].practice;
+    const cambridge = practice?.starters;
+    if (cambridge) return cambridge.paper === "speaking" ? row.length > 0
+      : row.length > 1 || row.some(value => value.length > cambridgeResponseLimit(cambridge));
     if (practice?.production && isProductive(practice.mode)) return row.length > 1 || row.some(value => value.length > practice.production!.limit);
     return row.some(value => value.length > 400);
   })) return { error: "Câu trả lời vượt giới hạn." } as const;
@@ -153,13 +181,9 @@ export async function finishAttempt(id: string, values: string[][]) {
       prompt: items[index].prompt, answer, correct: result.correct[index],
     })), p_score: result.score, p_total: result.total,
   }).maybeSingle();
-  if (error || !saved) return { error: "Chưa nộp được bài. Kiểm tra hạn và thử lại." } as const;
-  const record = saved as { score: number | null; total: number; answers: { answer: string[]; correct: boolean | null }[] };
-  if (data.assessment) {
-    (await cookies()).set(`receipt-${id}`, token, { httpOnly: true, sameSite: "lax", secure: process.env.APP_URL?.startsWith("https:"),
-      path: `/play/${id}/review`, maxAge: 30 * 86400 });
+  if (error || !saved) {
+    console.warn(JSON.stringify({ operation: "finish_attempt", code: error?.code ?? "no_attempt" }));
+    return { error: "Chưa nộp được bài. Kiểm tra hạn và thử lại." } as const;
   }
-  return { score: data.show_score ? record.score : null, total: record.total,
-    pendingReview: Boolean(data.assessment),
-    ...(data.show_review && { review: missedReview(items, record.answers) }) };
+  return submittedResult(id, token, assignment, saved as { score: number | null; total: number | null; answers: unknown });
 }

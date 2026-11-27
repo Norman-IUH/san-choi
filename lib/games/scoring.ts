@@ -31,7 +31,7 @@ export function grade(template: Template, items: Item[], responses: string[][], 
     return response?.length === 2 && response[1] === riskMarker && item.options.some(option => normalize(option) === normalize(response[0]));
   }) : -1;
   const correct = items.map((item, index) => {
-    if (kind === "prompt" || template === "flash-cards" || template === "flip-tiles") return null;
+    if (kind === "prompt" || template === "flash-cards" || template === "flip-tiles" || item.practice?.starters?.open) return null;
     const expected = item.answers.map(normalize);
     let response = responses[index] ?? [];
     if (item.practice?.pictureChoices) {

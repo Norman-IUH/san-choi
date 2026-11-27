@@ -7,6 +7,22 @@ export default function Samples() {
   return <div className="page stack english-library"><div className="section-head"><h1>Học liệu tiếng Anh</h1>
     <Link className="button" href="/library">Kho từ vựng cho giáo viên</Link></div>
     <p className="muted">Chọn cấp độ để chơi thử hoặc đưa bộ từ vựng vào thư viện cá nhân.</p>
+    <section className="panel section-head">
+      <div><h2>Cambridge Practice</h2><p>Bộ luyện Paper-based cho Starters, Movers và Flyers.</p></div>
+      <Link className="button primary" href="/samples/cambridge">Mở Cambridge Practice</Link>
+    </section>
+    <section className="panel section-head">
+      <div><h2>Cambridge Pre A1 Starters</h2><p>13 phần luyện tập và ba bài thi thử theo cấu trúc Paper-based.</p></div>
+      <Link className="button primary" href="/samples/cambridge-starters">Mở bộ luyện Starters</Link>
+    </section>
+    <section className="panel section-head">
+      <div><h2>Cambridge A1 Movers</h2><p>15 phần luyện tập và ba bài thi thử theo cấu trúc Paper-based.</p></div>
+      <Link className="button primary" href="/samples/cambridge-movers">Mở bộ luyện Movers</Link>
+    </section>
+    <section className="panel section-head">
+      <div><h2>Cambridge A2 Flyers</h2><p>16 phần luyện tập và ba bài thi thử theo cấu trúc Paper-based.</p></div>
+      <Link className="button primary" href="/samples/cambridge-flyers">Mở bộ luyện Flyers</Link>
+    </section>
     <div className="template-grid">{deckIds.map(id => {
       const deck = englishDecks[id];
       return <Link key={id} className="sample-link" href={`/samples/${id}`}>

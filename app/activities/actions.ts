@@ -7,8 +7,25 @@ import { compatible, contentSchema, templateSchema, type Item } from "@/lib/game
 import { demoContent, demos } from "@/lib/demo";
 import { itemMediaPaths } from "@/lib/media";
 import { englishDeckContent, englishDecks, isDeckId } from "@/lib/english-samples";
+import { cambridgeLevelSchema, starterPaperSchema, type CambridgeLevel } from "@/lib/games/starters";
+import { cambridgePapers } from "@/lib/cambridge-papers";
 
 const uuid = z.uuid();
+
+export async function importCambridge(level: CambridgeLevel, paper: string, part: number | undefined) {
+  const { db } = await account(true);
+  const parsed = starterPaperSchema.safeParse(paper);
+  const collection = cambridgeLevelSchema.safeParse(level);
+  const material = parsed.success && collection.success && cambridgePapers[collection.data](parsed.data, part);
+  if (!material) notFound();
+  const { data, error } = await db.from("activities").insert({
+    title: material.title, description: material.label, subject: "English", grade: material.items[0].english?.level,
+    tags: level[0].toUpperCase() + level.slice(1),
+    visibility: "private", draft: false, template: material.template, content: contentSchema(material.template).parse(material.items),
+  }).select("id").single();
+  check(error, "import_cambridge");
+  redirect(`/activities/${data!.id}?saved=1`);
+}
 
 export async function importEnglishDeck(form: FormData) {
   const { db } = await account(true);

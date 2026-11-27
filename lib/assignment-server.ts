@@ -11,7 +11,7 @@ export async function insertAssignment(source: { owner_id: string; activity_id: 
   const { level, ...fields } = source;
   const first = fields.content[0];
   const rubric = first?.practice?.production?.rubric;
-  const assessment = rubric && assessmentSchema.parse({ version: 1, skill: isSpeaking(first!.practice!.mode) ? "Speaking" : "Writing",
+  const assessment = rubric && assessmentSchema.parse({ version: 1, skill: isSpeaking(first!.practice!.mode) || first?.practice?.starters?.paper === "speaking" ? "Speaking" : "Writing",
     level: level ?? first?.english?.level ?? "", rubric });
   const { data, error } = await privilegedDatabase().from("assignments").insert({
     ...fields, ...(assessment && { assessment }), deadline: due === null ? null : new Date(due).toISOString(),

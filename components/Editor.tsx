@@ -38,7 +38,10 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
   const mode = practiceMode ?? content.find(item => item.practice)?.practice?.mode;
   const reading = mode && isReading(mode);
   const productive = Boolean(mode && isProductive(mode));
-  const speaking = Boolean(mode && isSpeaking(mode));
+  const starters = mode === "starters";
+  const speaking = Boolean(mode && (isSpeaking(mode) || content[0]?.practice?.starters?.paper === "speaking"));
+  const cambridgeWriting = starters && content.some(item => item.practice?.starters?.open);
+  const fixedWritingRubric = cambridgeWriting && content[0]?.practice?.starters?.level === "movers";
   const objective = productive && template === "type-answer";
   const [rubric, setRubric] = useState(() => content[0]?.practice?.production?.rubric ?? defaultRubric(speaking ? "Speaking" : "Writing"));
   const [stimulus, setStimulus] = useState(() => {
@@ -126,7 +129,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
         <label>Thẻ<input {...register("tags")} maxLength={250}/></label>
         <label>Quyền xem<select {...register("visibility")}><option value="private">Riêng tư</option>{!mode && <><option value="unlisted">Có link</option><option value="public">Công khai</option></>}</select></label></div>
     </div>
-    {productive && !objective && <section className="panel stack"><h2>Rubric nội bộ</h2>
+    {(productive || starters && speaking || cambridgeWriting) && !objective && <section className="panel stack"><h2>Rubric nội bộ</h2>
       {rubric.map((row, index) => <fieldset className="form-grid" key={index}><legend>Tiêu chí {index + 1}</legend>
         <label>Tên tiêu chí<input required maxLength={60} value={row.title} onChange={event => {
           const title = event.target.value; setRubric(previous => previous.map((item, i) => i === index ? { ...item, title } : item));
@@ -134,12 +137,12 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
         <label>Mô tả tiêu chí<input maxLength={240} value={row.description} onChange={event => {
           const description = event.target.value; setRubric(previous => previous.map((item, i) => i === index ? { ...item, description } : item));
         }}/></label>
-        <label>Điểm tối đa<input type="number" required min={1} max={20} value={row.max || ""} onChange={event => {
+        <label>Điểm tối đa<input type="number" required min={1} max={20} readOnly={fixedWritingRubric} value={row.max || ""} onChange={event => {
           const max = Number(event.target.value); setRubric(previous => previous.map((item, i) => i === index ? { ...item, max } : item));
         }}/></label>
-        <button type="button" className="button" disabled={rubric.length <= 1} onClick={() => setRubric(rubric.filter((_, i) => index !== i))}>Bỏ tiêu chí {index + 1}</button>
+        {!fixedWritingRubric && <button type="button" className="button" disabled={rubric.length <= 1} onClick={() => setRubric(rubric.filter((_, i) => index !== i))}>Bỏ tiêu chí {index + 1}</button>}
       </fieldset>)}
-      <button type="button" className="button" disabled={rubric.length >= 8} onClick={() => setRubric([...rubric, { title: "", description: "", max: 4 }])}>Thêm tiêu chí</button>
+      {!fixedWritingRubric && <button type="button" className="button" disabled={rubric.length >= 8} onClick={() => setRubric([...rubric, { title: "", description: "", max: 4 }])}>Thêm tiêu chí</button>}
     </section>}
     {reading && <section className="panel stack"><h2>Ngữ liệu chung</h2>
       <label>Loại ngữ liệu<select value={stimulus.stimulusKind} onChange={event => {
@@ -187,7 +190,11 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
             remember(path, url); setValue(`content.${i}.practice.stimulusImage`, path);
           }}/>}
       </section>}
-      {item?.practice && !reading && !productive && item.practice.mode !== "grammar" && <section className="stack">
+      {item?.practice?.starters?.teacher && <label>Hướng dẫn giáo viên<textarea lang="en" {...register(`content.${i}.practice.starters.teacher`)} maxLength={1200}/></label>}
+      {item?.practice?.starters?.choices?.map((_, choiceIndex) => <label key={choiceIndex}>Phương án {"ABC"[choiceIndex]}
+        <input lang="en" required maxLength={120} {...register(`content.${i}.practice.starters.choices.${choiceIndex}`)}/>
+      </label>)}
+      {item?.practice && !starters && !reading && !productive && item.practice.mode !== "grammar" && <section className="stack">
         <strong>{practiceModes[item.practice.mode]}</strong>
         <label>Hướng dẫn hoặc ngữ cảnh hiển thị<textarea {...register(`content.${i}.practice.stimulus`)} maxLength={1000}/></label>
         <label>Số lượt nghe tối đa (0 là không giới hạn)<input type="number" min={0} max={10} {...register(`content.${i}.practice.maxPlays`, { valueAsNumber: true })}/></label>
@@ -250,8 +257,8 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
       {kind === "choice" && !fixedChoices && <label>Phương án, mỗi dòng một phương án<textarea {...register(`content.${i}.options`)} rows={3}/></label>}
       {fixedChoices ? <label>Đáp án<select {...register(`content.${i}.answers`)}><option value="">Chọn đáp án</option>
         {fixedChoices.map(value => <option key={value}>{value}</option>)}</select></label>
-        : kind !== "prompt" && !maths && <label>{answerLabel}<textarea {...register(`content.${i}.answers`)} rows={kind === "choice" || kind === "sequence" ? 3 : 1}/></label>}
-      {alternatives && <label>Đáp án thay thế (mỗi dòng một đáp án)<textarea {...register(`content.${i}.alternatives`)} rows={2}/></label>}
+        : kind !== "prompt" && !maths && !item?.practice?.starters?.open && <label>{answerLabel}<textarea {...register(`content.${i}.answers`)} rows={kind === "choice" || kind === "sequence" ? 3 : 1}/></label>}
+      {alternatives && !item?.practice?.starters?.open && <label>Đáp án thay thế (mỗi dòng một đáp án)<textarea {...register(`content.${i}.alternatives`)} rows={2}/></label>}
       <details className="lesson-details"><summary>Học liệu tiếng Anh và tệp</summary><div className="stack">
         <div className="form-grid"><label>Cấp độ<select {...register(`content.${i}.english.level`)}><option value="">Chưa chọn</option>
           {levels.map(level => <option key={level}>{level}</option>)}</select></label>
@@ -261,7 +268,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
           <label>IPA<input {...register(`content.${i}.english.ipa`)} maxLength={100}/></label></div>
         <label>Câu ví dụ<textarea {...register(`content.${i}.english.example`)} maxLength={400}/></label>
         <label>Giải thích đáp án<textarea {...register(`content.${i}.explanation`)} maxLength={800}/></label>
-        <div className="form-grid">
+        {!starters && <div className="form-grid">
           {(["image", "audio"] as const).map(kind => {
             const path = item?.media?.[kind];
             return <MediaInput key={kind} label={kind === "image" ? "Ảnh câu hỏi" : "Âm thanh câu hỏi"} kind={kind}
@@ -276,7 +283,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
                 remember(path, url); setValue(`content.${i}.english.${accent}`, path);
               }}/>;
           })}
-        </div>
+        </div>}
         {kind === "choice" && options.slice(0, 8).map(option => <details key={option} className="lesson-details"><summary>Tệp cho phương án {option}</summary>
           <div className="form-grid">{(["image", "audio"] as const).filter(kind => !item?.practice?.pictureChoices || kind === "image").map(kind => {
             const path = item?.optionMedia?.find(media => media.option === option)?.[kind];
@@ -289,13 +296,13 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
               }}/>;
           })}</div></details>)}
       </div></details>
-      <div className="inline-actions">
+      {!starters && <div className="inline-actions">
         <button type="button" className="icon-button" aria-label={`Đưa mục ${i + 1} lên`} disabled={structureBusy || !i} onClick={() => move(i, i - 1)}><ArrowUp size={16}/></button>
         <button type="button" className="icon-button" aria-label={`Đưa mục ${i + 1} xuống`} disabled={structureBusy || i === fields.length - 1} onClick={() => move(i, i + 1)}><ArrowDown size={16}/></button>
         <button type="button" className="icon-button" aria-label={`Xóa mục ${i + 1}`} disabled={structureBusy} onClick={() => remove(i)}><Trash2 size={16}/></button>
-      </div>
+      </div>}
     </fieldset>; })}
-    <button type="button" className="button" disabled={structureBusy || fields.length >= maxItems} onClick={() => append(defaultEntry)}><Plus size={16}/> Thêm mục</button>
+    {!starters && <button type="button" className="button" disabled={structureBusy || fields.length >= maxItems} onClick={() => append(defaultEntry)}><Plus size={16}/> Thêm mục</button>}
     {error && <p className="notice error" role="alert">{error}</p>}
     <div className="inline-actions editor-actions"><button className="button primary" value="publish" disabled={structureBusy}>Xuất bản</button>
       <button className="button" value="draft" disabled={structureBusy}>Lưu nháp</button>{pending && <span role="status">Đang lưu…</span>}</div>

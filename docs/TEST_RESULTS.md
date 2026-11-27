@@ -211,3 +211,31 @@ Chất lượng IPA, ví dụ, clip tổng hợp và phát âm Phonics cần lư
 | QuizStudy | Ba migration `20261127071851`, `20261127072702` và `20261127111628` đã vào lịch sử. Kiểm tra xác nhận ba bảng mới bật RLS, bucket `practice-voice` ở chế độ riêng tư, và guest và giáo viên bị giới hạn theo quyền trực tiếp đã thiết kế. |
 
 Tổng cộng bảy lượt E2E QuizStudy đạt qua lần chạy lại và ca giáo án kiểm tra riêng. Ba lượt WebKit được skip vì các ca Writing khách quan, duyệt từ vựng và tích hợp giáo án chạy theo profile Chromium. Tất cả dữ liệu kiểm thử là tổng hợp. Kiểm thử microphone vật lý và xác nhận sau đăng nhập trên Vercel Preview vẫn chờ. Ghi âm cho học sinh thật mặc định tắt.
+
+## V1.5C1 — Cambridge Pre A1 Starters · 27/11/2026
+
+| Hạng mục | Kết quả |
+|---|---|
+| Mã và học liệu | 79 Vitest, lint, typecheck và production build đạt. Vitest kiểm tra cấu trúc, điểm đúng/sai/trống, media đi kèm và dữ liệu gửi tới người làm bài. |
+| Practice Mode | Playwright chạy đủ 13 Part với Chromium desktop, mobile, tablet, WebKit desktop và iPhone mô phỏng. Các bài nghe kiểm tra phát media thật. Các Part Speaking kiểm tra thao tác và xác nhận giao diện không yêu cầu microphone. |
+| Mock Test Mode | Playwright kiểm tra ba kỹ năng, giữ giới hạn hai lượt nghe khi đổi câu, quay lại câu trước, nộp khi hết giờ, giấu phản hồi đúng/sai trong lượt làm và chạy đủ bốn Part Speaking. |
+| Hồi quy và giao diện | Chạy bộ 34 mẫu game và bốn bộ từ vựng. Lượt đầu phát hiện đường dẫn Cambridge mới trùng bộ từ vựng Starters. Bộ Cambridge dùng `/samples/cambridge-starters` sau khi sửa. Ảnh 1920 × 1080 và 390 × 844 của thư viện và các màn tiêu biểu nằm trong `output/playwright/v15c1-screens`. Lượt kiểm tra bàn phím xác nhận Space chọn ghim, Enter sang câu và focus chuyển sang câu hỏi mới. |
+| QuizStudy thật | 3 E2E desktop đạt từ bản build chạy localhost. Kiểm tra nhập hoạt động, giao cả ba bài thi thử, lưu 1/20 Listening và 1/25 Reading & Writing, nhận bài Speaking, công bố nhận xét cho đúng phiên học sinh và xuất CSV. Chỉ dùng tài khoản và biệt danh tổng hợp. Đã đóng các bài giao QA. |
+| Vercel Preview | [PR #8 dạng draft](https://github.com/Norman-IUH/san-choi/pull/8) dựa trên nhánh V1.5B3. GitHub ghi nhận Vercel Preview Ready cho commit triển khai. Playwright phiên khách được chuyển đến màn đăng nhập Vercel. Kiểm tra giao diện sau xác thực chưa thực hiện. |
+
+Tổng lượt Playwright công khai và hồi quy đạt 265 ca. Năm lượt kiểm tra cấu hình single-teacher bỏ qua vì máy chủ localhost dùng cấu hình QA. Chạy riêng ba ca QuizStudy cũng đạt. Phiên bản này giữ cấu hình và schema QuizStudy hiện tại. Lượt QA tắt ghi âm. Phần Speaking cần giáo viên tham gia. [Đặc tả và giới hạn mô phỏng](STARTERS.md).
+
+## V1.5C2 — Cambridge A1 Movers · 27/11/2026
+
+| Hạng mục | Kết quả |
+|---|---|
+| Mã và học liệu | 82 Vitest. Lint, typecheck và production build đạt. Các ca mới kiểm tra cấu trúc, điểm đúng/sai/trống, đáp án số tương đương, tệp hình và audio, câu viết chấm tay và việc loại kịch bản giám khảo khỏi dữ liệu công khai. |
+| 15 Part và hồi quy | 235 ca Playwright công khai đạt trên Chromium desktop, mobile, tablet, WebKit desktop và iPhone mô phỏng. Phạm vi gồm toàn bộ Movers và Starters, bốn bộ từ vựng và game cơ bản. Năm ca kiểm tra cấu hình single-teacher bỏ qua trong môi trường QA nhiều giáo viên. |
+| Mock Test | Xác minh giới hạn hai lượt bắt đầu phát, audio phát thật, lưu lựa chọn khi quay lại, các mốc 25/30/7 phút và tự nộp khi hết giờ trong Playwright. Một lần tự nộp trên QuizStudy trong lượt tua đồng hồ trả lỗi. Player cho nộp lại khi hết giờ và giữ nguyên câu trả lời. |
+| QuizStudy · Listening | Nhập và giao bộ đề. Sau khi sửa nguồn, bài giao vẫn lấy câu đầu từ snapshot. Tải lại giữ ghim và lượt nghe. Nộp và lưu 1/25 điểm. |
+| QuizStudy · Reading & Writing | Bài giao giữ rubric gốc sau khi sửa nguồn. Lưu 1/33 câu tự động và hai câu viết. Giáo viên chấm 1/2 câu mở, công bố tổng 2/35 và xuất CSV có điểm tự động, thủ công và trạng thái. |
+| QuizStudy · Speaking | Làm đủ bốn Part qua link với ghi âm tắt. Giáo viên thấy hướng dẫn riêng, chấm và công bố 15/20 kèm nhận xét. Đã kiểm tra CSV và việc phiên khác không mở được nhận xét. |
+| Quyền và giao diện | Giáo viên thứ hai bị chặn ở kết quả và CSV. Ảnh tại `output/playwright/v15c2-screens` ghi nhận sáu màn ở 1920 × 1080 và 390 × 844, không tràn ngang ở các màn đã chụp. |
+| Vercel Preview | [Draft PR #8](https://github.com/Norman-IUH/san-choi/pull/8) giữ nhánh và base hiện có. Vercel báo Preview Ready. Phiên Playwright khách được chuyển tới đăng nhập Vercel, nên chưa kiểm tra giao diện sau xác thực trên Preview. E2E chạy ở localhost với QuizStudy thật. |
+
+Tất cả lượt kiểm tra dùng tài khoản và biệt danh tổng hợp. Cấu hình API, schema QuizStudy và thiết lập ghi âm production giữ nguyên. [Ánh xạ Paper-based](CAMBRIDGE_SPEC.md).
