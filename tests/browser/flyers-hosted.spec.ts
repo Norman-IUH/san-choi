@@ -34,7 +34,11 @@ for (const paper of ["listening", "reading", "speaking"]) {
     if (paper === "listening") {
       await button(page, "Sao chép").click();
       await expect(page.locator(".section-head h1")).toContainText("(bản sao)");
+      await expect(page.locator(".section-head").getByText(/Bản nháp/)).toBeVisible();
+      await page.getByRole("link", { name: "Chỉnh sửa", exact: true }).click();
       await page.waitForLoadState("networkidle");
+      await button(page, "Xuất bản").click();
+      await expect(page.getByText("Đã lưu thay đổi.", { exact: true })).toBeVisible();
     }
     const source = page.url();
     if (paper === "speaking") {
@@ -42,6 +46,7 @@ for (const paper of ["listening", "reading", "speaking"]) {
       await expect(page.getByText(/The boat leaves at 2:10 p.m./)).toBeVisible();
     }
     await page.getByLabel(/Cho học sinh xem câu sai/).check();
+    await expect(button(page, "Tạo link giao bài")).toBeVisible();
     await button(page, "Tạo link giao bài").click();
     const share = page.getByLabel("Link chia sẻ");
     await expect(share).toBeVisible();

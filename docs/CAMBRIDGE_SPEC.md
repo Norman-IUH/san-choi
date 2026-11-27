@@ -1,6 +1,6 @@
 # Cambridge Young Learners · Paper-based
 
-Học liệu trên Sân Chơi do dự án biên soạn. Mở **Cambridge Practice** trong **Học liệu mẫu** để chọn Starters, Movers hoặc Flyers. Dashboard dẫn tới 44 Part luyện tập và chín bài thi thử theo kỹ năng. Giáo viên lưu bộ đề thành hoạt động riêng tư, sửa câu hỏi, đáp án hoặc rubric, nhân bản, tạo link giao bài và xuất kết quả. Bài giao giữ snapshot tại thời điểm tạo.
+Học liệu trên Sân Chơi do dự án biên soạn. Mở **Cambridge Practice** trong **Học liệu mẫu** để chọn Starters, Movers hoặc Flyers. Dashboard dẫn tới 44 Part luyện tập và chín bài thi thử theo kỹ năng. Giáo viên lưu bộ đề thành hoạt động riêng tư, sửa câu hỏi, đáp án hoặc rubric, nhân bản, tạo link giao bài và xuất kết quả. Bản sao được lưu dưới dạng nháp và cần xuất bản trước khi giao. Bài giao giữ snapshot tại thời điểm tạo.
 
 ## Phạm vi đã triển khai
 

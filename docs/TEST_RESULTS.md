@@ -239,3 +239,17 @@ Tổng lượt Playwright công khai và hồi quy đạt 265 ca. Năm lượt k
 | Vercel Preview | [Draft PR #8](https://github.com/Norman-IUH/san-choi/pull/8) giữ nhánh và base hiện có. Vercel báo Preview Ready. Phiên Playwright khách được chuyển tới đăng nhập Vercel, nên chưa kiểm tra giao diện sau xác thực trên Preview. E2E chạy ở localhost với QuizStudy thật. |
 
 Tất cả lượt kiểm tra dùng tài khoản và biệt danh tổng hợp. Cấu hình API, schema QuizStudy và thiết lập ghi âm production giữ nguyên. [Ánh xạ Paper-based](CAMBRIDGE_SPEC.md).
+
+## V1.5C3 — Cambridge A2 Flyers · 27/11/2026
+
+| Hạng mục | Kết quả |
+|---|---|
+| Kiểm tra mã | 85 Vitest, lint, typecheck, production build đạt. Unit test kiểm tra cấu trúc, số câu, audio và tranh, chấm tự động đúng/sai/trống, bài viết tay và quyền truy cập kịch bản giám khảo. |
+| Playwright | 260 ca Cambridge và từ vựng đạt trên Chromium desktop, mobile, tablet, WebKit desktop và iPhone mô phỏng sau khi chạy lại ca đồng hồ Safari với mốc hết giờ được so sánh trực tiếp. Năm ca chỉ dành cho cấu hình single-teacher được bỏ qua trên máy chủ QA. Thêm 13 ca demo cơ bản đạt trên desktop. |
+| Dashboard, thiết bị và thời gian | Kiểm tra 44 link Part, chín bài thi thử, ba mốc Flyers 25/40/9 phút, hai lượt phát và khôi phục đồng hồ, đáp án, lượt nghe sau tải lại. Tám ảnh desktop và mobile trong `output/playwright/v15c3-screens`; các màn chụp không tràn ngang. |
+| QuizStudy · Listening | Nhân bản bộ đề, xuất bản bản nháp rồi giao. Bài giao giữ đề cũ sau khi sửa nguồn. Chặn yêu cầu tự nộp lúc hết giờ trước khi máy chủ nhận. Khi có mạng, tải lại cùng tab giữ bản làm và lưu đúng một lượt với 1/25 điểm. Đã kiểm tra xuất CSV và quyền giáo viên thứ hai. |
+| QuizStudy · Reading & Writing | Sửa rubric nguồn sau khi giao. Giữ nguyên rubric snapshot và nội dung truyện qua một phản hồi nộp bài bị ngắt sau khi máy chủ lưu. Tải lại nhận đúng một lượt, hiển thị 1/43 tự động. Giáo viên công bố 3/5 thủ công, tổng 4/48, rồi xuất CSV. |
+| QuizStudy · Speaking | Làm đủ bốn Part, kiểm tra hai vai Information Exchange. Kịch bản và đáp án giám khảo thuộc bản riêng của giáo viên. Công bố 15/20 và kiểm tra CSV, quyền chủ bài và quyền nhận xét theo cookie. |
+| Preview | [Draft PR #8](https://github.com/Norman-IUH/san-choi/pull/8) giữ nhánh review. GitHub ghi nhận Vercel Preview Ready. Trình duyệt khách được chuyển tới đăng nhập Vercel. Các E2E ứng dụng chạy trên bản build localhost nối QuizStudy thật. |
+
+Bốn E2E QuizStudy đạt qua các lượt chạy xác nhận, gồm ba thành phần Flyers và hồi quy Listening Movers. Lượt QA chỉ dùng dữ liệu tổng hợp và tắt ghi âm. Phiên bản này dùng schema hiện có. [Đặc tả và giới hạn mô phỏng](CAMBRIDGE_SPEC.md).
