@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import { cellKey } from "@/lib/games/word-puzzles";
 import { LessonMedia, Pronunciation } from "./LessonMedia";
-import { Progress } from "./Progress";
 import type { RoundProps } from "./LegacyRound";
 
 export default function BoardRound({ template, items, answers, setAnswers, assets, busy, bindFocus, submit }: RoundProps) {
@@ -19,7 +18,6 @@ export default function BoardRound({ template, items, answers, setAnswers, asset
     const paired = Object.values(answers).flat();
     return <div className="play-stack memory-game">
       <h2 tabIndex={-1} ref={node => { heading.current = node; bindFocus(node); }}>Lật và ghép thẻ</h2>
-      <Progress value={paired.length} total={items.length}/>
       <div className="memory-table">
         <div role="group" aria-label="Thẻ gợi ý">{items.map((item, i) => {
           const matched = answers[i]?.[0];

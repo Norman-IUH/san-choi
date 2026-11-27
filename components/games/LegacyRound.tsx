@@ -5,7 +5,6 @@ import { doubleMarker, templates, type PlayItem, type Template } from "@/lib/gam
 import { LessonMedia, Pronunciation } from "./LessonMedia";
 import { PairBoard } from "./PairBoard";
 import { Wheel } from "./Wheel";
-import { Progress } from "./Progress";
 
 export type RoundProps = {
   template: Template;
@@ -21,6 +20,7 @@ export type RoundProps = {
   bindFocus: (node: HTMLElement | null) => void;
   next: (answer: string[]) => void;
   submit: (answers: Record<number, string[]>) => void;
+  hudTools?: HTMLDivElement | null;
   playHit?: () => void;
   guess?: (letter: string, guesses: string[]) => Promise<NonNullable<PlayItem["hangman"]> | null>;
 };
@@ -51,7 +51,6 @@ export function LegacyRound({ template, items, order, turn, index, answers, setA
         {i in answers && <><LessonMedia media={box.media} assets={assets} label={reveals[i]}/><Pronunciation item={box} assets={assets}/></>}</div>)}</div>
       <button className="button primary" disabled={busy || Object.keys(answers).length !== items.length} onClick={() => void submit(answers)}>Hoàn thành</button>
     </div> : item && <div className="play-stack">
-      <Progress value={turn + 1} total={items.length}/>
       {template === "wheel" ? <div className="wheel-prompt" tabIndex={-1} ref={bindFocus}>
         <Wheel key={turn} labels={wheelLabels} selected={turn - wheelPage} spun={flipped}/>
         {flipped && <h2>{item.prompt}</h2>}

@@ -1,3 +1,4 @@
+import { captureGame } from "./capture-game";
 import { mkdir } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import { demoContent } from "../../lib/demo";
@@ -9,6 +10,7 @@ for (const template of Object.keys(puzzleTemplates) as PuzzleTemplate[]) {
     test.setTimeout(60000);
     if (template === "flip-tiles") await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/demo/" + template);
+    await captureGame(page, info, template, "start");
     const items = demoContent(template);
     const start = page.getByRole("button", { name: "Bắt đầu" });
     await expect(start).toBeEnabled();
@@ -16,6 +18,7 @@ for (const template of Object.keys(puzzleTemplates) as PuzzleTemplate[]) {
     else await start.press("Enter");
     const board = page.locator(".game-stage > .play-stack");
     await expect(board).toBeVisible();
+    await captureGame(page, info, template, "playing");
     if (template === "flip-tiles") await expect(board.locator(".flash-face").first()).toHaveCSS("animation-name", "none");
     const output = process.env.V14B_SCREENSHOTS;
     if (output && info.project.name === "desktop") {
@@ -26,6 +29,7 @@ for (const template of Object.keys(puzzleTemplates) as PuzzleTemplate[]) {
     await solvePuzzle(page, template, items, true);
     await expect(page.getByRole("heading", { name: "Hoàn thành!" })).toBeVisible();
     if (template !== "flip-tiles") await expect(page.getByText((items.length - 1) + "/" + items.length + " điểm", { exact: true })).toBeVisible();
+    await captureGame(page, info, template, "result");
     await page.getByRole("button", { name: "Chơi lại" }).click();
     await expect(start).toBeVisible();
   });

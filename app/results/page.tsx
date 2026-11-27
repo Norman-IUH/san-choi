@@ -9,7 +9,7 @@ export default async function Results() {
     db.from("assignments").select("id", { count: "exact", head: true }),
   ]);
   check(assignments.error, "results_list"); check(complete.error, "complete_count"); check(count.error, "assignment_count");
-  return <div className="page stack"><h1>Kết quả</h1><div className="stats">
+  return <div className="page stack teacher-results"><h1>Kết quả</h1><div className="stats">
     <div className="panel"><strong>{count.count ?? 0}</strong><p>Bài đã giao</p></div>
     <div className="panel"><strong>{complete.count ?? 0}</strong><p>Bài đã nộp</p></div></div>
     <section className="panel stack"><h2>Bài giao gần đây</h2>

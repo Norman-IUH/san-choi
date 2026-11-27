@@ -33,6 +33,6 @@ export default async function Resource({ params }: Props) {
   if (!data || !isTemplate(data.template)) notFound();
   const content = contentSchema(data.template).safeParse(data.content);
   if (!content.success) notFound();
-  return <div className="narrow stack"><Player title={data.title} mediaScope={{ source: "resource", id }} {...localPlay(data.template, content.data, await mediaUrls(content.data, data.owner_id))}/>
-    {data.description && <p>{data.description}</p>}</div>;
+  return <div className="immersive-page"><Player title={data.title} description={data.description ?? undefined} backHref="/community"
+    mediaScope={{ source: "resource", id }} {...localPlay(data.template, content.data, await mediaUrls(content.data, data.owner_id))}/></div>;
 }

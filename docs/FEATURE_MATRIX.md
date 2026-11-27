@@ -78,3 +78,13 @@ Xem [kết quả kiểm thử](TEST_RESULTS.md) và [các phần còn thiếu](L
 - Phaser được tải khi bắt đầu Maze Chase, Flying Fruit, Airplane, Balloon Pop hoặc Whack-a-Mole. Speed Sorting và Win or Lose Quiz dùng DOM cho các lượt kéo thả và đố vui rời rạc.
 - Mặc định không đếm giờ. Đồng hồ và độ khó nằm trong snapshot từng mục. Ẩn tab hoặc mất focus sẽ tạm dừng. Khi tải lại cùng tab, trò giữ các câu đã chốt và mở lại câu hiện tại từ đầu.
 - Bài giao gửi phương án đã chốt. Server chấm trước khi lưu, kể cả lượt thử sức của Win or Lose Quiz. Đáp án sai và chi tiết trả lời chỉ hiện khi chính sách bài giao cho phép.
+
+## V1.4D — Cải tiến trải nghiệm
+
+| Tính năng | Trạng thái V1.4D |
+|---|---|
+| Game Shell | Trang demo và bài chơi riêng có HUD quay lại, tiến độ, âm thanh, pause và fullscreen. Player xem trước vẫn nằm trong trang hoạt động |
+| Start và Result | Minh họa theo mẫu, nút bắt đầu lớn, lời động viên và chơi lại. Điểm và câu sai theo quyền bài giao |
+| Trò theo lượt | Thẻ Quiz lớn hơn, vùng kéo Rank Order cho cảm ứng, chế độ trình chiếu thẻ ghi nhớ, cỡ chữ ô chữ lớn hơn |
+| Arcade | Phối cảnh dọc và ngang, chữ mục tiêu tương phản cao hơn và D-pad Maze Chase. Tiếp tục dùng riêng luật chơi V1.4C |
+| Giáo viên | Tìm và lọc bộ 34 mẫu bằng ảnh gameplay, lối tắt đến biểu mẫu giao bài, tinh chỉnh danh sách kết quả và học liệu tiếng Anh |

@@ -4,7 +4,6 @@ import { lineBetween } from "@/lib/games/word-puzzles";
 import { normalize } from "@/lib/games/model";
 import { truthOptions } from "@/lib/games/word-templates";
 import { LessonMedia, Pronunciation } from "./LessonMedia";
-import { Progress } from "./Progress";
 import type { RoundProps } from "./LegacyRound";
 
 export default function WordRound({ template, items, index, turn, next, busy, assets, bindFocus, guess }: RoundProps) {
@@ -128,7 +127,6 @@ export default function WordRound({ template, items, index, turn, next, busy, as
     }
   }
   return <div className="play-stack word-round">
-    <Progress value={turn + 1} total={items.length}/>
     <h2 className="lesson-text" lang="en" tabIndex={-1} ref={node => { heading.current = node; bindFocus(node); }}>{item.prompt}</h2>
     {media}
     {game}

@@ -29,6 +29,14 @@ Hai atlas nguyên gốc được tạo bằng ImageGen cho Sân Chơi. Atlas mô
 
 Ảnh đại diện trong thư viện dùng sân khấu đang chơi của từng demo, chụp trên Chromium rồi chuyển sang WebP rộng 640 px trong `public/illustrations/gameplay`. Màn mở đầu dùng ảnh nền ImageGen để giới thiệu chủ đề của trò.
 
+## V1.4D
+
+Teacher Workspace giữ nền giấy `#f8f9fc`, chữ mực `#1b2340` và nút thao tác tím `#5736cc`. Student Player dùng nền sân khấu `#262044` bao quanh vùng trò chơi, với `--game-accent`, `--game-paper` và `--game-edge` theo từng mẫu. Be Vietnam Pro và font hệ thống hỗ trợ tiếng Việt và tiếng Anh. Câu hỏi dùng cỡ chữ co giãn từ 1,3 đến 2,65 rem. Bo góc sân khấu dùng `--stage-card`, khoảng mép theo `--stage-gutter` và bóng `--stage-shadow`. Nút Bắt đầu cao tối thiểu 56 px, các nút HUD tối thiểu 44 px.
+
+Trang demo, bài giao còn mở và học liệu công khai có Game Shell toàn trang. Điều hướng quay lại, tiến độ và công cụ nằm trên HUD. Giáo viên dùng cùng Player để xem trước trong trang hoạt động. Kết quả dùng minh họa mẫu và lời động viên. Điểm và đáp án tiếp tục tuân theo tùy chọn bài giao. Pause tạm dừng arcade hoặc mở hộp thoại giữ nguyên trạng thái ở các trò theo lượt. Âm phản hồi do người dùng bật, phát âm có nhãn Anh–Anh và Anh–Mỹ, và hiệu ứng dùng tùy chọn giảm chuyển động của thiết bị.
+
+Canvas arcade dọc dùng khung 720 × 540 và tính lại tọa độ vẽ từ không gian mô phỏng. Canvas ngang giữ 960 × 480. Điều này giữ va chạm và lượt chơi qua thay đổi hướng màn hình. Hình đáp án, nền và sprite gốc V1.3–V1.4C tiếp tục được tái sử dụng. 34 thẻ thư viện dùng thumbnail WebP chụp từ gameplay và tải theo vị trí cuộn.
+
 **Prompt môi trường**
 
 > An exact 4 column by 2 row 8 panel game background atlas, wide landscape image, no gaps, even equal rectangles. Original premium illustrated picture-book art for a Vietnamese children's English arcade; tactile paper and gouache, brightly lit, clear silhouettes, composed like game level backgrounds with spacious center. Row 1 panels left to right: aerial emerald jungle maze ruins with turquoise stream, peach-orange golden orchard with flying leaves, deep blue airplane sky with fluffy clouds and sandstone canyons, purple sunset festival with balloons at the edges. Row 2 left to right: green garden with soft grassy earth, aqua classroom recycling workshop, navy and violet art-deco quiz stage with spotlights, cream and coral paper textures. No words, numbers, watermarks, humans, interface, borders or dividing lines. Each panel independently designed to be used as an illustrated game stage.

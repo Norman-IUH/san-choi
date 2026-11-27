@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { GripVertical, Presentation } from "lucide-react";
 import { normalize } from "@/lib/games/model";
 import { reorderRank } from "@/lib/games/puzzle-templates";
 import { LessonMedia, Pronunciation } from "./LessonMedia";
-import { Progress } from "./Progress";
 import type { RoundProps } from "./LegacyRound";
 
 export default function PuzzleRound({ template, items, index, turn, answers, setAnswers, assets, busy, bindFocus, next, submit }: RoundProps) {
@@ -12,6 +12,7 @@ export default function PuzzleRound({ template, items, index, turn, answers, set
   const [order, setOrder] = useState(() => item.options.map((_, position) => position));
   const [picked, setPicked] = useState<number[]>([]);
   const [hidden, setHidden] = useState(false);
+  const [presenting, setPresenting] = useState(false);
   const [flipped, setFlipped] = useState<number[]>([]);
   const [announcement, setAnnouncement] = useState("");
   const heading = useRef<HTMLHeadingElement>(null);
@@ -34,7 +35,6 @@ export default function PuzzleRound({ template, items, index, turn, answers, set
 
   if (template === "flip-tiles") return <div className="play-stack flip-tiles-board">
     <h2 ref={focus} tabIndex={-1}>Lật ô để kiểm tra</h2>
-    <Progress value={Object.keys(answers).length} total={items.length}/>
     <div className="flip-grid">{items.map((tile, i) => {
       const revealed = flipped.includes(i);
       return <div className="flip-tile" key={i}>
@@ -74,13 +74,19 @@ export default function PuzzleRound({ template, items, index, turn, answers, set
       break;
     case "rank-order":
       game = <><ol className="ranking-board" aria-label="Thứ tự của em">{order.map((tile, position) =>
-        <li key={tile} draggable onDragStart={event => event.dataTransfer.setData("application/x-sanchoi-rank", String(tile))}
+        <li key={tile} data-rank-position={position} draggable onDragStart={event => event.dataTransfer.setData("application/x-sanchoi-rank", String(tile))}
           onDragOver={event => event.preventDefault()} onDrop={event => {
             event.preventDefault();
             const source = event.dataTransfer.getData("application/x-sanchoi-rank");
             if (source) move(Number(source), position);
           }}>
-          <div className="rank-row"><span>{item.options[tile]}</span><div className="inline-actions">
+          <div className="rank-row"><div className="rank-grip" aria-hidden="true"
+            onPointerDown={event => { if (event.pointerType === "touch") event.currentTarget.setPointerCapture(event.pointerId); }}
+            onPointerUp={event => {
+              if (event.pointerType !== "touch") return;
+              const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>("[data-rank-position]");
+              if (target?.dataset.rankPosition !== undefined) move(tile, Number(target.dataset.rankPosition));
+            }}><GripVertical size={20}/></div><span>{item.options[tile]}</span><div className="inline-actions">
             <button className="icon-button" type="button" aria-label={"Đưa lên " + item.options[tile]} disabled={position === 0} onClick={() => move(tile, position - 1)}>↑</button>
             <button className="icon-button" type="button" aria-label={"Đưa xuống " + item.options[tile]} disabled={position + 1 === order.length} onClick={() => move(tile, position + 1)}>↓</button>
           </div></div>
@@ -108,8 +114,11 @@ export default function PuzzleRound({ template, items, index, turn, answers, set
       </div>{finish([value], Boolean(value))}</>;
       break;
     case "watch-memorize":
-      game = !hidden ? <><ol className="memory-strip" aria-label="Chuỗi cần nhớ" lang="en">
-        {item.memory?.map((word, position) => <li key={position}>{word}</li>)}</ol>
+      game = !hidden ? <><div className="memory-presentation">
+        <button className="button" type="button" aria-pressed={presenting} onClick={() => setPresenting(!presenting)}>
+          <Presentation size={18} aria-hidden="true"/> {presenting ? "Thu nhỏ thẻ" : "Trình chiếu thẻ"}
+        </button><ol className="memory-strip" data-presenting={presenting} aria-label="Chuỗi cần nhớ" lang="en">
+        {item.memory?.map((word, position) => <li key={position}>{word}</li>)}</ol></div>
         <button className="button primary" onClick={() => setHidden(true)}>Che thẻ và xếp lại</button></>
         : <><div className="memory-strip" role="group" aria-label="Chuỗi của em">
           {picked.map(tile => <button className="option" type="button" key={tile} aria-label={"Bỏ " + item.options[tile]}
@@ -131,7 +140,6 @@ export default function PuzzleRound({ template, items, index, turn, answers, set
       break;
   }
   return <div className="play-stack puzzle-round">
-    <Progress value={turn + 1} total={items.length}/>
     <h2 className="lesson-text" tabIndex={-1} ref={focus}>{template === "pair-or-no-pair" ? "So sánh hai thẻ" : item.prompt}</h2>
     {questionMedia}{game}
   </div>;
