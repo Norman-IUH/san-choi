@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
   const { data: assignment } = await db.from("assignments").select("id,assessment").eq("id", id!).maybeSingle();
   if (!assignment) return new Response(null, { status: 404 });
   const assessment = assessmentSchema.safeParse(assignment.assessment).data;
-  const rubric = assessment?.level === cambridgeLevels.movers ? assessment.rubric : null;
+  const rubric = assessment && (assessment.level === cambridgeLevels.movers || assessment.level === cambridgeLevels.flyers)
+    ? assessment.rubric : null;
   const rows: (string | number | null)[][] = [["Biệt danh", "Điểm", "Tổng", "Bắt đầu", "Hoàn thành"]];
   if (rubric) rows[0].push("Điểm tự động", "Điểm thủ công", "Trạng thái chấm");
   for (let offset = 0; ; offset += 500) {

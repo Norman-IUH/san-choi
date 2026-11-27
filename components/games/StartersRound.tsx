@@ -1,32 +1,35 @@
 "use client";
 import { useId, useState } from "react";
 import { colourPalette } from "@/lib/games/practice";
-import { cambridgeResponseLimit, moverPartNames, starterPartNames } from "@/lib/games/starters";
+import { cambridgeResponseLimit, cambridgePartNames } from "@/lib/games/starters";
 import { LessonMedia } from "./LessonMedia";
 import type { RoundProps } from "./LegacyRound";
 
 export default function StartersRound({ items, index, turn, answers, assets, setAnswers, next, busy, bindFocus }: RoundProps) {
   const item = items[index];
   const config = item.practice!.starters!;
-  const { paper, part, scene, cards, targets, letters, passage, guide, example, fields, lead, choices, copyWord, open, sign, visuals, groups } = config;
-  const movers = config.level === "movers";
+  const { paper, part, scene, cards, targets, letters, passage, guide, example, fields, lead, choices, copyWord, open, sign, signPosition,
+    visuals, groups, wordBank, responses, exchange } = config;
+  const level = config.level ?? "starters";
+  const advanced = level !== "starters";
   const match = paper === "listening" && part === 1;
-  const colouring = paper === "listening" && part === (movers ? 5 : 4);
+  const colouring = paper === "listening" && part === (advanced ? 5 : 4);
   const paint = colouring && !sign;
   const speaking = paper === "speaking";
-  const tick = !movers && paper === "reading" && part === 1;
+  const tick = !advanced && paper === "reading" && part === 1;
   const typed = paper === "listening" && part === 2 || paper === "reading" &&
-    (movers ? copyWord || part >= 5 : [2, 3, 4, 5].includes(part));
+    (advanced ? copyWord || part >= 5 : [2, 3, 4, 5].includes(part));
   const value = answers[index]?.[0] ?? "";
   const [target, setTarget] = useState(value.split(":")[0]);
   const [card, setCard] = useState(paint ? value.split(":")[1] ?? "" : "");
   const [word, setWord] = useState("");
   const [zoom, setZoom] = useState<string>();
+  const [asking, setAsking] = useState(false);
   const inputId = useId();
   const palette = ["blue", "red", "green", "yellow", "orange", "pink", "purple", "brown"] as const;
   const section = items.flatMap((row, i) => row.practice?.starters?.part === part && row.practice.starters.paper === paper ? [i] : []);
   const previous = section.filter(i => i !== index).map(i => answers[i]?.[0] ?? "");
-  const heading = (movers ? moverPartNames : starterPartNames)[paper][part - 1];
+  const heading = cambridgePartNames[level][paper][part - 1];
   function pick(answer: string) {
     setAnswers(old => ({ ...old, [index]: answer ? [answer] : [] }));
   }
@@ -34,6 +37,14 @@ export default function StartersRound({ items, index, turn, answers, assets, set
     if (!copyWord) return pick(answer);
     setWord(answer);
     document.getElementById(inputId)?.focus();
+  }
+  function signField(position?: "left" | "right") {
+    const current = sign && signPosition === position;
+    const signIndex = section.find(i => items[i].practice?.starters?.sign && items[i].practice?.starters?.signPosition === position);
+    const className = position ? `mover-sign flyer-sign-${position}` : "mover-sign";
+    return current ? <label className={className}><span className="sr-only">{position ? `Word on the ${position} sign` : "Word on the sign"}</span>
+      <input value={value} onChange={event => pick(event.target.value)} maxLength={40} spellCheck={false} autoComplete="off"/>
+    </label> : <span className={className} aria-hidden="true">{signIndex !== undefined && answers[signIndex]?.[0]}</span>;
   }
   return <form className="starter-sheet" lang="en" onSubmit={event => {
     event.preventDefault();
@@ -53,12 +64,26 @@ export default function StartersRound({ items, index, turn, answers, assets, set
         const caption = visuals.length === 2 ? `Picture ${"AB"[i]}` : `Picture ${i + 1}`;
         return <figure key={src} data-enlarged={zoom === src || undefined}>
           <button type="button" aria-label={`Enlarge ${caption}`} aria-pressed={zoom === src} onClick={() => setZoom(zoom === src ? undefined : src)}>
-            <LessonMedia media={{ image: src }} assets={assets} label={`Fair scene ${i + 1}`}/>
+            <LessonMedia media={{ image: src }} assets={assets} label={`Scene ${i + 1}`}/>
           </button>
           <figcaption>{caption}</figcaption>
         </figure>;
       })}
     </div>}
+    {exchange && <section className="flyer-exchange" aria-label="Information exchange">
+      <div className="starter-buttons">
+        <button type="button" aria-pressed={!asking} onClick={() => setAsking(false)}>Answer the examiner</button>
+        <button type="button" aria-pressed={asking} onClick={() => setAsking(true)}>Ask the examiner</button>
+      </div>
+      <div className="flyer-exchange-card">
+        <figure><LessonMedia media={{ image: asking ? exchange.examiner.image : exchange.learner.image }} assets={assets}
+          label={asking ? exchange.examiner.value : exchange.learner.value}/>
+          <figcaption>{asking ? exchange.examiner.value : exchange.learner.value}</figcaption></figure>
+        <dl className="mover-booking">{exchange.rows.map(row => <div key={row.label}><dt>{row.label}</dt>
+          <dd>{asking ? "?" : row.value}</dd></div>)}</dl>
+      </div>
+      <p lang="vi">{asking ? "Đặt câu hỏi để tìm thông tin còn thiếu." : "Dùng phiếu của em để trả lời câu hỏi của giáo viên."}</p>
+    </section>}
     {groups?.map((group, i) => <fieldset key={i} className="mover-odd">
       <legend>Set {i + 1}</legend>
       <div className="starter-cards">{group.map((src, n) => <button key={src} className="starter-card" type="button"
@@ -75,11 +100,10 @@ export default function StartersRound({ items, index, turn, answers, assets, set
     </div>)}</dl>}
     {scene && (targets ? <div className="starter-scene">
       <LessonMedia media={{ image: scene }} assets={assets}
-        label={movers ? (colouring ? "A fair stall with an empty sign" : "Six children at the fair") :
+        label={level === "flyers" ? (colouring ? "A beach hut with two empty signs" : "Six children at the coastal centre") :
+          advanced ? (colouring ? "A fair stall with an empty sign" : "Six children at the fair") :
           (paint ? "Seven balls in a park" : "Six children in a park")}/>
-      {movers && colouring && (sign ? <label className="mover-sign"><span className="sr-only">Word on the sign</span>
-        <input value={value} onChange={event => pick(event.target.value)} maxLength={40} spellCheck={false} autoComplete="off"/>
-      </label> : <span className="mover-sign" aria-hidden="true">{answers[section.find(i => items[i].practice?.starters?.sign) ?? -1]?.[0]}</span>)}
+      {advanced && colouring && (level === "flyers" ? <>{signField("left")}{signField("right")}</> : signField())}
       {match && value && <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line x1="50" y1="4"
         x2={targets.find(point => point.id === value)?.x} y2={targets.find(point => point.id === value)?.y}/></svg>}
       {targets.map(point => {
@@ -90,7 +114,7 @@ export default function StartersRound({ items, index, turn, answers, assets, set
         return <div key={point.id}>
           {mask && fill && <span className="mover-colour-fill" aria-hidden="true" style={{ backgroundColor: fill, maskImage: `url(${mask})` }}/>}
           <button className={mask ? "starter-pin mover-colour-pin" : "starter-pin"} type="button"
-          aria-label={`${colouring ? (movers ? "Object" : "Ball") : "Person"} ${point.id}${paintValue ? " " + paintValue : ""}`}
+          aria-label={`${colouring ? (advanced ? "Object" : "Ball") : "Person"} ${point.id}${paintValue ? " " + paintValue : ""}`}
           aria-pressed={target === point.id} style={{ left: point.x + "%", top: point.y + "%",
             backgroundColor: mask ? undefined : fill }}
           disabled={taken || sign} onClick={() => {
@@ -104,7 +128,7 @@ export default function StartersRound({ items, index, turn, answers, assets, set
           }}>{point.id}{speaking && answers[index]?.some(entry => entry.startsWith(point.id + ":")) && <span aria-hidden="true"> ✓</span>}</button>
         </div>;
       })}
-    </div> : <div className={!movers && paper === "reading" && [1, 3].includes(part) ? "starter-picture starter-object" : "starter-picture"}><LessonMedia media={{ image: scene }} assets={assets}
+    </div> : <div className={!advanced && paper === "reading" && [1, 3].includes(part) ? "starter-picture starter-object" : "starter-picture"}><LessonMedia media={{ image: scene }} assets={assets}
       label={paper === "reading" && part === 5 ? "Story picture" : "Question picture"}/></div>)}
     {speaking && part === 1 && !!answers[index]?.length && <ul className="starter-placements" aria-label="Placed cards">
       {answers[index].map(entry => { const [person, object] = entry.split(":"); return <li key={object}>{object} → {person}</li>; })}
@@ -150,8 +174,18 @@ export default function StartersRound({ items, index, turn, answers, assets, set
         {!copyWord && <span className="starter-choice-letter" aria-hidden="true">{"ABC"[i]}</span>}{choice}
       </button>)}
     </div>}
+    {wordBank && <div className="starter-buttons" aria-label="Word bank">
+      {wordBank.map(entry => <button key={entry} type="button" aria-pressed={word === entry} onClick={() => pickWord(entry)}>{entry}</button>)}
+    </div>}
+    {responses && <div className="starter-buttons flyer-responses" aria-label="Responses A to H">
+      {responses.map((response, i) => {
+        const letter = "ABCDEFGH"[i];
+        return <button type="button" key={letter} aria-pressed={value === letter} disabled={previous.includes(letter)}
+          onClick={() => pick(letter)}><span className="starter-choice-letter">{letter}</span>{response}</button>;
+      })}
+    </div>}
     {typed && <label className="starter-answer">Your answer
-      {open ? <textarea id={inputId} value={value} onChange={event => pick(event.target.value)} rows={3}
+      {open ? <textarea id={inputId} value={value} onChange={event => pick(event.target.value)} rows={level === "flyers" ? 6 : 3}
         maxLength={cambridgeResponseLimit(config)} spellCheck={false}/> :
         <input id={inputId} value={value} onChange={event => pick(event.target.value)} placeholder={letters && "– ".repeat(letters.length).trim()} autoComplete="off" autoCorrect="off"
           autoCapitalize="off" spellCheck={false} maxLength={cambridgeResponseLimit(config)}/>}

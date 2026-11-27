@@ -41,6 +41,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
   const starters = mode === "starters";
   const speaking = Boolean(mode && (isSpeaking(mode) || content[0]?.practice?.starters?.paper === "speaking"));
   const cambridgeWriting = starters && content.some(item => item.practice?.starters?.open);
+  const fixedWritingRubric = cambridgeWriting && content[0]?.practice?.starters?.level === "movers";
   const objective = productive && template === "type-answer";
   const [rubric, setRubric] = useState(() => content[0]?.practice?.production?.rubric ?? defaultRubric(speaking ? "Speaking" : "Writing"));
   const [stimulus, setStimulus] = useState(() => {
@@ -136,12 +137,12 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
         <label>Mô tả tiêu chí<input maxLength={240} value={row.description} onChange={event => {
           const description = event.target.value; setRubric(previous => previous.map((item, i) => i === index ? { ...item, description } : item));
         }}/></label>
-        <label>Điểm tối đa<input type="number" required min={1} max={20} readOnly={cambridgeWriting} value={row.max || ""} onChange={event => {
+        <label>Điểm tối đa<input type="number" required min={1} max={20} readOnly={fixedWritingRubric} value={row.max || ""} onChange={event => {
           const max = Number(event.target.value); setRubric(previous => previous.map((item, i) => i === index ? { ...item, max } : item));
         }}/></label>
-        {!cambridgeWriting && <button type="button" className="button" disabled={rubric.length <= 1} onClick={() => setRubric(rubric.filter((_, i) => index !== i))}>Bỏ tiêu chí {index + 1}</button>}
+        {!fixedWritingRubric && <button type="button" className="button" disabled={rubric.length <= 1} onClick={() => setRubric(rubric.filter((_, i) => index !== i))}>Bỏ tiêu chí {index + 1}</button>}
       </fieldset>)}
-      {!cambridgeWriting && <button type="button" className="button" disabled={rubric.length >= 8} onClick={() => setRubric([...rubric, { title: "", description: "", max: 4 }])}>Thêm tiêu chí</button>}
+      {!fixedWritingRubric && <button type="button" className="button" disabled={rubric.length >= 8} onClick={() => setRubric([...rubric, { title: "", description: "", max: 4 }])}>Thêm tiêu chí</button>}
     </section>}
     {reading && <section className="panel stack"><h2>Ngữ liệu chung</h2>
       <label>Loại ngữ liệu<select value={stimulus.stimulusKind} onChange={event => {

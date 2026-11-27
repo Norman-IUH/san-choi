@@ -13,7 +13,7 @@ import { isWordTemplate } from "@/lib/games/word-templates";
 import { isPuzzleTemplate } from "@/lib/games/puzzle-templates";
 import { isArcadeTemplate } from "@/lib/games/arcade-templates";
 import { gameTheme } from "./games/game-themes";
-import { cambridgeLevels, moverSeconds, starterSeconds } from "@/lib/games/starters";
+import { cambridgeLevels, cambridgeSeconds } from "@/lib/games/starters";
 import { StartersAudio } from "./games/StartersAudio";
 
 type Props = { title: string; description?: string; backHref?: string; template: Template; initialItems?: PlayItem[]; reveals?: string[];
@@ -181,7 +181,7 @@ export function Player({ title, description, backHref, template, initialItems = 
       setResult(null);
       setFeedback("");
       const config = started.items[0].practice?.starters;
-      const seconds = config?.mock ? (config.level === "movers" ? moverSeconds : starterSeconds)[config.paper] : 0;
+      const seconds = config?.mock ? cambridgeSeconds[config.level ?? "starters"][config.paper] : 0;
       const deadline = Math.min(typeof draft?.deadline === "number" ? draft.deadline : Infinity, Date.now() + seconds * 1000);
       expired.current = false;
       setMock(seconds ? { deadline, seconds: Math.max(0, Math.ceil((deadline - Date.now()) / 1000)) } : null);
@@ -293,7 +293,8 @@ export function Player({ title, description, backHref, template, initialItems = 
       <h2 tabIndex={-1} ref={bindFocus}
       aria-describedby={result.score !== null || assignment ? outcomeId : undefined}>Hoàn thành!</h2>
       {result.score !== null && <strong id={outcomeId}>{result.score}/{result.total} điểm{manualWriting && " tự động"}</strong>}
-      {manualWriting && <p>{assignment ? "Hai câu viết mở chờ giáo viên chấm." : "Giáo viên có thể chấm hai câu viết mở khi giao bộ bài."}</p>}
+      {manualWriting && <p>{starters?.level === "flyers" ? (assignment ? "Bài viết truyện chờ giáo viên chấm." : "Giáo viên có thể chấm bài viết truyện khi giao bộ bài.") :
+        (assignment ? "Hai câu viết mở chờ giáo viên chấm." : "Giáo viên có thể chấm hai câu viết mở khi giao bộ bài.")}</p>}
       {assignment && <p id={result.score === null ? outcomeId : undefined}>Bài làm đã được lưu.</p>}
       {assignment && result.pendingReview && <Link className="button" href={`/play/${assignment}/review`}>Xem nhận xét khi giáo viên công bố</Link>}
       <p>{result.score !== null && result.score === result.total ? "Em đã hoàn thành xuất sắc!" : "Giỏi lắm, em đã hoàn thành lượt chơi."}</p>

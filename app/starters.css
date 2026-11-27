@@ -101,6 +101,21 @@
 .mover-odd { margin: 0; min-width: 0; border: 1px solid #bfdad6; border-radius: .65rem; padding: .5rem; }
 .mover-odd legend { padding: 0 .35rem; font-weight: 750; }
 .mover-odd .starter-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.flyer-sign-left, .flyer-sign-right { top: 28.5%; width: 18%; height: 11%; }
+.flyer-sign-left { left: 11.5%; }
+.flyer-sign-right { left: 69.8%; }
+.flyer-sign-left input, .flyer-sign-right input { min-height: 24px; }
+.flyer-responses { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%, 17rem),1fr)); }
+.flyer-responses button { text-align: left; }
+.flyer-exchange, .flyer-exchange-card { display: grid; gap: .85rem; }
+.flyer-exchange-card { grid-template-columns: repeat(auto-fit,minmax(min(100%, 12rem),1fr)); align-items: center; }
+.flyer-exchange-card figure { margin: 0; border-radius: .65rem; background: var(--starter-aqua); padding: .5rem; }
+.flyer-exchange-card img { display: block; width: 100%; border-radius: .45rem; }
+.flyer-exchange-card figcaption { padding-top: .4rem; font-weight: 700; }
+.cambridge-dashboard-list { display: grid; padding: 0; margin: 0; list-style: none; }
+.cambridge-dashboard-list li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .35rem .75rem; padding: .65rem 0; border-bottom: 1px solid #bfdad6; }
+.cambridge-dashboard-list li p { margin: 0; }
+.cambridge-dashboard-list a { color: #205766; text-decoration: underline; text-underline-offset: .16em; }
 @media (max-width: 540px) {
   .starter-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .starter-import { margin: .75rem; }

@@ -7,20 +7,20 @@ import { compatible, contentSchema, templateSchema, type Item } from "@/lib/game
 import { demoContent, demos } from "@/lib/demo";
 import { itemMediaPaths } from "@/lib/media";
 import { englishDeckContent, englishDecks, isDeckId } from "@/lib/english-samples";
-import { starterPaperSchema } from "@/lib/games/starters";
-import { starterPaper } from "@/lib/starters-paper";
-import { moverPaper } from "@/lib/movers-paper";
+import { cambridgeLevelSchema, starterPaperSchema, type CambridgeLevel } from "@/lib/games/starters";
+import { cambridgePapers } from "@/lib/cambridge-papers";
 
 const uuid = z.uuid();
 
-export async function importCambridge(level: "starters" | "movers", paper: string, part: number | undefined) {
+export async function importCambridge(level: CambridgeLevel, paper: string, part: number | undefined) {
   const { db } = await account(true);
   const parsed = starterPaperSchema.safeParse(paper);
-  const material = parsed.success && (level === "starters" ? starterPaper : level === "movers" ? moverPaper : () => null)(parsed.data, part);
+  const collection = cambridgeLevelSchema.safeParse(level);
+  const material = parsed.success && collection.success && cambridgePapers[collection.data](parsed.data, part);
   if (!material) notFound();
   const { data, error } = await db.from("activities").insert({
     title: material.title, description: material.label, subject: "English", grade: material.items[0].english?.level,
-    tags: level === "movers" ? "Movers" : "Starters",
+    tags: level[0].toUpperCase() + level.slice(1),
     visibility: "private", draft: false, template: material.template, content: contentSchema(material.template).parse(material.items),
   }).select("id").single();
   check(error, "import_cambridge");
