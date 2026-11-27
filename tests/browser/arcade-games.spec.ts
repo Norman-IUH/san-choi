@@ -1,3 +1,4 @@
+import { captureGame } from "./capture-game";
 import { mkdir } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import { arcadeTemplates, hasArcadeCanvas, type ArcadeTemplate } from "../../lib/games/arcade-templates";
@@ -9,6 +10,7 @@ for (const template of Object.keys(arcadeTemplates) as ArcadeTemplate[]) {
     test.setTimeout(85000);
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/demo/" + template);
+    await captureGame(page, info, template, "start");
     const start = page.getByRole("button", { name: "Bắt đầu" });
     await expect(start).toBeEnabled({ timeout: 20000 });
     const output = process.env.ARCADE_SCREENSHOTS;
@@ -39,10 +41,12 @@ for (const template of Object.keys(arcadeTemplates) as ArcadeTemplate[]) {
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
     await capture("playing");
+    await captureGame(page, info, template, "playing");
     await playArcade(page, template, demoContent(template));
     await expect(page.getByText(template === "win-or-lose-quiz" ? "2/3 điểm" : "1/2 điểm", { exact: true })).toBeVisible();
     await expect(field.locator("canvas")).toHaveCount(0);
     await capture("result");
+    await captureGame(page, info, template, "result");
     await page.getByRole("button", { name: "Chơi lại" }).click();
     await expect(start).toBeVisible();
   });

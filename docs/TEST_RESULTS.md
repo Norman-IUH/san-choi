@@ -131,3 +131,19 @@ Các giới hạn còn lại gồm WebKit và thiết bị thật, máy chiếu 
 105 ảnh toàn trang lưu Start, Playing và Result của bảy mẫu trên năm cấu hình trình duyệt. Thiết bị thật và máy chiếu lớp học vẫn chờ kiểm tra. [Ảnh kiểm thử V1.4C](../output/playwright/v14c-gameplay).
 
 Đăng ký công khai của QuizStudy đã tắt theo lần xác minh ở đợt phát hành trước. Khóa bí mật từng được chia sẻ vẫn là rủi ro bảo mật chưa xử lý. Đợt này giữ nguyên khóa và tài khoản giáo viên hiện tại. V1.4C dành cho review trên nhánh riêng.
+
+## V1.4D — Premium Visual Polish
+
+| Hạng mục | Kết quả |
+|---|---|
+| Baseline V1.4C | Commit `98ae902`, 108 lượt Playwright qua 34 trò trên desktop, tablet và mobile. Lưu 306 ảnh Start, Playing và Result |
+| Lint, typecheck, unit test và production build | Đạt. 59 Vitest và 34 trang demo render sẵn |
+| Playwright Chromium | 143 lượt đạt. Bảy lượt theo cấu hình riêng hoặc chỉ dành cho thiết bị chạm được bỏ qua theo profile. So sánh chín ảnh chuẩn HUD của Quiz, Flip Tiles và Maze Chase. Kiểm tra thêm thư viện tải ảnh theo vùng nhìn, kéo Rank Order bằng chạm và chế độ trình chiếu thẻ ghi nhớ |
+| Playwright WebKit | 82 lượt đạt trên Desktop Safari và iPhone 13 mô phỏng. Hai lượt dùng CDP để kéo thả cảm ứng được chạy trong bộ Chromium |
+| E2E QuizStudy | 23 lượt đạt. Ba nhóm editor, preview, giao và lưu kết quả V1.4A/B/C cùng luồng ảnh, audio UK/US và quyền xem câu sai của Quiz. Dùng tài khoản và bài thử riêng |
+| Lỗi mạng | Kiểm tra lại nộp lặp sau khi mất phản hồi và cấp lại signed URL trong cùng lượt, kể cả ảnh trong canvas |
+| Audit npm | Runtime 0 cảnh báo. Audit đầy đủ còn 7 mục mức vừa thuộc chuỗi phụ thuộc phát triển TypeScript ESLint và minimatch. [Advisory](https://github.com/advisories/GHSA-g3hv-75wg-m249) |
+
+612 ảnh Before và After dùng cùng ba viewport desktop 1920 × 1080, tablet 820 × 1180 và mobile 390 × 844. Mỗi mẫu có ảnh Start, Playing và Result. Ma trận ảnh dùng dữ liệu demo. Thiết bị thật và máy chiếu lớp học vẫn chờ xác minh.
+
+Đợt này giữ nguyên cấu hình API và tài khoản giáo viên. Khóa bí mật từng lộ vẫn là rủi ro bảo mật chưa xử lý.

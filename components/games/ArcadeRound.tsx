@@ -1,12 +1,12 @@
 "use client";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { createPortal } from "react-dom";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Pause, Play } from "lucide-react";
 import { ArcadeSimulation, type Direction } from "@/lib/games/arcade-runtime";
 import { arcadeWorlds, hasArcadeCanvas, isArcadeTemplate, riskMarker } from "@/lib/games/arcade-templates";
 import type { RoundProps } from "./LegacyRound";
 import { LessonMedia, Pronunciation } from "./LessonMedia";
-import { Progress } from "./Progress";
 import { RiskBoard, SortingBoard } from "./ArcadeBoards";
 
 const ArcadeCanvas = dynamic(() => import("./ArcadeCanvas"), { ssr: false, loading: () => <p role="status">Đang mở sân chơi…</p> });
@@ -16,7 +16,7 @@ const directions = [
 ] as const;
 const keyboard: Record<string, Direction | undefined> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" };
 
-export default function ArcadeRound({ template, items, index, turn, answers, next, busy, assets, bindFocus, playHit }: RoundProps) {
+export default function ArcadeRound({ template, items, index, turn, answers, next, busy, assets, bindFocus, playHit, hudTools }: RoundProps) {
   if (!isArcadeTemplate(template)) throw new Error("Unknown arcade stage");
   const item = items[index];
   const [world] = useState(() => new ArcadeSimulation(template, item, matchMedia("(prefers-reduced-motion: reduce)").matches));
@@ -30,6 +30,10 @@ export default function ArcadeRound({ template, items, index, turn, answers, nex
   const canvas = hasArcadeCanvas(template);
   const blocked = paused || selected !== undefined;
   const riskAvailable = !Object.values(answers).some(answer => answer.includes(riskMarker));
+  const pauseControl = <button className="icon-button" type="button" aria-pressed={paused} aria-label={paused ? "Tiếp tục chơi" : "Tạm dừng"}
+    onClick={() => { world.setPaused(!paused); setPaused(!paused); }}>
+    {paused ? <Play size={19} aria-hidden="true"/> : <Pause size={19} aria-hidden="true"/>}
+  </button>;
 
   useEffect(() => {
     stage.current?.focus();
@@ -72,12 +76,10 @@ export default function ArcadeRound({ template, items, index, turn, answers, nex
   }
 
   return <div className="play-stack arcade-round" data-paused={paused} onKeyDown={control}>
-    <div className="arcade-hud"><Progress value={turn + 1} total={items.length}/>
+    <div className="arcade-hud">
       <span className="arcade-counter">Đã ghi {Object.keys(answers).length}/{items.length}</span>
       {world.duration > 0 && <span className="arcade-counter" role="timer">{seconds} giây</span>}
-      <button className="button" type="button" aria-pressed={paused} onClick={() => { world.setPaused(!paused); setPaused(!paused); }}>
-        {paused ? <Play size={16}/> : <Pause size={16}/>} {paused ? "Tiếp tục chơi" : "Tạm dừng"}
-      </button>
+      {hudTools ? createPortal(pauseControl, hudTools) : pauseControl}
     </div>
     <h2 tabIndex={-1} ref={bindFocus} className="arcade-question">{item.prompt}</h2>
     <div className={`arcade-field${canvas ? "" : " arcade-dom-field"}`} ref={stage} tabIndex={0} aria-label="Sân chơi arcade"
@@ -87,9 +89,9 @@ export default function ArcadeRound({ template, items, index, turn, answers, nex
           <RiskBoard item={item} assets={assets} risk={risk} setRisk={setRisk} riskAvailable={riskAvailable} blocked={blocked} selected={selected} onPick={pickBoard}/>}
       {paused && <div className="arcade-overlay">Đang tạm dừng</div>}
     </div>
-    {(mapped || plane) && <div className="arcade-direction" role="group" aria-label="Điều khiển di chuyển">
+    {(mapped || plane) && <div className={mapped ? "arcade-direction arcade-dpad" : "arcade-direction"} role="group" aria-label="Điều khiển di chuyển">
       {directions.filter(({ action }) => mapped || action === "up" || action === "down").map(({ action, label, Icon }) =>
-        <button key={action} className="button" type="button" aria-label={label} disabled={paused || selected !== undefined}
+        <button key={action} data-direction={action} className="button" type="button" aria-label={label} disabled={paused || selected !== undefined}
           onClick={() => world.move(action)}><Icon size={20}/>{label}</button>)}
     </div>}
     <div className="arcade-support">

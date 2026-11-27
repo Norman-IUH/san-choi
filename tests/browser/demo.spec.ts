@@ -1,3 +1,4 @@
+import { captureGame } from "./capture-game";
 import { expect, test } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 import { demoContent } from "../../lib/demo";
@@ -15,6 +16,7 @@ for (const template of legacyIds) {
     const items = demoContent(template);
     const kind = templates[template].kind;
     await page.goto(`/demo/${template}`);
+    await captureGame(page, info, template, "start");
     const checkWidth = async () => expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
     const output = process.env.V13_SCREENSHOTS;
     const capture = async (state: string) => {
@@ -29,6 +31,7 @@ for (const template of legacyIds) {
     await page.locator(".game-stage > .play-stack").waitFor();
     await checkWidth();
     await capture("play");
+    await captureGame(page, info, template, "playing");
     if (template === "match-up" || template === "group-sort") {
       for (const item of items) {
         await page.getByRole("group", { name: "Thẻ cần ghép" }).getByRole("button", { name: item.prompt, exact: true }).click();
@@ -62,6 +65,7 @@ for (const template of legacyIds) {
     await expect(page.getByRole("heading", { name: "Hoàn thành!" })).toBeVisible();
     await checkWidth();
     await capture("result");
+    await captureGame(page, info, template, "result");
     const maxScore = items.length + Number(template === "gameshow");
     if (kind !== "prompt" && template !== "flash-cards") await expect(page.getByText(`${maxScore}/${maxScore} điểm`)).toBeVisible();
     await page.getByRole("button", { name: "Chơi lại" }).click();

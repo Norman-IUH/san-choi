@@ -49,4 +49,12 @@ Sau khi xử lý cổng bảo mật và có phê duyệt, merge PR #1 trước v
 
 Đối chiếu [ảnh V1.4B](../output/playwright/v14b-gameplay) với [ảnh arcade V1.4C](../output/playwright/v14c-gameplay). Ưu tiên các mẫu cũ còn dành phần lớn màn hình cho biểu mẫu hoặc khoảng trắng. Vòng tiếp theo sẽ chuẩn hóa bố cục toàn màn hình, cỡ chữ và vùng chạm, rồi thử từng trò ở viewport dọc, ngang và khi chiếu lớp. Với trò có sân khấu, kiểm tra đầu mục và kết quả có cùng ngôn ngữ hình ảnh. Với trò nhập chữ hoặc sắp xếp, ưu tiên khả năng đọc và thao tác trước hiệu ứng.
 
-Thứ tự review hiện tại là PR #1 → #2 → #3 → #4. Chỉ phát hành khi chủ dự án phê duyệt. Rủi ro Secret Key từng lộ vẫn được ghi nhận theo cấu hình hiện tại.
+## V1.4D Premium Visual Polish
+
+- D1 đưa các trang chơi riêng sang Game Shell toàn trang với HUD, màn mở đầu và kết quả thống nhất.
+- D2 tăng khả năng đọc của câu hỏi, ô chữ, thẻ lựa chọn và thẻ ghép. Rank Order thêm vùng kéo cảm ứng. Watch and Memorize có nút phóng to thẻ khi trình chiếu.
+- D3 thêm canvas dọc và D-pad, tìm kiếm và lọc 34 mẫu, thumbnail tải gần viewport và lối tắt đến phần giao bài.
+
+Labelled Diagram tiếp tục giữ một ghim mỗi mục. Nhiều ghim trong một ảnh cần thiết kế cấu trúc nhập liệu, snapshot và luật chấm trước khi triển khai.
+
+V1.4D dựa trên PR #4. Chỉ phát hành sau khi review các PR theo thứ tự và chủ dự án phê duyệt. Rủi ro Secret Key từng lộ vẫn được ghi nhận theo cấu hình hiện tại.

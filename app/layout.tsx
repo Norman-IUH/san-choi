@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight, Blocks } from "lucide-react";
 import "./globals.css";
+import "./game-shell.css";
 
 export const metadata: Metadata = {
   title: { default: "Sân Chơi — Học liệu tương tác", template: "%s | Sân Chơi" },

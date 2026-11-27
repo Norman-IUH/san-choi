@@ -1,23 +1,25 @@
 "use client";
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
-import { Maximize, Minimize, RotateCcw, Volume2, VolumeX } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, Maximize, Minimize, Pause, Play, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { finishAttempt, guessAssignmentLetter, refreshLessonMedia, startAttempt } from "@/app/play/actions";
 import { grade, missedReview, shuffle, templates, type Template, type Item, type PlayItem, type ReviewEntry } from "@/lib/game";
 import { RefreshLessonMedia } from "./games/LessonMedia";
 import { GameRound } from "./games/GameRound";
+import { Progress } from "./games/Progress";
 import { hangmanPattern } from "@/lib/games/word-puzzles";
 import { isWordTemplate } from "@/lib/games/word-templates";
 import { isPuzzleTemplate } from "@/lib/games/puzzle-templates";
 import { isArcadeTemplate } from "@/lib/games/arcade-templates";
 import { gameTheme } from "./games/game-themes";
 
-type Props = { title: string; template: Template; initialItems?: PlayItem[]; reveals?: string[];
+type Props = { title: string; description?: string; backHref?: string; template: Template; initialItems?: PlayItem[]; reveals?: string[];
   localContent?: Item[]; assignment?: string; requireName?: boolean; assets?: Record<string, string>;
   mediaScope?: { source: "activity" | "resource"; id: string } };
 
 const subscribeToNothing = () => () => {};
 
-export function Player({ title, template, initialItems = [], reveals: initialReveals = [], localContent, assignment, requireName, assets: initialAssets = {}, mediaScope }: Props) {
+export function Player({ title, description, backHref, template, initialItems = [], reveals: initialReveals = [], localContent, assignment, requireName, assets: initialAssets = {}, mediaScope }: Props) {
   const ready = useSyncExternalStore(subscribeToNothing, () => true, () => false);
   const [items, setItems] = useState(initialItems);
   const [reveals, setReveals] = useState(initialReveals);
@@ -34,10 +36,12 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
   const [sound, setSound] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [classroomFallback, setClassroomFallback] = useState(false);
+  const [hudTools, setHudTools] = useState<HTMLDivElement | null>(null);
   const draftId = useRef<string | null>(null);
   const lastMediaRefresh = useRef(0);
   const audioContext = useRef<AudioContext | null>(null);
   const panelRef = useRef<HTMLElement | null>(null);
+  const pauseDialog = useRef<HTMLDialogElement | null>(null);
   const focusTarget = useRef<HTMLElement | null>(null);
   const replayPending = useRef(false);
   const outcomeId = useId();
@@ -47,8 +51,11 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
   const theme = gameTheme(template);
   const arcade = isArcadeTemplate(template);
   const gameplayThumbnail = arcade || isWordTemplate(template) || isPuzzleTemplate(template);
+  const artStyle = gameplayThumbnail ? { backgroundImage: `url(/illustrations/${arcade ? "arcade" : "gameplay"}/${template}.webp)` } : { backgroundPosition: theme.artPosition };
+  const defaultArcadePractice = arcade && !assignment && !!localContent && localContent.every(item => !item.arcade?.timed);
   const index = order[turn] ?? 0;
   const rows = template === "match-up" || template === "group-sort";
+  const board = rows || template === "open-box" || template === "flip-tiles" || template === "matching-pairs";
   const stageScore = (arcade || template === "gameshow") && active && !result && !assignment && localContent
     ? grade(template, localContent, items.map((_, i) => answers[i] ?? [])).score : null;
 
@@ -62,7 +69,7 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
     if (!classroomFallback) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    function closeOnEscape(event: KeyboardEvent) { if (event.key === "Escape") setClassroomFallback(false); }
+    function closeOnEscape(event: KeyboardEvent) { if (event.key === "Escape" && !pauseDialog.current?.open) setClassroomFallback(false); }
     document.addEventListener("keydown", closeOnEscape);
     return () => {
       document.body.style.overflow = previous;
@@ -202,8 +209,18 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
   }
 
   return <RefreshLessonMedia.Provider value={renewMedia}><section ref={panelRef} className={`player game-stage game-${template} ${arcade ? "arcade-stage" : ""} ${template === "gameshow" ? "gameshow" : ""} ${classroomFallback ? "classroom-fallback" : ""}`}>
-    <div className="player-top"><span className={`template-tag ${meta.color}`}>{meta.icon} &nbsp;{meta.title}</span>
+    <div className="player-top"><div className="game-identity">
+      {backHref && <Link className="icon-button game-back" aria-label={backHref === "/#mau" ? "Tất cả mẫu" : "Quay lại học liệu"} href={backHref}><ArrowLeft size={20}/></Link>}
+      <span className={`template-tag ${meta.color}`}>{meta.title}</span>
+    </div>
+      {active && !result && template !== "crossword" && <Progress value={board ? Object.keys(answers).length : turn + 1} total={items.length}/>}
+      {stageScore !== null && <div className="game-scoreboard"><span>{arcade ? "Điểm luyện tập" : "Điểm sân khấu"}</span><strong key={stageScore} aria-live="polite">{stageScore}</strong></div>}
       <div className="game-tools">
+        <div ref={setHudTools} className="game-round-tools"/>
+        {active && !result && !arcade && <button type="button" className="icon-button" aria-label="Tạm dừng" onClick={() => {
+          panelRef.current?.querySelectorAll("audio").forEach(audio => audio.pause());
+          pauseDialog.current?.showModal();
+        }}><Pause size={19} aria-hidden="true"/></button>}
         <button type="button" className="icon-button" aria-label="Âm thanh phản hồi" aria-pressed={sound} onClick={() => void toggleSound()}>
           {sound ? <Volume2 size={19}/> : <VolumeX size={19}/>}
         </button>
@@ -213,16 +230,18 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
         </button>
       </div>
     </div>
-    <h1>{title}</h1>
-    {stageScore !== null && <div className="game-scoreboard"><span>{arcade ? "Điểm luyện tập" : "Điểm sân khấu"}</span><strong key={stageScore} aria-live="polite">{stageScore}</strong></div>}
+    {active && <h1 className={result ? "sr-only" : "game-round-title"}>{title}</h1>}
     {error && <p role="alert" className="notice error">{error}</p>}
     <p role="status" aria-atomic="true" className={feedback ? "notice" : "sr-only"}>
       {feedback}
     </p>
-    {result ? <div className="result"><h2 tabIndex={-1} ref={bindFocus}
+    {result ? <div className="result game-completion">
+      <div className={`game-art completion-art${gameplayThumbnail ? " gameplay-thumbnail" : ""}`} aria-hidden="true" style={artStyle}/>
+      <h2 tabIndex={-1} ref={bindFocus}
       aria-describedby={result.score !== null || assignment ? outcomeId : undefined}>Hoàn thành!</h2>
       {result.score !== null && <strong id={outcomeId}>{result.score}/{result.total} điểm</strong>}
       {assignment && <p id={result.score === null ? outcomeId : undefined}>Bài làm đã được lưu.</p>}
+      <p>{result.score !== null && result.score === result.total ? "Em đã hoàn thành xuất sắc!" : "Giỏi lắm, em đã hoàn thành lượt chơi."}</p>
       {!!result.review?.length && <details className="review-panel"><summary>Xem lại câu sai ({result.review.length})</summary>
         <ol>{result.review.map((entry, index) => <li key={index}>
           <strong>{entry.prompt}</strong>
@@ -237,15 +256,22 @@ export function Player({ title, template, initialItems = [], reveals: initialRev
       }}><RotateCcw size={16}/> Chơi lại</button>
     </div> : !active ? <div className="game-intro">
       <div className={gameplayThumbnail ? "game-art gameplay-thumbnail" : "game-art"} aria-hidden="true"
-        style={gameplayThumbnail ? { backgroundImage: `url(/illustrations/${arcade ? "arcade" : "gameplay"}/${template}.webp)` } : { backgroundPosition: theme.artPosition }}/>
+        style={artStyle}/>
       <form onSubmit={event => { event.preventDefault(); void start(); }}>
+      <h1>{title}</h1>
       <p>{theme.instruction}</p>
+      {description && <p className="hint">{description}</p>}
+      {defaultArcadePractice && <p className="hint">Luyện tập không giới hạn thời gian</p>}
       {assignment && requireName && <label>Biệt danh<input value={nickname} onChange={event => setNickname(event.target.value)} maxLength={80} required /></label>}
       {assignment && <p className="hint">Nếu đã bắt đầu, em có thể tiếp tục sau khi tải lại trong cùng thẻ trình duyệt.</p>}
-      <button ref={bindFocus} className="button primary" disabled={!ready || busy}>{busy ? "Đang mở…" : "Bắt đầu"}</button>
-    </form></div> : <GameRound key={turn} {...{ template, items, order, turn, index, answers, setAnswers, assets, reveals, busy, bindFocus, next, submit }}
+      <button ref={bindFocus} className="button primary game-start" disabled={!ready || busy}><Play size={20} aria-hidden="true"/>{busy ? "Đang mở…" : "Bắt đầu"}</button>
+    </form></div> : <GameRound key={turn} {...{ template, items, order, turn, index, answers, setAnswers, assets, reveals, busy, bindFocus, next, submit, hudTools }}
       playHit={arcade ? () => chime(null) : undefined}
       guess={template === "hangman" ? async (letter, guesses) => assignment ? guessAssignmentLetter(assignment, index, letter)
         : localContent?.[index] ? { ...hangmanPattern(localContent[index].answers[0], guesses), guesses } : null : undefined}/>}
+    {active && !result && !arcade && <dialog ref={pauseDialog} className="game-pause-dialog" aria-label="Tạm dừng trò chơi">
+      <h2>Đang tạm dừng</h2>
+      <form method="dialog"><button className="button primary">Tiếp tục chơi</button></form>
+    </dialog>}
   </section></RefreshLessonMedia.Provider>;
 }

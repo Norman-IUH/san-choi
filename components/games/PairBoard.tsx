@@ -1,5 +1,6 @@
 "use client";
 import { useId, useRef, useState, type ReactNode } from "react";
+import { GripVertical } from "lucide-react";
 import { type PlayItem } from "@/lib/game";
 
 export function PairBoard({ items, answers, grouping, onAssign, renderMedia }: {
@@ -46,7 +47,7 @@ export function PairBoard({ items, answers, grouping, onAssign, renderMedia }: {
               const answer = target?.dataset.pairOption;
               if (answer !== undefined) { touchDrop.current = true; assign(row, answer); }
             }}>
-            <span>{item.prompt}</span>
+            <span className="pair-label"><GripVertical size={16} aria-hidden="true"/>{item.prompt}</span>
             {answers[row]?.[0] && <small id={`${selectionId}-${row}`}>{answers[row][0]}</small>}
           </button>
           {renderMedia(item)}

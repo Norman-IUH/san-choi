@@ -1,9 +1,17 @@
 "use client";
-import { useContext, useEffect, useEffectEvent, useRef } from "react";
+import { useContext, useEffect, useEffectEvent, useRef, useSyncExternalStore } from "react";
 import Phaser from "phaser";
 import { arcadeWorlds } from "@/lib/games/arcade-templates";
 import { arenaHeight, arenaWidth, maze, mazePoint, mazeTile, type ArcadeSimulation } from "@/lib/games/arcade-runtime";
 import { RefreshLessonMedia } from "./LessonMedia";
+
+const compactQuery = "(max-width: 600px) and (orientation: portrait)";
+const isCompact = () => window.matchMedia(compactQuery).matches;
+function subscribeViewport(update: () => void) {
+  const media = window.matchMedia(compactQuery);
+  media.addEventListener("change", update);
+  return () => media.removeEventListener("change", update);
+}
 
 export default function ArcadeCanvas({ simulation, assets, onOutcome, onClock }: {
   simulation: ArcadeSimulation;
@@ -16,6 +24,8 @@ export default function ArcadeCanvas({ simulation, assets, onOutcome, onClock }:
   const notifyClock = useEffectEvent(onClock);
   const refreshMedia = useContext(RefreshLessonMedia);
   const renewMedia = useEffectEvent((url: string) => refreshMedia?.(url));
+  const compact = useSyncExternalStore(subscribeViewport, isCompact, () => false);
+  const outcomeSent = useRef(false);
 
   useEffect(() => {
     const host = root.current;
@@ -28,6 +38,10 @@ export default function ArcadeCanvas({ simulation, assets, onOutcome, onClock }:
     const path = "/illustrations/arcade/";
     const lane = mode === "airplane";
     const mapped = mode === "maze-chase";
+    const width = compact ? 720 : arenaWidth;
+    const height = compact ? 540 : arenaHeight;
+    const sx = (x: number) => x * width / arenaWidth;
+    const sy = (y: number) => y * height / arenaHeight;
     let pieces: Phaser.GameObjects.Container[] = [];
     let character: Phaser.GameObjects.Image;
     let obstacle: Phaser.GameObjects.Image | undefined;
@@ -36,7 +50,7 @@ export default function ArcadeCanvas({ simulation, assets, onOutcome, onClock }:
     delete host.dataset.ready;
     let seconds = simulation.duration;
     const game = new Phaser.Game({
-      type: Phaser.CANVAS, parent: mount, width: arenaWidth, height: arenaHeight,
+      type: Phaser.CANVAS, parent: mount, width, height,
       scale: { mode: Phaser.Scale.NONE },
       fps: { smoothStep: false },
       input: { keyboard: false, mouse: false, touch: false },
@@ -57,28 +71,29 @@ export default function ArcadeCanvas({ simulation, assets, onOutcome, onClock }:
         },
         create(this: Phaser.Scene) {
           if (disposed) return;
-          this.add.image(arenaWidth / 2, arenaHeight / 2, "world").setDisplaySize(arenaWidth, arenaHeight);
-          this.add.rectangle(arenaWidth / 2, arenaHeight / 2, arenaWidth, arenaHeight, 0x11142e, mapped ? .44 : .24);
+          const world = this.add.image(width / 2, height / 2, "world");
+          world.setScale(Math.max(width / world.width, height / world.height));
+          this.add.rectangle(width / 2, height / 2, width, height, 0x11142e, mapped ? .49 : .35);
           if (mapped) {
             maze.forEach((row, y) => Array.from(row).forEach((wall, x) => {
               const pos = mazePoint(x, y);
-              const tile = this.add.rectangle(pos.x, pos.y, mazeTile - 3, mazeTile - 3,
+              const tile = this.add.rectangle(sx(pos.x), sy(pos.y), sx(mazeTile) - 3, sy(mazeTile) - 3,
                 wall === "#" ? 0x1d5345 : 0xa7e4ae, wall === "#" ? .97 : .73);
               if (wall === "#") tile.setStrokeStyle(3, 0x72bea6, .7);
             }));
             if (simulation.difficult) obstacle = this.add.image(0, 0, "obstacle").setDisplaySize(44, 44).setTint(0xff7373).setDepth(3);
           }
           if (lane) {
-            item.options.forEach((_, i) => this.add.rectangle(480, simulation.lane(i), 908, 2, 0xffffff, .3));
-            this.add.rectangle(143, 240, 4, 366, 0xb8f4ff, .65);
+            item.options.forEach((_, i) => this.add.rectangle(width / 2, sy(simulation.lane(i)), sx(908), 2, 0xffffff, .48));
+            this.add.rectangle(sx(143), height / 2, 4, sy(366), 0xb8f4ff, .8);
           }
           if (mode === "whack-a-mole") simulation.targets().forEach(target => {
-            this.add.ellipse(target.x, target.y + 10, 148, 51, 0x332219).setStrokeStyle(5, 0xa57755);
+            this.add.ellipse(sx(target.x), sy(target.y) + 10, sx(148), 51, 0x332219).setStrokeStyle(5, 0xa57755);
           });
           pieces = simulation.targets().map(({ x, y, index }) => {
-            const width = mapped ? 112 : lane ? 132 : 166;
-            const group = this.add.container(x, y);
-            const backdrop = this.add.rectangle(0, 0, width, lane ? 35 : mapped ? 36 : 45, Phaser.Display.Color.HexStringToColor(skin.colors[0]).color)
+            const labelWidth = sx(mapped ? 120 : lane ? 155 : 182);
+            const group = this.add.container(sx(x), sy(y));
+            const backdrop = this.add.rectangle(0, 0, labelWidth, compact ? 63 : 52, Phaser.Display.Color.HexStringToColor(skin.colors[0]).color)
               .setStrokeStyle(3, Phaser.Display.Color.HexStringToColor(skin.colors[1]).color);
             const imageKey = "option-" + index;
             if (this.textures.exists(imageKey)) {
@@ -89,26 +104,26 @@ export default function ArcadeCanvas({ simulation, assets, onOutcome, onClock }:
               group.add(sprite.setScale(scale).setAlpha(lane ? .36 : 1));
             }
             const text = this.add.text(0, 0, item.options[index], {
-              fontFamily: "system-ui, sans-serif", fontSize: lane || mapped ? "22px" : "25px", fontStyle: "bold",
-              color: "#ffffff", align: "center", wordWrap: { width: width - 12, useAdvancedWrap: true }, maxLines: 2,
+              fontFamily: "system-ui, sans-serif", fontSize: compact ? "27px" : "26px", fontStyle: "bold",
+              color: "#ffffff", align: "center", wordWrap: { width: labelWidth - 10, useAdvancedWrap: true }, maxLines: 2,
             }).setOrigin(.5);
             group.add([backdrop, text]);
             return group;
           });
-          if (mapped || lane) character = this.add.image(0, 0, "avatar").setDisplaySize(mapped ? 49 : 105, mapped ? 49 : 70).setDepth(4);
+          if (mapped || lane) character = this.add.image(0, 0, "avatar").setDisplaySize(mapped ? 52 : 112, mapped ? 52 : 74).setDepth(4);
           this.scale.refresh();
           host.dataset.ready = "true";
         },
         update(this: Phaser.Scene, _time: number, delta: number) {
           if (disposed) return;
           simulation.tick(delta);
-          for (const target of simulation.targets()) pieces[target.index]?.setPosition(target.x, target.y).setVisible(target.visible);
+          for (const target of simulation.targets()) pieces[target.index]?.setPosition(sx(target.x), sy(target.y)).setVisible(target.visible);
           if (mapped) {
             const cell = mazePoint(simulation.cell.x, simulation.cell.y);
-            character?.setPosition(cell.x, cell.y);
+            character?.setPosition(sx(cell.x), sy(cell.y));
             const danger = simulation.obstacle();
-            if (danger) obstacle?.setPosition(danger.x, danger.y);
-          } else if (lane) character?.setPosition(simulation.pilot.x, simulation.pilot.y);
+            if (danger) obstacle?.setPosition(sx(danger.x), sy(danger.y));
+          } else if (lane) character?.setPosition(sx(simulation.pilot.x), sy(simulation.pilot.y));
           const remaining = Math.max(0, Math.ceil(simulation.duration - simulation.elapsed));
           if (seconds !== remaining) { seconds = remaining; notifyClock(seconds); }
           if (done || (simulation.choice === null && !simulation.expired)) return;
@@ -126,7 +141,7 @@ export default function ArcadeCanvas({ simulation, assets, onOutcome, onClock }:
               }
             }
           }
-          notifyOutcome(simulation.choice);
+          if (!outcomeSent.current) { outcomeSent.current = true; notifyOutcome(simulation.choice); }
         },
       },
     });
@@ -139,7 +154,7 @@ export default function ArcadeCanvas({ simulation, assets, onOutcome, onClock }:
       mount.remove();
       game.destroy(true);
     };
-  }, [simulation, assets]);
+  }, [simulation, assets, compact]);
 
   return <div className="arcade-canvas" ref={root} aria-hidden="true" onPointerUp={event => {
     if (!event.isPrimary || event.button !== 0) return;

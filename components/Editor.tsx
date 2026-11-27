@@ -201,7 +201,7 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
     </fieldset>; })}
     <button type="button" className="button" disabled={structureBusy || fields.length >= maxItems} onClick={() => append(defaultEntry)}><Plus size={16}/> Thêm mục</button>
     {error && <p className="notice error" role="alert">{error}</p>}
-    <div className="inline-actions"><button className="button primary" value="publish" disabled={structureBusy}>Xuất bản</button>
+    <div className="inline-actions editor-actions"><button className="button primary" value="publish" disabled={structureBusy}>Xuất bản</button>
       <button className="button" value="draft" disabled={structureBusy}>Lưu nháp</button>{pending && <span role="status">Đang lưu…</span>}</div>
   </form>;
 }

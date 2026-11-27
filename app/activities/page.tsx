@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Folder, Heart, LayoutGrid, List, Plus, Search, Trash2, FileText, Share2, Library } from "lucide-react";
 import { account, check } from "@/lib/supabase";
 import { isTemplate, templates } from "@/lib/game";
@@ -74,9 +75,12 @@ export default async function Activities({ searchParams }: { searchParams: Promi
         <Link aria-label="Dạng danh sách" aria-current={layout === "list" ? "true" : undefined} href={href({ layout: "list", page: String(page) })}><List size={18}/></Link></div></div>
     <p className="muted">{count ?? 0} hoạt động</p>
     {data?.length ? <div className={layout === "list" ? "activity-list" : "activity-grid"}>{data.map(activity => {
-      const meta = isTemplate(activity.template) ? templates[activity.template] : null;
+      const templateId = isTemplate(activity.template) ? activity.template : null;
+      const meta = templateId ? templates[templateId] : null;
       return <Link className="template-card" key={activity.id} href={`/activities/${activity.id}`}>
-        <span className={`template-picture ${meta?.color ?? "violet"}`}><span>{meta?.icon ?? "?"}</span>{activity.favorite && <Heart size={17}/>}</span>
+        <span className={`template-picture activity-picture ${meta?.color ?? "violet"}`} aria-hidden="true">
+          {templateId && <Image src={`/illustrations/gameplay/${templateId}.webp`} alt="" fill unoptimized loading="lazy"/>}
+          {activity.favorite && <Heart size={17}/>}</span>
         <div><strong>{activity.title}</strong><small>{meta?.title} {activity.draft ? "· Bản nháp" : ""}</small></div></Link>;
     })}</div> : <div className="empty"><Library size={35}/><h2>Chưa có hoạt động</h2><p>{term || template ? "Thử từ khóa hoặc bộ lọc khác." : "Hoạt động trong mục này sẽ xuất hiện tại đây."}</p></div>}
     {(page > 1 || (count ?? 0) > page * 12) && <nav className="inline-actions" aria-label="Phân trang">

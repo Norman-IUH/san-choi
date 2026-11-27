@@ -31,7 +31,10 @@ export default async function Activity({ params, searchParams }: {
   const preview = query.preview && isTemplate(query.preview) && compatible(template, query.preview, content) ? query.preview : null;
   return <div className="narrow wide"><Link className="back" href={activity.deleted_at ? "/activities?view=trash" : "/activities"}>← Hoạt động của tôi</Link>
     <div className="section-head"><div><p className="welcome">{templates[template].title} {activity.draft ? "· Bản nháp" : ""}</p><h1>{activity.title}</h1></div>
-      {!activity.deleted_at && !query.edit && <Link className="button primary" href={`/activities/${id}?edit=1`}>Chỉnh sửa</Link>}</div>
+      {!activity.deleted_at && !query.edit && <div className="inline-actions">
+        <Link className="button" href={`/activities/${id}?edit=1`}>Chỉnh sửa</Link>
+        {!activity.draft && <Link className="button primary" href="#giao-bai">Giao bài</Link>}
+      </div>}</div>
     {query.saved && <p className="notice" role="status">Đã lưu thay đổi.</p>}
     {(query.invalid || query.incompatible) && <p className="notice error" role="alert">{query.incompatible ? "Mẫu đích không thể giữ toàn bộ nội dung." : "Kiểm tra thông tin trước khi lưu."}</p>}
     {activity.deleted_at ? <div className="inline-actions">
@@ -66,7 +69,7 @@ export default async function Activity({ params, searchParams }: {
         <button className="button" disabled={!templateIds.some(id => id !== template && compatible(template, id, content))}>Xem trước mẫu</button></form>
       </section>
       {!activity.draft && activity.visibility !== "private" && <section className="panel stack"><h2>Chia sẻ</h2><label>Link hoạt động<input readOnly value={urlFor(`/resource/${id}`)}/></label></section>}
-      {!activity.draft && <section className="panel stack"><h2>Giao bài</h2><form action={createAssignment.bind(null, id)} className="stack">
+        {!activity.draft && <section className="panel stack" id="giao-bai"><h2>Giao bài</h2><form action={createAssignment.bind(null, id)} className="stack">
         <label>Hạn nộp (giờ Việt Nam)<input name="deadline" type="datetime-local"/></label>
         <label className="check"><input type="checkbox" name="require_name" defaultChecked/> Yêu cầu biệt danh</label>
         <label className="check"><input type="checkbox" name="show_score" defaultChecked/> Cho học sinh xem điểm</label>
