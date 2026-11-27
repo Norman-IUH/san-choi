@@ -1,0 +1,32 @@
+.bank-page { --bank-leaf: #195b48; --bank-paper: #eff7f2; }
+.bank-page h1 { margin-block: .25rem .35rem; }
+.bank-starters { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,14rem),1fr)); gap: .65rem; }
+.bank-starters a { display: grid; align-content: start; gap: .25rem; padding: 1rem; background: var(--bank-paper); color: var(--bank-leaf); text-decoration: none; }
+.bank-starters a strong { font-size: 1.17rem; }
+.bank-starters .sample-art { border-radius: .5rem; margin-bottom: .35rem; }
+.bank-layout { display: grid; grid-template-columns: minmax(0,1fr) minmax(18rem,.48fr); align-items: start; gap: 1rem; }
+.bank-filters { display: grid; gap: .6rem; grid-template-columns: repeat(2,minmax(0,1fr)); }
+.bank-filters label > span { display: flex; align-items: center; gap: .45rem; }
+.bank-words { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .5rem; }
+.bank-words > li { border: 1px solid var(--line); border-radius: .6rem; padding: .45rem .6rem; min-width: 0; }
+.bank-words > li:has(input:checked) { border-color: var(--bank-leaf); background: var(--bank-paper); }
+.bank-words > li > small { display: block; color: var(--muted); overflow-wrap: anywhere; }
+.bank-word { display: flex; align-items: center; gap: .55rem; min-height: 44px; cursor: pointer; }
+.bank-word > span { display: grid; min-width: 0; overflow-wrap: anywhere; }
+.bank-word > input { flex: none; width: 1.1rem; height: 1.1rem; accent-color: var(--bank-leaf); }
+.bank-page .bank-edit { display: inline-flex; align-items: center; min-height: 44px; color: var(--bank-leaf); }
+.bank-selected { max-height: 10rem; overflow: auto; display: flex; align-content: flex-start; flex-wrap: wrap; gap: .35rem; }
+.bank-selection details > form, .bank-import, .bank-media { margin-top: .75rem; }
+.bank-layout .bank-selection-link { display: none; }
+.bank-lesson-list > li { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .55rem; padding: .65rem 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.bank-lesson-list span { color: var(--muted); font-size: .9rem; }
+@media (max-width: 840px) {
+  .bank-layout { grid-template-columns: minmax(0,1fr); }
+  .bank-layout .bank-selection-link { display: inline-flex; }
+}
+@media (max-width: 560px) {
+  .bank-starters { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .bank-starters a { padding: .6rem; overflow-wrap: anywhere; }
+  .bank-starters a strong { font-size: 1rem; }
+}
+@media (max-width: 460px) { .bank-words { grid-template-columns: minmax(0,1fr); } }

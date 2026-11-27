@@ -147,3 +147,18 @@ Các giới hạn còn lại gồm WebKit và thiết bị thật, máy chiếu 
 612 ảnh Before và After dùng cùng ba viewport desktop 1920 × 1080, tablet 820 × 1180 và mobile 390 × 844. Mỗi mẫu có ảnh Start, Playing và Result. Ma trận ảnh dùng dữ liệu demo. Thiết bị thật và máy chiếu lớp học vẫn chờ xác minh.
 
 Đợt này giữ nguyên cấu hình API và tài khoản giáo viên. Khóa bí mật từng lộ vẫn là rủi ro bảo mật chưa xử lý.
+
+## V1.5A — Thư viện học liệu tiếng Anh
+
+| Hạng mục | Kết quả |
+|---|---|
+| Danh mục và chuyển đổi | 440 mục, 110 ở mỗi nhóm. Unit test kiểm tra ID duy nhất, bốn bài mở đầu, chuyển đổi và chấm điểm, quy tắc tương thích và CSV |
+| Kiểm tra mã và hồi quy Chromium | Lint, typecheck, build và 62 Vitest đạt. 143 Playwright Chromium đạt. Bảy lượt cần cấu hình hoặc profile riêng được bỏ qua |
+| Hồi quy WebKit | 84 lượt đạt trên Desktop Safari và iPhone mô phỏng. Bốn lượt dành cho cấu hình hoặc trình duyệt khác được bỏ qua |
+| Hồi quy editor cũ | Một lượt hosted đạt cho nhập XLSX/CSV trực tiếp trong Flashcards, tải ảnh thật, mở bài giao và xác nhận học sinh nhận bản chụp có câu ví dụ |
+| Bộ kiểm thử hosted mới | 10 lượt đạt, gồm bốn bài giao, một luồng import/export và media, năm lượt tìm/lọc trên desktop Chromium, mobile, tablet, Desktop Safari và iPhone mô phỏng |
+| Migration | `20261127021107_english_learning_library.sql` chạy thử trên PostgreSQL nhúng trước khi áp dụng trên QuizStudy. Hoạt động có từ trước vẫn đọc được. Hai bảng mới bật RLS. Vai trò ẩn danh không có quyền đọc. Khóa ngoại theo chủ sở hữu ngăn gắn lesson của workspace khác. [Nguyên tắc cấp quyền Data API của Supabase](https://supabase.com/docs/guides/api/securing-your-api) |
+| Bài giao thử | Kids, Pre A1 Starters, A1 Movers và A2 Flyers đều xem trước được Flashcards và dùng cùng bài học để soạn Quiz. Bốn bài giao đều lưu `4/5` với một câu sai. Sửa nguồn Kids sau khi giao vẫn để học sinh làm đủ năm mục. Chế độ ẩn câu sai của bài giao được giữ. Bốn bài thử đã đóng |
+| Import và media | CSV, XLSX, cập nhật chủ đề cho nhóm từ và xuất CSV đạt trên dữ liệu thử. Tệp ảnh và phát âm tải lên đi qua Storage. Ảnh tải được bằng signed URL. URL không ký bị từ chối. CSV không chứa signed URL |
+
+20 từ trong bốn bài mở đầu có IPA, câu ví dụ và audio Anh–Anh, Anh–Mỹ tổng hợp có sẵn. Từ còn lại có từ, nghĩa tiếng Việt, từ loại và chủ đề. Phân cấp phục vụ nội bộ. Đánh giá lớp học trên thiết bị thật, nội dung luyện theo phần thi và chấm thủ công thuộc công việc sau V1.5A.

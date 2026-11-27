@@ -19,6 +19,7 @@ export function Pronunciation({ item, assets }: { item: PlayItem; assets: Record
     const path = item.pronunciation?.[accent];
     const label = accent === "uk" ? "Anh–Anh" : "Anh–Mỹ";
     return path && assets[path] && <div key={accent} className="pronunciation"><strong>{label}</strong>
+      {path.startsWith("/audio/vocabulary/") && <small>Audio tổng hợp</small>}
       <audio aria-label={label} controls preload="none" src={assets[path]} onError={() => refresh?.(assets[path])}/></div>;
   })}</>;
 }

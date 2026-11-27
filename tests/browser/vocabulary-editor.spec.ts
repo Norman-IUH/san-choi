@@ -64,5 +64,6 @@ test("teacher imports and uploads vocabulary, then the student receives the save
     await expect(student.getByText("Bài làm đã được lưu.")).toBeVisible();
   } finally {
     await student.close();
+    await page.getByRole("button", { name: "Đóng bài tập", exact: true }).click();
   }
 });

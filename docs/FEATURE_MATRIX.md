@@ -88,3 +88,14 @@ Xem [kết quả kiểm thử](TEST_RESULTS.md) và [các phần còn thiếu](L
 | Trò theo lượt | Thẻ Quiz lớn hơn, vùng kéo Rank Order cho cảm ứng, chế độ trình chiếu thẻ ghi nhớ, cỡ chữ ô chữ lớn hơn |
 | Arcade | Phối cảnh dọc và ngang, chữ mục tiêu tương phản cao hơn và D-pad Maze Chase. Tiếp tục dùng riêng luật chơi V1.4C |
 | Giáo viên | Tìm và lọc bộ 34 mẫu bằng ảnh gameplay, lối tắt đến biểu mẫu giao bài, tinh chỉnh danh sách kết quả và học liệu tiếng Anh |
+
+## V1.5A
+
+| Tính năng | Phạm vi |
+|---|---|
+| Ngân hàng từ | 110 mục mỗi cấp độ. Từ, nghĩa, từ loại và chủ đề cho toàn bộ danh mục. 20 mục mở đầu có IPA, ví dụ và 40 tệp phát âm tổng hợp |
+| Từ của giáo viên | Tạo, sửa, sao chép, tìm và lọc. Có ảnh và audio Anh–Anh, Anh–Mỹ tùy chọn |
+| Nhập, xuất và sửa theo nhóm | CSV/XLSX tối đa 1.000 dòng trong giới hạn tệp 512 KiB. CSV tải xuống gồm dữ liệu chữ. Sửa cấp độ và chủ đề cho từ riêng đã chọn |
+| Bài học | Lưu danh sách tham chiếu, lọc theo cấp độ, kỹ năng, chủ đề, unit và độ khó, sao chép bài |
+| Tái sử dụng | Xem trước từ cùng nguồn. Chỉ bật mẫu vượt qua schema và phù hợp dữ liệu đã chọn. Bản soạn và bài giao là bản chụp độc lập |
+| V1.5B/C | Bài luyện nhiều kỹ năng, rubric, thu âm tùy chọn và luyện theo phần thi thuộc các đợt kế tiếp |
