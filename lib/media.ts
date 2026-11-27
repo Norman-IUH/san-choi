@@ -1,8 +1,9 @@
 import { sampleAudioPath, sampleImagePath, type Item, type Media } from "./game";
 import { samplePracticeAudio } from "./games/practice";
+import { starterAudio, starterImage } from "./games/starters";
 
 const builtIn = (path: unknown) => sampleAudioPath.safeParse(path).success ||
-  sampleImagePath.safeParse(path).success || samplePracticeAudio.safeParse(path).success;
+  sampleImagePath.safeParse(path).success || samplePracticeAudio.safeParse(path).success || starterImage.safeParse(path).success || starterAudio.safeParse(path).success;
 
 export const mediaBucket = "teaching-media";
 export const mediaSize = 3 * 1024 * 1024;
@@ -25,6 +26,7 @@ export function itemMediaPaths(items: Item[]) {
 
 export function builtInMediaUrls(items: Item[]) {
   return Object.fromEntries(items.flatMap(item => [item.english?.uk, item.english?.us, item.media?.image, item.media?.audio, item.practice?.stimulusImage,
+    item.practice?.starters?.scene, ...(item.practice?.starters?.cards?.map(card => card.image) ?? []),
     ...(item.optionMedia?.flatMap(media => [media.image, media.audio]) ?? [])]
     .filter((path): path is string => typeof path === "string" && builtIn(path)).map(path => [path, path])));
 }

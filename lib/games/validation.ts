@@ -8,11 +8,25 @@ import { pairOptions } from "./puzzle-templates";
 import { doubleMarker } from "./scoring";
 import { colourPalette, grammarTemplates, isAudioPractice, isPhonics, isReading, practiceTemplate, samplePracticeAudio } from "./practice";
 import { isProductive, isSpeaking } from "./productive";
+import { starterPartNames } from "./starters";
 
 export function contentSchema(template: Template, draft = false) {
   return z.array(itemSchema).min(draft ? 0 : 1).max(60).superRefine((items, context) => {
     if (draft) return;
     const kind = templates[template].kind;
+    const starters = items[0]?.practice?.starters;
+    if (items.some(item => item.practice?.mode === "starters")) {
+      const speaking = starters?.paper === "speaking";
+      const count = starters?.mock ? starterPartNames[starters.paper].length * (speaking ? 1 : 5) : speaking ? 1 : 5;
+      if (!starters || items.length !== count || template !== (speaking ? "speaking" : "type-answer") ||
+        (speaking && !items[0].practice?.production?.rubric) || items.some((item, index) => {
+          const config = item.practice?.starters;
+          return item.practice?.mode !== "starters" || !config || config.paper !== starters.paper || config.mock !== starters.mock ||
+            config.part > starterPartNames[starters.paper].length || config.part !== (starters.mock ? Math.floor(index / (speaking ? 1 : 5)) + 1 : starters.part) ||
+            item.answers.length !== (speaking ? 0 : 1) || (config.paper === "listening" && !item.media?.audio);
+        })) context.addIssue({ code: "custom", message: "Kiểm tra cấu trúc đề Starters và học liệu từng phần." });
+      return;
+    }
     const englishPuzzle = template === "wordsearch" || template === "spell-word" || template === "hangman" || template === "crossword";
     if (template === "crossword" && (items.length > 10 || !buildCrossword(items.map(item => item.answers[0] ?? "")))) {
       context.addIssue({ code: "custom", message: "Ô chữ cần 2–10 từ nối được với nhau theo thứ tự nhập." });
