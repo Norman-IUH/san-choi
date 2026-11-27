@@ -38,5 +38,5 @@ export function readingSample(mode: ReadingMode) {
     practice: { version: 1, mode, maxPlays: 0, showTranscript: false, reviewedAudio: false,
       ...(index === 0 && { stimulusKind: source.kind, stimulus: source.text, stimulusImage: "image" in source ? source.image : undefined }) },
   }));
-  return { title: source.title, modeTitle: readingModes[mode], template, level: source.level, items };
+  return { title: source.title, modeTitle: readingModes[mode], template, level: source.level, items } as const;
 }

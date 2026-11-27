@@ -5,6 +5,7 @@ import { practiceSample } from "../lib/practice-samples";
 import { listeningModes, isPhonics, pictureToken, practiceTemplate } from "../lib/games/practice";
 import { readingSample, readingSamples } from "../lib/reading-samples";
 import type { AudioPracticeMode, ReadingMode } from "../lib/games/practice";
+import { grammarSample, grammarTopics } from "../lib/grammar-samples";
 import { builtInMediaUrls } from "../lib/media";
 import { vocabularyCatalog } from "../lib/vocabulary-catalog";
 
@@ -78,5 +79,17 @@ test("all catalog pronunciation pointers exist and coverage counts are real", ()
   expect(vocabularyCatalog.filter(word => word.us)).toHaveLength(36);
   for (const word of vocabularyCatalog) {
     for (const path of [word.uk, word.us]) if (path) expect(existsSync("public" + path), path).toBe(true);
+  }
+});
+
+test("each of the 21 Grammar groups accepts valid forms and keeps review explanations private", () => {
+  expect(grammarTopics).toHaveLength(21);
+  for (const topic of grammarTopics) {
+    const { template, items } = grammarSample(topic.key)!;
+    expect(contentSchema(template).safeParse(items).success, topic.key).toBe(true);
+    expect(grade(template, items, [items[0].answers]).score).toBe(1);
+    for (const value of items[0].alternatives ?? []) expect(grade(template, items, [[value]]).score).toBe(1);
+    expect(grade(template, items, [[items[0].options[1] ?? "wrong"]]).score).toBe(0);
+    expect(makePlayItems(template, items)[0]).not.toHaveProperty("explanation");
   }
 });

@@ -275,6 +275,8 @@ export function Player({ title, description, backHref, template, initialItems = 
         <LessonMedia media={{ image: reading.stimulusImage }} assets={assets} label="Hình ngữ liệu đọc"/>
         {reading.stimulus && <p lang="en">{reading.stimulus}</p>}
       </details>}
+      {items[index]?.practice?.mode === "grammar" && items[index].practice?.stimulus &&
+        <p className="grammar-example">Ví dụ <span lang="en">{items[index].practice.stimulus}</span></p>}
       <GameRound key={turn} {...{ template, items, order, turn, index, answers, setAnswers, assets, reveals, busy, bindFocus, next, submit, hudTools, practiceSession }}
       playHit={arcade ? () => chime(null) : undefined}
       guess={template === "hangman" ? async (letter, guesses) => assignment ? guessAssignmentLetter(assignment, index, letter)

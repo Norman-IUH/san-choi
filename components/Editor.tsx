@@ -146,7 +146,8 @@ export function Editor({ id, template, initial, content = [], assets: initialAss
       return <fieldset className="panel stack" key={field.id}><legend>Mục {i + 1}</legend>
       <label>{kind === "blank" ? "Câu có dấu ___ ở chỗ trống" : kind === "pair" ? "Mặt trước / nội dung" : "Câu hỏi hoặc gợi ý"}
         <textarea {...register(`content.${i}.prompt`)} maxLength={400} rows={2}/></label>
-      {item?.practice && !reading && <section className="stack">
+      {item?.practice?.mode === "grammar" && <label>Ví dụ mẫu cho học sinh<textarea lang="en" {...register(`content.${i}.practice.stimulus`)} maxLength={1000}/></label>}
+      {item?.practice && !reading && item.practice.mode !== "grammar" && <section className="stack">
         <strong>{practiceModes[item.practice.mode]}</strong>
         <label>Hướng dẫn hoặc ngữ cảnh hiển thị<textarea {...register(`content.${i}.practice.stimulus`)} maxLength={1000}/></label>
         <label>Số lượt nghe tối đa (0 là không giới hạn)<input type="number" min={0} max={10} {...register(`content.${i}.practice.maxPlays`, { valueAsNumber: true })}/></label>

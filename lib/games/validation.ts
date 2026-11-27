@@ -6,7 +6,7 @@ import { buildCrossword } from "./word-puzzles";
 import { isArcadeTemplate, riskMarker } from "./arcade-templates";
 import { pairOptions } from "./puzzle-templates";
 import { doubleMarker } from "./scoring";
-import { colourPalette, isPhonics, isReading, practiceTemplate, samplePracticeAudio } from "./practice";
+import { colourPalette, grammarTemplates, isAudioPractice, isPhonics, isReading, practiceTemplate, samplePracticeAudio } from "./practice";
 
 export function contentSchema(template: Template, draft = false) {
   return z.array(itemSchema).min(draft ? 0 : 1).max(60).superRefine((items, context) => {
@@ -38,7 +38,8 @@ export function contentSchema(template: Template, draft = false) {
       const unique = new Set(options.map(normalize));
       const exposesDictation = practice?.mode === "dictation" && [...answers, ...(alternatives ?? [])]
         .some(answer => normalize(prompt + " " + (practice.stimulus ?? "")).includes(normalize(answer)));
-      if (practice && (practiceTemplate(practice.mode) !== template || (!isReading(practice.mode) && (!media?.audio || answers.length !== 1)) ||
+      if (practice && ((practice.mode === "grammar" ? !grammarTemplates.some(id => template === id) : practiceTemplate(practice.mode) !== template) ||
+        (isAudioPractice(practice.mode) && (!media?.audio || answers.length !== 1)) ||
         (isPhonics(practice.mode) && (!practice.reviewedAudio || samplePracticeAudio.safeParse(media?.audio).success)) ||
         (practice.mode === "colour" && (!media?.image || options.some(option => !Object.hasOwn(colourPalette, normalize(option))))) ||
         (practice.showTranscript && (practice.mode !== "dialogue" || !practice.transcript)) ||

@@ -400,4 +400,6 @@ ol.memory-strip{padding-left:1.8rem;gap:1.5rem}
 .reading-source { background: #fffae6; color: #212b43; border: 1px solid #c6ae6c; border-radius: .85rem; padding: 1rem; }
 .reading-source summary { font-weight: 800; cursor: pointer; }
 .reading-source p { font: 1.16rem/1.65 Georgia, serif; white-space: pre-wrap; overflow-wrap: anywhere; }
+.grammar-example { padding: .6rem .8rem; border-inline-start: 4px solid #6879b5; margin: .5rem 0; }
+.grammar-example span { padding-inline-start: .5rem; font-weight: 700; }
 @media (min-width: 850px) { .reading-layout { grid-template-columns: minmax(15rem, .8fr) minmax(0, 1.2fr); } }

@@ -11,7 +11,7 @@ export const readingModes = {
   "passage-reading": "Short Passage Comprehension", "story-sequencing": "Story Sequencing",
   "gap-reading": "Gap Filling", "reading-choice": "Multiple Choice",
 } as const;
-export const practiceModes = { ...listeningModes, ...readingModes };
+export const practiceModes = { ...listeningModes, ...readingModes, grammar: "Grammar Practice" };
 export type PracticeMode = keyof typeof practiceModes;
 export type AudioPracticeMode = keyof typeof listeningModes;
 export type ReadingMode = keyof typeof readingModes;
@@ -37,6 +37,8 @@ export const isPhonics = (mode: PracticeMode) =>
   mode === "letter-sounds" || mode === "beginning" || mode === "ending" ||
   mode === "blending" || mode === "rhymes" || mode === "discrimination";
 export const isReading = (mode: PracticeMode): mode is ReadingMode => Object.hasOwn(readingModes, mode);
+export const isAudioPractice = (mode: PracticeMode): mode is AudioPracticeMode => Object.hasOwn(listeningModes, mode);
+export const grammarTemplates = ["quiz", "sentence", "type-answer", "unjumble", "word-magnets"] as const;
 export function practiceTemplate(mode: PracticeMode): "type-answer" | "match-up" | "unjumble" | "sentence" | "quiz" {
   switch (mode) {
     case "dictation": return "type-answer";
