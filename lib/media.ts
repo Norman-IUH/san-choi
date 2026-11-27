@@ -26,7 +26,8 @@ export function itemMediaPaths(items: Item[]) {
 
 export function builtInMediaUrls(items: Item[]) {
   return Object.fromEntries(items.flatMap(item => [item.english?.uk, item.english?.us, item.media?.image, item.media?.audio, item.practice?.stimulusImage,
-    item.practice?.starters?.scene, ...(item.practice?.starters?.cards?.map(card => card.image) ?? []),
+    item.practice?.starters?.scene, item.practice?.starters?.lead?.image, ...(item.practice?.starters?.visuals ?? []),
+    ...(item.practice?.starters?.groups?.flat() ?? []), ...(item.practice?.starters?.cards?.map(card => card.image) ?? []),
     ...(item.optionMedia?.flatMap(media => [media.image, media.audio]) ?? [])]
     .filter((path): path is string => typeof path === "string" && builtIn(path)).map(path => [path, path])));
 }

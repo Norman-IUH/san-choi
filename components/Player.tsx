@@ -13,7 +13,7 @@ import { isWordTemplate } from "@/lib/games/word-templates";
 import { isPuzzleTemplate } from "@/lib/games/puzzle-templates";
 import { isArcadeTemplate } from "@/lib/games/arcade-templates";
 import { gameTheme } from "./games/game-themes";
-import { starterSeconds } from "@/lib/games/starters";
+import { cambridgeLevels, moverSeconds, starterSeconds } from "@/lib/games/starters";
 import { StartersAudio } from "./games/StartersAudio";
 
 type Props = { title: string; description?: string; backHref?: string; template: Template; initialItems?: PlayItem[]; reveals?: string[];
@@ -180,7 +180,7 @@ export function Player({ title, description, backHref, template, initialItems = 
       setResult(null);
       setFeedback("");
       const config = started.items[0].practice?.starters;
-      const seconds = config?.mock ? starterSeconds[config.paper] : 0;
+      const seconds = config?.mock ? (config.level === "movers" ? moverSeconds : starterSeconds)[config.paper] : 0;
       const deadline = Math.min(typeof draft?.deadline === "number" ? draft.deadline : Infinity, Date.now() + seconds * 1000);
       expired.current = false;
       setMock(seconds ? { deadline, seconds: Math.max(0, Math.ceil((deadline - Date.now()) / 1000)) } : null);
@@ -259,7 +259,7 @@ export function Player({ title, description, backHref, template, initialItems = 
   return <RefreshLessonMedia.Provider value={renewMedia}><section ref={panelRef} className={`player game-stage game-${template} ${arcade ? "arcade-stage" : ""} ${template === "gameshow" ? "gameshow" : ""} ${classroomFallback ? "classroom-fallback" : ""}`}>
     <div className="player-top"><div className="game-identity">
       {backHref && <Link className="icon-button game-back" aria-label={backHref === "/#mau" ? "Tất cả mẫu" : "Quay lại học liệu"} href={backHref}><ArrowLeft size={20}/></Link>}
-      <span className={`template-tag ${meta.color}`}>{starters ? "Pre A1 Starters" : meta.title}</span>
+      <span className={`template-tag ${meta.color}`}>{starters ? cambridgeLevels[starters.level ?? "starters"] : meta.title}</span>
     </div>
       {active && !result && template !== "crossword" && <Progress value={board ? Object.keys(answers).length : turn + 1} total={items.length}/>}
       {stageScore !== null && <div className="game-scoreboard"><span>{arcade ? "Điểm luyện tập" : "Điểm sân khấu"}</span><strong key={stageScore} aria-live="polite">{stageScore}</strong></div>}

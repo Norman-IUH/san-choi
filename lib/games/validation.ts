@@ -8,7 +8,7 @@ import { pairOptions } from "./puzzle-templates";
 import { doubleMarker } from "./scoring";
 import { colourPalette, grammarTemplates, isAudioPractice, isPhonics, isReading, practiceTemplate, samplePracticeAudio } from "./practice";
 import { isProductive, isSpeaking } from "./productive";
-import { starterAudio, starterPartNames } from "./starters";
+import { cambridgeCounts, starterAudio } from "./starters";
 
 export function contentSchema(template: Template, draft = false) {
   return z.array(itemSchema).min(draft ? 0 : 1).max(60).superRefine((items, context) => {
@@ -17,14 +17,23 @@ export function contentSchema(template: Template, draft = false) {
     const starters = items[0]?.practice?.starters;
     if (items.some(item => item.practice?.mode === "starters")) {
       const speaking = starters?.paper === "speaking";
-      const count = starters?.mock ? starterPartNames[starters.paper].length * (speaking ? 1 : 5) : speaking ? 1 : 5;
-      if (!starters || items.length !== count || template !== (speaking ? "speaking" : "type-answer") ||
-        (speaking && (!items[0].practice?.production?.rubric || items[0].practice.production.objective)) || items.some((item, index) => {
+      const layout = starters ? cambridgeCounts(starters).flatMap((count, i) => starters.mock || starters.part === i + 1
+        ? Array.from({ length: count }, (_, offset) => ({ part: i + 1, offset })) : []) : [];
+      const writing = starters?.level === "movers" && starters.paper === "reading" && (starters.mock || starters.part === 6);
+      const rubric = items[0]?.practice?.production?.rubric;
+      if (!starters || items.length !== layout.length || template !== (speaking ? "speaking" : "type-answer") ||
+        Boolean(rubric) !== Boolean(speaking || writing) || (rubric && items[0].practice?.production?.objective) ||
+        (writing && (rubric?.length !== 2 || rubric.some(row => row.max !== 1))) || items.some((item, index) => {
           const config = item.practice?.starters;
+          const expected = layout[index];
+          const open = Boolean(writing && expected.part === 6 && expected.offset >= 4);
+          const collection = starters.level ?? "starters";
           return item.practice?.mode !== "starters" || !config || config.paper !== starters.paper || config.mock !== starters.mock ||
-            config.part > starterPartNames[starters.paper].length || config.part !== (starters.mock ? Math.floor(index / (speaking ? 1 : 5)) + 1 : starters.part) ||
-            item.answers.length !== (speaking ? 0 : 1) || (config.paper === "listening" && !starterAudio.safeParse(item.media?.audio).success);
-        })) context.addIssue({ code: "custom", message: "Kiểm tra cấu trúc đề Starters và học liệu từng phần." });
+            config.level !== starters.level || config.part !== expected.part || Boolean(config.open) !== open ||
+            (index > 0 && Boolean(item.practice.production?.rubric)) || item.answers.length !== (speaking || open ? 0 : 1) ||
+            ((speaking || open) && !!item.alternatives?.length) || (config.paper === "listening" &&
+              (!starterAudio.safeParse(item.media?.audio).success || !item.media?.audio?.startsWith(`/audio/${collection}/`)));
+        })) context.addIssue({ code: "custom", message: "Kiểm tra cấu trúc đề Cambridge và học liệu từng phần." });
       return;
     }
     const englishPuzzle = template === "wordsearch" || template === "spell-word" || template === "hangman" || template === "crossword";

@@ -1,0 +1,36 @@
+import { readFileSync } from "node:fs";
+import { expect, test } from "vitest";
+import { contentSchema, grade, makePlayItems } from "../lib/game";
+import { cambridgeCounts, moverPartNames, type StarterPaper } from "../lib/games/starters";
+import { builtInMediaUrls, itemMediaPaths } from "../lib/media";
+import { moverPaper } from "../lib/movers-paper";
+
+function checkPaper(paper: StarterPaper) {
+  const mock = moverPaper(paper)!;
+  const sections = moverPartNames[paper].map((_, i) => moverPaper(paper, i + 1)!);
+  expect(sections.map(section => section.items.length)).toEqual(cambridgeCounts({ level: "movers", paper }));
+  expect(sections.flatMap(section => section.items.map(item => item.prompt))).toEqual(mock.items.map(item => item.prompt));
+  for (const { template, items } of [...sections, mock]) {
+    expect(contentSchema(template).safeParse(items).success).toBe(true);
+    expect(itemMediaPaths(items)).toEqual([]);
+    for (const path of Object.keys(builtInMediaUrls(items))) {
+      const media = readFileSync("public" + path);
+      expect(media.toString("ascii", 0, 4)).toBe("RIFF");
+      expect(media.readUInt32LE(4)).toBe(media.length - 8);
+    }
+    const projected = JSON.stringify(makePlayItems(template, items));
+    expect(projected).not.toMatch(/"answers"|"teacher"|"rubric"/);
+    if (items[0].practice?.starters?.mock) expect(projected).not.toContain('"guide"');
+    const responses = items.map(item => item.answers);
+    const count = items.filter(item => item.answers.length).length;
+    expect(grade(template, items, responses)).toMatchObject({ score: count || null, total: count });
+    if (count > 0) expect(grade(template, items, [[], ["x"], ...responses.slice(2)]).score).toBe(count - 2);
+  }
+  expect(moverPaper(paper, sections.length + 1)).toBeNull();
+}
+
+test("Movers Listening has 25 scored questions with local pictures and original audio", () => {
+  checkPaper("listening");
+  const book = moverPaper("listening", 2)!;
+  expect(grade(book.template, book.items, [["saturday"], ["Hall"], ["sixteen"], ["nine"], ["bottle"]]).score).toBe(5);
+});

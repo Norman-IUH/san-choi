@@ -11,6 +11,10 @@ export default function Samples() {
       <div><h2>Cambridge Pre A1 Starters</h2><p>13 phần luyện tập và ba bài thi thử theo cấu trúc Paper-based.</p></div>
       <Link className="button primary" href="/samples/cambridge-starters">Mở bộ luyện Starters</Link>
     </section>
+    <section className="panel section-head">
+      <div><h2>Cambridge A1 Movers</h2><p>15 phần luyện tập và ba bài thi thử theo cấu trúc Paper-based.</p></div>
+      <Link className="button primary" href="/samples/cambridge-movers">Mở bộ luyện Movers</Link>
+    </section>
     <div className="template-grid">{deckIds.map(id => {
       const deck = englishDecks[id];
       return <Link key={id} className="sample-link" href={`/samples/${id}`}>

@@ -79,6 +79,16 @@
   width: min(100%, 48rem); background: var(--starter-aqua); border-radius: .75rem;
 }
 .starter-clock { padding: .3rem .55rem; font-variant-numeric: tabular-nums; background: var(--starter-yellow); border-radius: .5rem; font-weight: 750; }
+.mover-booking { margin: 0; display: grid; gap: .35rem; }
+.mover-booking div { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; padding: .35rem .65rem; border-bottom: 1px solid #bfdad6; }
+.mover-booking dd { margin: 0; overflow-wrap: anywhere; }
+.mover-booking [aria-current], .mover-matches [aria-current] { background: var(--starter-aqua); outline: 2px solid #286568; border-radius: .5rem; }
+.mover-matches { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .35rem; padding: 0; margin: 0; list-style: none; }
+.mover-matches li { min-width: 0; padding: .2rem; text-align: center; font-size: .9rem; }
+.mover-matches img { width: 100%; display: block; border-radius: .45rem; }
+.mover-sign { position: absolute; left: 38.5%; top: 25.5%; width: 22%; height: 15%; text-align: center; overflow-wrap: anywhere; }
+.mover-sign input { width: 100%; height: 100%; min-height: 2rem; padding: .1rem .2rem; text-align: center; font-size: inherit; }
+.starter-pin.mover-colour-pin { mix-blend-mode: multiply; color: #192d49; }
 @media (max-width: 540px) {
   .starter-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .starter-import { margin: .75rem; }

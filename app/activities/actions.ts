@@ -9,19 +9,21 @@ import { itemMediaPaths } from "@/lib/media";
 import { englishDeckContent, englishDecks, isDeckId } from "@/lib/english-samples";
 import { starterPaperSchema } from "@/lib/games/starters";
 import { starterPaper } from "@/lib/starters-paper";
+import { moverPaper } from "@/lib/movers-paper";
 
 const uuid = z.uuid();
 
-export async function importStarter(paper: string, part: number | undefined) {
+export async function importCambridge(level: "starters" | "movers", paper: string, part: number | undefined) {
   const { db } = await account(true);
   const parsed = starterPaperSchema.safeParse(paper);
-  const material = parsed.success && starterPaper(parsed.data, part);
+  const material = parsed.success && (level === "starters" ? starterPaper : level === "movers" ? moverPaper : () => null)(parsed.data, part);
   if (!material) notFound();
   const { data, error } = await db.from("activities").insert({
-    title: material.title, description: material.label, subject: "English", grade: "Pre A1 Starters", tags: "Starters",
+    title: material.title, description: material.label, subject: "English", grade: material.items[0].english?.level,
+    tags: level === "movers" ? "Movers" : "Starters",
     visibility: "private", draft: false, template: material.template, content: contentSchema(material.template).parse(material.items),
   }).select("id").single();
-  check(error, "import_starters");
+  check(error, "import_cambridge");
   redirect(`/activities/${data!.id}?saved=1`);
 }
 
