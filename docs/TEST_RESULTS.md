@@ -183,10 +183,12 @@ Kiểm thử dùng tài khoản và dữ liệu riêng. Giới hạn nghe vận 
 |---|---|
 | Kiểm tra mã | Lint, typecheck, production build và 70 Vitest đạt. `npm audit --omit=dev` báo 0 advisory. `npm run vocabulary:check` xác nhận báo cáo khớp 440 mục và 194 mục bổ sung. |
 | Hồi quy 34 mẫu game | 180 lượt đạt trên Chromium desktop, mobile, tablet và WebKit desktop, iPhone mô phỏng. Bộ chạy tập trung gồm demo, vòng chơi word, puzzle và arcade. |
+| Hồi quy điều khiển | 25 lượt đạt sau khi chạy lại focus, tiến độ, chọn thẻ, giảm chuyển động, toàn màn hình và xem lại câu sai. Năm lượt cộng đồng yêu cầu server chưa cấu hình Supabase được bỏ qua. |
 | Listening và Phonics trên QuizStudy | Kiểm tra đủ năm Listening và sáu Phonics trên Chromium bằng clip thử. Có ảnh lựa chọn tải lên, xóa EXIF, nhãn trung tính, bảng ghép, vùng tô và cấp lại URL clip. Dictation chạy lại trên WebKit đạt. Bản ghi thử Phonics phục vụ kiểm tra luồng kỹ thuật. |
 | Reading trên QuizStudy | Chromium và WebKit đạt. Cả hai câu dùng cùng đoạn văn. Học sinh mở lại đoạn văn ở khung 390 × 844 và nộp 1/2. Sửa đoạn văn nguồn sau khi giao không ảnh hưởng bài làm. HTML và phản hồi bắt đầu không có ghi chú riêng hoặc lời giải. |
 | Grammar trên QuizStudy | Chromium và WebKit đạt. Dạng Have got ghi đúng 1/1 cho dạng rút gọn, 0/1 cho dạng sai và chỉ hiện giải thích sau nộp khi bật xem lại. Kiểm tra trên khung 820 × 1180. |
 | Giáo án trên QuizStudy | Tạo từ mẫu, thêm/bỏ bước, đổi thứ tự bằng bàn phím và kéo thả Chromium, lưu nháp, reload, nhân bản, trình chiếu, vào/thoát fullscreen và tạo bài giao riêng cho một hoạt động. Kết quả gắn với đúng bước. Giáo viên thứ hai nhận 404. |
+| Hồi quy thư viện trên QuizStudy | Sáu lượt Chromium đạt, gồm bốn cấp độ, dùng lại Vocabulary Lesson để tạo bài giao, CSV/XLSX, lưu trữ, media và bộ lọc. |
 | Migration | `20261127064352_lesson_builder.sql` qua kiểm tra trên PostgreSQL nhúng với schema và dữ liệu fixture cũ. Kiểm tra schema QuizStudy trước khi áp dụng cho thấy không có dòng lesson xung đột. Sau khi áp dụng, xác nhận migration có trong lịch sử, index mới tồn tại và RLS vẫn bật trên lesson và assignments. |
 | Vercel Preview | GitHub checks của PR #7 báo deployment hoàn thành. Đường dẫn giáo án thử chuyển về trang đăng nhập của Sân Chơi trong phiên khách. E2E có đăng nhập chạy trên app cục bộ nối QuizStudy. |
 
