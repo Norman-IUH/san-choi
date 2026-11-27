@@ -2,6 +2,8 @@ import { templateIds, templates, type Item, type Template } from "./game";
 
 import { isWordTemplate, type WordTemplate, truthOptions } from "./games/word-templates";
 
+import { isArcadeTemplate } from "./games/arcade-templates";
+import { arcadeDemos } from "./games/arcade-demos";
 import { isPuzzleTemplate } from "./games/puzzle-templates";
 import { puzzleDemos } from "./games/puzzle-demos";
 
@@ -51,6 +53,7 @@ export const demoTitles = [
 ];
 
 export function demoContent(template: Template): Item[] {
+  if (isArcadeTemplate(template)) return arcadeDemos[template].items;
   if (isPuzzleTemplate(template)) return puzzleDemos[template].items;
   if (isWordTemplate(template)) return wordDemos[template].items;
   switch (templates[template].kind) {
@@ -76,4 +79,4 @@ export function demoContent(template: Template): Item[] {
   }
 }
 
-export const demos = templateIds.map((id, index) => ({ id, ...templates[id], demoTitle: isPuzzleTemplate(id) ? puzzleDemos[id].title : isWordTemplate(id) ? wordDemos[id].title : demoTitles[index] }));
+export const demos = templateIds.map((id, index) => ({ id, ...templates[id], demoTitle: isArcadeTemplate(id) ? arcadeDemos[id].title : isPuzzleTemplate(id) ? puzzleDemos[id].title : isWordTemplate(id) ? wordDemos[id].title : demoTitles[index] }));

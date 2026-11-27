@@ -5,11 +5,12 @@
 | Phiên bản | Trạng thái | Cổng nghiệm thu và kiểm thử |
 |---|---|---|
 | V1.1 Foundation | Đạt luồng cốt lõi | QuizStudy đã nghiệm thu Auth, PostgREST, RLS, RPC, snapshot, deadline, nộp trùng, giới hạn tần suất và CSV. Xử lý cảnh báo bảo mật khi chuẩn bị production. |
-| V1.2 Một giáo viên và English Content Engine | Luồng chính đạt trên Vercel | Tạo bài, giao bài, nộp và lưu điểm đã chạy trên production. Preview bổ sung 20 từ, 40 audio UK/US và media phương án. QuizStudy vẫn bật đăng ký trực tiếp qua Auth API. |
+| V1.2 Một giáo viên và English Content Engine | Luồng chính đạt trên Vercel | Tạo bài, giao bài, nộp và lưu điểm đã chạy trên production. Preview bổ sung 20 từ, 40 audio UK/US và media phương án. QuizStudy đã tắt đăng ký trực tiếp. |
 | V1.3 Nâng cấp 12 trò | Triển khai trên nhánh review | 12 sân khấu riêng, toàn màn hình, kéo thả, hiệu ứng và xem lại theo tùy chọn khi giao bài. Kiểm thử trên ba kích thước Chromium và bài giao QuizStudy. Xem kết quả và giới hạn thiết bị bên dưới. |
 | V1.4A Nền tảng và 8 trò từ vựng | Nhánh review, 20 mẫu tổng cộng | Registry, tải renderer theo nhu cầu, URL media ký lại theo quyền và tám trải nghiệm có editor, demo, giao bài và kiểm thử. |
 | V1.4B 7 câu đố tương tác | Nhánh review, 27 mẫu tổng cộng | Labelled Diagram, Flip Tiles, Rank Order, Pair or No Pair, Image Quiz, Watch and Memorize, Maths Generator. |
-| V1.4C 7 trò arcade | Backlog | Maze Chase, Flying Fruit, Balloon Pop, Whack-a-Mole, Airplane, Speed Sorting, Win or Lose Quiz. Dùng Phaser cho trò cần vòng lặp thời gian thực. |
+| V1.4C 7 trò arcade | Nhánh review, 34 mẫu tổng cộng | Hai nhóm C1 và C2, đủ bảy vòng chơi. Năm trò tải Phaser theo nhu cầu. Hai trò lượt rời rạc giữ HTML. |
+| Visual Polish cho 34 mẫu | Đề xuất sau V1.4C | So sánh ảnh Start, Playing, Result. Ưu tiên màn chơi lớp học, chữ trên di động, phản hồi, độ tương phản và điều khiển chạm. |
 | V1.5 English Practice và Cambridge YLE | Not Started | Đối chiếu tài liệu Cambridge. Kiểm thử từng kỹ năng và từng phần, gồm rubric giáo viên, bài luyện gốc và quyền truy cập bản ghi âm. |
 | V1.6 Teaching Tools và lớp học | Not Started | Vocabulary Bank, Lesson Library, QR, PDF/đáp án, Excel, AI tùy chọn, roster và tiến độ. Kiểm tra phân quyền và cách ly giữa các lớp. |
 | V2.0 Production | Not Started | Backup và rollback, audit bảo mật, kiểm thử tải, preview từ mạng di động và triển khai HTTPS với project production riêng. |
@@ -43,3 +44,9 @@ delete from private.attempt_rate_limits where window_start < now() - interval '1
 QuizStudy đã tắt signup theo dashboard và Auth API. Chủ dự án chọn giữ cấu hình API hiện tại. Khóa bí mật từng chia sẻ vẫn là rủi ro chưa giải quyết, nên bản hiện tại chưa đạt cổng bảo mật production. [Tài liệu khóa Supabase](https://supabase.com/docs/guides/getting-started/api-keys).
 
 Sau khi xử lý cổng bảo mật và có phê duyệt, merge PR #1 trước và giữ nhánh nguồn. Cập nhật PR #2 với `master`, đổi base và đối chiếu diff để giữ đúng phần V1.4A, rồi chạy lại hồi quy trước khi merge. Xác minh deployment production mới, chạy đủ 20 demo, và kiểm tra giáo viên tạo bài, giao link, học sinh nộp và lưu điểm. V1.4B tiếp tục review trên nhánh phụ thuộc PR #2.
+
+## Đề xuất Visual Polish sau V1.4C
+
+Đối chiếu [ảnh V1.4B](../output/playwright/v14b-gameplay) với [ảnh arcade V1.4C](../output/playwright/v14c-gameplay). Ưu tiên các mẫu cũ còn dành phần lớn màn hình cho biểu mẫu hoặc khoảng trắng. Vòng tiếp theo sẽ chuẩn hóa bố cục toàn màn hình, cỡ chữ và vùng chạm, rồi thử từng trò ở viewport dọc, ngang và khi chiếu lớp. Với trò có sân khấu, kiểm tra đầu mục và kết quả có cùng ngôn ngữ hình ảnh. Với trò nhập chữ hoặc sắp xếp, ưu tiên khả năng đọc và thao tác trước hiệu ứng.
+
+Thứ tự review hiện tại là PR #1 → #2 → #3 → #4. Chỉ phát hành khi chủ dự án phê duyệt. Rủi ro Secret Key từng lộ vẫn được ghi nhận theo cấu hình hiện tại.

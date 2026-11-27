@@ -26,6 +26,7 @@ export function makePlayItems(template: Template, items: Item[]): PlayItem[] {
     })()),
     ...(template === "flip-tiles" && { reveal: item.answers[0] }),
     ...(template === "watch-memorize" && { memory: item.answers }),
+    ...(item.arcade && { arcade: item.arcade }),
     ...(item.pin && { pin: item.pin }),
     ...(item.secondary && { secondary: item.secondary }),
     ...(item.math && (() => {

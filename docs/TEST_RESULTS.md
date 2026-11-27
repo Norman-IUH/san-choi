@@ -113,3 +113,21 @@ Các giới hạn còn lại gồm WebKit và thiết bị thật, máy chiếu 
 | Vercel Preview | Commit `6de8207` lên Preview thành công. Thử Image Quiz có một câu đúng, một câu sai, và xác nhận kết quả `1/2` cùng phần xem lại. [Draft PR #3](https://github.com/Norman-IUH/san-choi/pull/3) · [Vercel Preview](https://san-choi-git-codex-v14b-puzzle-games-norman22.vercel.app/demo/image-quiz) |
 
 Ảnh dùng trong thư viện được tạo từ gameplay Playwright. [Ảnh kiểm thử V1.4B](../output/playwright/v14b-gameplay). Phần WebKit là browser engine và profile mô phỏng. Thiết bị iOS, Android và máy chiếu thật vẫn chờ kiểm tra.
+
+## V1.4C — 34 mẫu trên nhánh review
+
+| Hạng mục | Kết quả |
+|---|---|
+| Lint, typecheck, Vitest và build | Đạt. 59 Vitest. Production build render sẵn 34 trang demo |
+| Playwright Chromium | 126 lượt đạt trên desktop 1920 × 1080, điện thoại 390 × 844 và tablet 820 × 1180. Hồi quy 27 mẫu hiện có và bảy mẫu arcade. Sáu lượt dành cho cấu hình riêng được bỏ qua trong lần chạy này |
+| Playwright WebKit | 72 lượt đạt trên Desktop Safari và iPhone 13 mô phỏng. Các arcade đã chơi qua câu sai và câu đúng, pause/resume khi mất focus, fullscreen, reduced motion và replay |
+| Luật arcade | Unit test kiểm tra tường mê cung, va chạm máy bay ở nhịp khung hình thấp, vùng chạm bóng, chuột chũi đang ẩn, countdown, pause và cách tính điểm thử sức |
+| Lazy loading | Chromium theo dõi request của production build. Cả tám trang thử chỉ tải Phaser sau nút Bắt đầu ở năm game canvas. Quiz, Speed Sorting và Win or Lose Quiz không gửi request Phaser |
+| Supabase QuizStudy | 7/7 mẫu qua editor, xuất bản, preview, tạo bài giao có hạn nộp, nộp đúng/sai và tải lại bảng kết quả. Sáu mẫu lưu `1/2`. Win or Lose Quiz lưu `2/3`. Các bài giao thử đã đóng |
+| Ảnh riêng tư trong canvas | Maze Chase tự tải lại ảnh đáp án từ Storage sau khi yêu cầu signed URL đầu tiên được mô phỏng hết hạn. Học sinh tiếp tục và nộp bài trong cùng lượt |
+| Khôi phục và nộp lại | Speed Sorting giữ câu đã làm qua một lần tải lại. Với Win or Lose Quiz, Playwright chặn phản hồi sau khi Supabase nhận bài. Lượt nộp lại giữ nguyên một kết quả `2/3` |
+| Audit npm | Runtime có 0 advisory. Audit đầy đủ báo 7 mục mức vừa từ chuỗi phụ thuộc `typescript-eslint` và `minimatch` đã có trên nhánh V1.4B. [Advisory minimatch](https://github.com/advisories/GHSA-g3hv-75wg-m249) |
+
+105 ảnh toàn trang lưu Start, Playing và Result của bảy mẫu trên năm cấu hình trình duyệt. Thiết bị thật và máy chiếu lớp học vẫn chờ kiểm tra. [Ảnh kiểm thử V1.4C](../output/playwright/v14c-gameplay).
+
+Đăng ký công khai của QuizStudy đã tắt theo lần xác minh ở đợt phát hành trước. Khóa bí mật từng được chia sẻ vẫn là rủi ro bảo mật chưa xử lý. Đợt này giữ nguyên khóa và tài khoản giáo viên hiện tại. V1.4C dành cho review trên nhánh riêng.
