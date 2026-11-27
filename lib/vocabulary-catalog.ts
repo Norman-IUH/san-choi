@@ -1,5 +1,6 @@
 import { deckIds, englishDeckContent, englishDecks, type DeckId } from "./english-samples";
 import type { BankWord } from "./vocabulary-bank";
+import { vocabularyBatchB2, vocabularyTeacherReviews } from "./vocabulary-batch-b2";
 
 type Topic = [name: string, part: string, entries: string];
 const topics: Record<DeckId, Topic[]> = {
@@ -66,7 +67,7 @@ export const starterLessons = deckIds.map(id => ({
   keys: englishDeckContent(id).map(item => `catalog/${id}/${item.prompt}`),
 }));
 
-export const vocabularyCatalog: BankWord[] = deckIds.flatMap(id => [
+const vocabularyBase: BankWord[] = deckIds.flatMap(id => [
   ...englishDeckContent(id).map((item): BankWord => ({
     id: `catalog/${id}/${item.prompt}`, word: item.prompt, meaning: item.answers[0], level: englishDecks[id].level,
     topic: starterTags[id], part: ["protect", "collect", "improve", "recycle", "cross"].includes(item.prompt) ? "verb"
@@ -83,3 +84,12 @@ export const vocabularyCatalog: BankWord[] = deckIds.flatMap(id => [
       ...(early && { uk: `/audio/vocabulary/${word}-uk.wav`, us: `/audio/vocabulary/${word}-us.wav` }) };
   })),
 ]);
+
+const enrichment = new Map(vocabularyBatchB2.entries.map(entry => [entry[0], entry] as const));
+export const vocabularyCatalog = vocabularyBase.map((word): BankWord => {
+  const draft = enrichment.get(word.id as typeof vocabularyBatchB2.entries[number][0]);
+  if (!draft) return word;
+  const [, ipa, example, audio] = draft;
+  return { ...word, ipa, example, review: vocabularyTeacherReviews[word.id] ? "teacher-reviewed" : "pending",
+    ...(audio && { uk: `/audio/vocabulary/${word.word}-uk.wav`, us: `/audio/vocabulary/${word.word}-us.wav` }) };
+});

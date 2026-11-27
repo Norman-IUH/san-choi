@@ -74,9 +74,9 @@ test("all six Reading modes score from the server source and project one shared 
 });
 
 test("all catalog pronunciation pointers exist and coverage counts are real", () => {
-  expect(vocabularyCatalog.filter(word => word.ipa && word.example)).toHaveLength(36);
-  expect(vocabularyCatalog.filter(word => word.uk)).toHaveLength(36);
-  expect(vocabularyCatalog.filter(word => word.us)).toHaveLength(36);
+  expect(vocabularyCatalog.filter(word => word.ipa && word.example)).toHaveLength(230);
+  expect(vocabularyCatalog.filter(word => word.uk)).toHaveLength(57);
+  expect(vocabularyCatalog.filter(word => word.us)).toHaveLength(57);
   for (const word of vocabularyCatalog) {
     for (const path of [word.uk, word.us]) if (path) expect(existsSync("public" + path), path).toBe(true);
   }

@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "vocabulary:coverage": "node scripts/vocabulary-coverage.mjs",
+    "vocabulary:check": "node scripts/vocabulary-coverage.mjs --check"
   },
   "type": "module",
   "dependencies": {
