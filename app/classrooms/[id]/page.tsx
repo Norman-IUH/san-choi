@@ -1,32 +1,29 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
-import { account, check } from "@/lib/supabase";
-import type { Classroom, Student } from "@/lib/classroom";
+import { classroomData } from "@/lib/classroom-server";
+import { readProgressFilters } from "@/lib/classroom-progress";
 import { ClassroomFields } from "../fields";
 import { archiveClassroom, duplicateClassroom, importRoster, saveClassroom } from "../actions";
+import { ProgressSummary, ReportControls } from "../progress";
 
 export default async function ClassroomPage({ params, searchParams }: {
   params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | undefined>>;
 }) {
-  const [{ id }, query, { db, user }] = await Promise.all([params, searchParams, account(true)]);
+  const [{ id }, query] = await Promise.all([params, searchParams]);
   if (!z.uuid().safeParse(id).success) notFound();
-  const [classroom, membership] = await Promise.all([
-    db.from("classrooms").select("id,name,level,schedule,course,notes,archived_at").eq("owner_id", user.id).eq("id", id).maybeSingle(),
-    db.from("classroom_members").select("students(id,name,notes,archived_at)").eq("owner_id", user.id).eq("classroom_id", id)
-      .is("removed_at", null).overrideTypes<{ students: Student | null }[], { merge: false }>(),
-  ]);
-  check(classroom.error, "classroom_detail"); check(membership.error, "classroom_roster");
-  if (!classroom.data) notFound();
-  const row = classroom.data as Classroom;
+  const parsed = readProgressFilters({ classroom: id, student: query.student, from: query.from, to: query.to, skill: query.skill });
+  const filters = parsed.data ?? { classroom: id };
+  const data = await classroomData(filters);
+  const row = data.classroom!;
   const needle = typeof query.q === "string" ? query.q.trim().slice(0, 80).toLocaleLowerCase("vi") : "";
-  const roster = (membership.data ?? []).flatMap(member => member.students ? [member.students] : []);
-  const students = roster.filter(student => (!student.archived_at || query.archived === "1") &&
+  const students = data.roster.filter(student => (!student.archived_at || query.archived === "1") &&
     student.name.toLocaleLowerCase("vi").includes(needle)).sort((a, b) => a.name.localeCompare(b.name, "vi") * (query.sort === "desc" ? -1 : 1));
   return <div className="narrow wide stack">
     <Link className="back" href="/classrooms">← Lớp học</Link><h1>{row.name}</h1>
     <p>{[row.level, row.course, row.schedule, row.archived_at && "Đã lưu trữ"].filter(Boolean).join(" · ")}</p>
     {query.problem && <p role="alert" className="notice error">{query.problem}</p>}
+    {!parsed.success && <p role="alert" className="notice error">Kiểm tra lại bộ lọc ngày giao và kỹ năng.</p>}
     {query.added && <p role="status" className="notice">Đã thêm {query.added} học sinh.</p>}
     <section className="panel stack"><h2>Học sinh</h2>
       <form className="stack"><div className="form-grid">
@@ -45,6 +42,8 @@ export default async function ClassroomPage({ params, searchParams }: {
           <button className="button">Nhập danh sách</button></form>
       </details>}
     </section>
+    <ReportControls filters={filters} students={data.students}/>
+    <ProgressSummary data={data} individual={!!filters.student}/>
     <details className="panel"><summary>Chỉnh sửa lớp</summary>
       <form className="stack" action={saveClassroom.bind(null, id)}><ClassroomFields record={row}/><button className="button primary">Lưu thông tin lớp</button></form>
     </details>

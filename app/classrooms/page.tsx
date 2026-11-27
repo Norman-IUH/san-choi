@@ -17,7 +17,7 @@ export default async function Classrooms({ searchParams }: { searchParams: Promi
   check(error, "list_classrooms");
   const rows = data?.filter(row => [row.name, row.course, row.schedule].some(value => value.toLocaleLowerCase("vi").includes(needle.toLocaleLowerCase("vi"))));
   return <div className="narrow wide stack">
-    <h1>Lớp học</h1>
+    <div className="section-head"><h1>Lớp học</h1><Link className="button" href="/classrooms/students">Hồ sơ học sinh</Link></div>
     {query.problem && <p role="alert" className="notice error">{query.problem}</p>}
     <form className="panel stack">
       <div className="form-grid">

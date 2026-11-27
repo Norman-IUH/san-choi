@@ -73,6 +73,7 @@ export async function assignLessonStep(id: string, stepId: string, form: FormDat
   const assignment = await insertAssignment({ owner_id: user.id, activity_id: activity.activityId,
     title: activity.title, template: activity.template, content: activity.items, lesson_id: id, lesson_step: stepId, level: data?.level }, form);
   if (assignment === "draft") redirect(`/library/${id}?step=${stepId}&problem=draft`);
+  if (assignment === "classroom") redirect(`/library/${id}?step=${stepId}&problem=classroom`);
   if (!assignment) redirect(`/library/${id}?step=${stepId}&problem=deadline`);
   redirect(`/assignments/${assignment}`);
 }

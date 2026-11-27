@@ -2,20 +2,24 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { account, check } from "@/lib/supabase";
+import { classroomData } from "@/lib/classroom-server";
+import { readProgressFilters } from "@/lib/classroom-progress";
 import { archiveStudent, deleteStudent, moveStudent, removeMembership, saveStudent } from "../../actions";
 import { StudentCodeForm } from "./student-code-form";
+import { ProgressSummary, ReportControls } from "../../progress";
 
-export default async function StudentPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ problem?: string }> }) {
+export default async function StudentPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | undefined>> }) {
   const [{ id }, query, { db, user }] = await Promise.all([params, searchParams, account(true)]);
   if (!z.uuid().safeParse(id).success) notFound();
-  const [student, list, member] = await Promise.all([
-    db.from("students").select("id,name,notes,archived_at").eq("owner_id", user.id).eq("id", id).maybeSingle(),
+  const parsed = readProgressFilters({ student: id, skill: query.skill, from: query.from, to: query.to });
+  const filters = parsed.data ?? { student: id };
+  const [data, list, member] = await Promise.all([
+    classroomData(filters),
     db.from("classrooms").select("id,name,archived_at").eq("owner_id", user.id).order("name"),
     db.from("classroom_members").select("classroom_id").eq("owner_id", user.id).eq("student_id", id).is("removed_at", null),
   ]);
-  check(student.error, "student_detail"); check(list.error, "student_classes"); check(member.error, "student_memberships");
-  if (!student.data) notFound();
-  const row = student.data;
+  check(list.error, "student_classes"); check(member.error, "student_memberships");
+  const row = data.student!;
   const memberships = new Set(member.data?.map(entry => entry.classroom_id));
   const options = list.data?.filter(entry => !entry.archived_at && !memberships.has(entry.id)) ?? [];
   const current = list.data?.filter(entry => memberships.has(entry.id)) ?? [];
@@ -23,6 +27,10 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
     <Link className="back" href="/classrooms">← Lớp học</Link>
     <header><h1>{row.name}</h1><p>Hồ sơ {id.slice(0, 8)} {row.archived_at && "· Đã lưu trữ"}</p></header>
     {query.problem && <p role="alert" className="notice error">{query.problem}</p>}
+    {!parsed.success && <p role="alert" className="notice error">Kiểm tra lại bộ lọc ngày giao và kỹ năng.</p>}
+    {row.notes && <aside className="panel"><h2>Nhận xét riêng</h2><p className="assessment-response">{row.notes}</p></aside>}
+    <ReportControls filters={filters}/>
+    <ProgressSummary data={data} individual/>
     <details className="panel"><summary>Chỉnh sửa hồ sơ</summary><form action={saveStudent.bind(null, id)} className="stack">
       <label>Tên học sinh<input name="name" required maxLength={80} defaultValue={row.name}/></label>
       <label>Nhận xét riêng<textarea name="notes" maxLength={2000} rows={4} defaultValue={row.notes}/></label>

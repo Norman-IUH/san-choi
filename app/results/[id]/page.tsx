@@ -11,7 +11,8 @@ import { voicePlayable } from "@/lib/voice-server";
 export default async function Result({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ review?: string }> }) {
   const [{ id }, { db }, query] = await Promise.all([params, account(true), searchParams]);
   if (!z.uuid().safeParse(id).success) notFound();
-  const { data, error } = await db.from("attempts").select("*,assignments(content,assessment),manual_reviews(*)").eq("id", id).not("completed_at", "is", null).maybeSingle();
+  const { data, error } = await db.from("attempts").select("*,assignments(content,assessment),manual_reviews(*),students(id,name)")
+    .eq("id", id).not("completed_at", "is", null).maybeSingle();
   check(error, "attempt_detail");
   if (!data) notFound();
   const answers = data.answers as { prompt: string; answer: string[]; correct: boolean | null }[];
@@ -28,7 +29,9 @@ export default async function Result({ params, searchParams }: { params: Promise
     .eq("manual_reviews.state", "pending").neq("id", id).order("completed_at").limit(1).maybeSingle() : null;
   check(next?.error ?? null, "next_manual_review");
   return <div className="narrow wide stack"><Link className="back" href={`/assignments/${data.assignment_id}`}>← Bài giao</Link>
-    <h1>Bài làm của {data.nickname}</h1><p>{snapshot.success ? `Chấm thủ công · ${review?.state === "published" ? "Đã công bố" : review?.state === "reviewed" ? "Đã chấm" : "Chờ chấm"}` : data.score === null ? "Hoạt động không chấm điểm" : `${data.score}/${data.total} điểm`} · {Math.max(0, Math.round((Date.parse(data.completed_at) - Date.parse(data.started_at)) / 1000))} giây</p>
+    <h1>Bài làm của {data.students?.name ?? data.nickname}</h1>
+    {data.students && <Link href={`/classrooms/students/${data.students.id}`}>Hồ sơ {data.students.id.slice(0, 8)}</Link>}
+    <p>{snapshot.success ? `Chấm thủ công · ${review?.state === "published" ? "Đã công bố" : review?.state === "reviewed" ? "Đã chấm" : "Chờ chấm"}` : data.score === null ? "Hoạt động không chấm điểm" : `${data.score}/${data.total} điểm`} · {Math.max(0, Math.round((Date.parse(data.completed_at) - Date.parse(data.started_at)) / 1000))} giây</p>
     {query.review === "saved" && <p role="status" className="notice">Đã lưu đánh giá.</p>}
     {writingScenes.length > 0 && <section className="panel starter-picture"><h2>Tranh dùng để chấm câu viết mở</h2>
       {data.score !== null && <p>{data.score}/{data.total} điểm tự động</p>}

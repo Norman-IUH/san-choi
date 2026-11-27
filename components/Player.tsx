@@ -18,7 +18,8 @@ import { StartersAudio } from "./games/StartersAudio";
 
 type Props = { title: string; description?: string; backHref?: string; template: Template; initialItems?: PlayItem[]; reveals?: string[];
   localContent?: Item[]; assignment?: string; requireName?: boolean; assets?: Record<string, string>;
-  mediaScope?: { source: "activity" | "resource"; id: string }; voiceEnabled?: boolean; cambridgeDraft?: string };
+  mediaScope?: { source: "activity" | "resource"; id: string }; voiceEnabled?: boolean; cambridgeDraft?: string;
+  classroom?: boolean; allowReplay?: boolean };
 
 const subscribeToNothing = () => () => {};
 type Answers = Record<number, string[]>;
@@ -43,7 +44,7 @@ function writeDraft(key: string | null, draft: Draft | null) {
   } catch { /* The browser may disable session storage. */ }
 }
 
-export function Player({ title, description, backHref, template, initialItems = [], reveals: initialReveals = [], localContent, assignment, requireName, assets: initialAssets = {}, mediaScope, voiceEnabled, cambridgeDraft }: Props) {
+export function Player({ title, description, backHref, template, initialItems = [], reveals: initialReveals = [], localContent, assignment, requireName, assets: initialAssets = {}, mediaScope, voiceEnabled, cambridgeDraft, classroom, allowReplay = true }: Props) {
   const ready = useSyncExternalStore(subscribeToNothing, () => true, () => false);
   const [items, setItems] = useState(initialItems);
   const [reveals, setReveals] = useState(initialReveals);
@@ -56,6 +57,7 @@ export function Player({ title, description, backHref, template, initialItems = 
   const [turn, setTurn] = useState(0);
   const [order, setOrder] = useState<number[]>([]);
   const [nickname, setNickname] = useState<string>();
+  const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ score: number | null; total: number; review?: ReviewEntry[]; pendingReview?: boolean } | null>(null);
@@ -195,8 +197,9 @@ export function Player({ title, description, backHref, template, initialItems = 
     try {
       const cached = readDraft(draftKey);
       const resumeId = assignment && typeof cached?.deadline === "number" ? cached.id : undefined;
-      const started = assignment ? await startAttempt(assignment, playerName, resumeId) : { items: initialItems, reveals: initialReveals, assets: initialAssets };
+      const started = assignment ? await startAttempt(assignment, playerName, resumeId, classroom ? code : undefined) : { items: initialItems, reveals: initialReveals, assets: initialAssets };
       if ("error" in started && started.error) { setError(started.error); return; }
+      setCode("");
       if (!started.items?.length) { setError("Hoạt động chưa có nội dung."); return; }
       if ("submission" in started && started.submission) {
         writeDraft(draftKey, null);
@@ -247,7 +250,7 @@ export function Player({ title, description, backHref, template, initialItems = 
     try {
       const ordered = items.map((_, i) => starters?.paper === "speaking" ? [] : snapshot[i] ?? []);
       const local = assignment ? null : grade(template, localContent ?? [], ordered);
-      const response = local ?? await finishAttempt(assignment!, ordered, mock ? draftId.current ?? undefined : undefined);
+      const response = local ?? await finishAttempt(assignment!, ordered, mock || classroom ? draftId.current ?? undefined : undefined);
       if ("error" in response && response.error) { setError(response.error); return; }
       if ("score" in response) {
         const review = local && localContent ? missedReview(localContent, ordered.map((answer, i) => ({ answer, correct: local.correct[i] })))
@@ -307,7 +310,7 @@ export function Player({ title, description, backHref, template, initialItems = 
   const round = <GameRound key={turn} {...{ template, items, order, turn, index, answers, setAnswers, assets, reveals, busy, bindFocus, next, submit, hudTools, practiceSession }}
     voiceUrl={voiceEnabled && assignment ? `/play/${assignment}/voice/${index}` : undefined}
     playHit={arcade ? () => chime(null) : undefined}
-    guess={template === "hangman" ? async (letter, guesses) => assignment ? guessAssignmentLetter(assignment, index, letter)
+    guess={template === "hangman" ? async (letter, guesses) => assignment ? guessAssignmentLetter(assignment, index, letter, draftId.current ?? undefined)
       : localContent?.[index] ? { ...hangmanPattern(localContent[index].answers[0], guesses), guesses } : null : undefined}/>;
 
   return <RefreshLessonMedia.Provider value={renewMedia}><section ref={panelRef} className={`player game-stage game-${template} ${arcade ? "arcade-stage" : ""} ${template === "gameshow" ? "gameshow" : ""} ${classroomFallback ? "classroom-fallback" : ""}`}>
@@ -349,7 +352,8 @@ export function Player({ title, description, backHref, template, initialItems = 
       {manualWriting && <p>{starters?.level === "flyers" ? (assignment ? "Bài viết truyện chờ giáo viên chấm." : "Giáo viên có thể chấm bài viết truyện khi giao bộ bài.") :
         (assignment ? "Hai câu viết mở chờ giáo viên chấm." : "Giáo viên có thể chấm hai câu viết mở khi giao bộ bài.")}</p>}
       {assignment && <p id={result.score === null ? outcomeId : undefined}>Bài làm đã được lưu.</p>}
-      {assignment && result.pendingReview && <Link className="button" href={`/play/${assignment}/review`}>Xem nhận xét khi giáo viên công bố</Link>}
+      {assignment && result.pendingReview && (classroom ? <p>Giáo viên sẽ xem bài và gửi nhận xét.</p> :
+        <Link className="button" href={`/play/${assignment}/review`}>Xem nhận xét khi giáo viên công bố</Link>)}
       <p>{result.score !== null && result.score === result.total ? "Em đã hoàn thành xuất sắc!" : "Giỏi lắm, em đã hoàn thành lượt chơi."}</p>
       {!!result.review?.length && <details className="review-panel"><summary>Xem lại câu sai ({result.review.length})</summary>
         <ol>{result.review.map((entry, index) => <li key={index}>
@@ -357,12 +361,12 @@ export function Player({ title, description, backHref, template, initialItems = 
           <p>Em chọn {entry.selected.join(" / ") || "—"}</p><p>Đáp án {entry.expected.join(" / ")}</p>
           {entry.explanation && <p>{entry.explanation}</p>}
         </li>)}</ol></details>}
-      <button className="button primary" onClick={() => {
+      {allowReplay && <button className="button primary" onClick={() => {
         replayPending.current = true;
         setResult(null);
         setActive(false);
         setFeedback("");
-      }}><RotateCcw size={16}/> Chơi lại</button>
+      }}><RotateCcw size={16}/> Chơi lại</button>}
     </div> : !active ? <div className="game-intro">
       <div className={gameplayThumbnail ? "game-art gameplay-thumbnail" : "game-art"} aria-hidden="true"
         style={artStyle}/>
@@ -371,7 +375,9 @@ export function Player({ title, description, backHref, template, initialItems = 
       <p>{starters ? (starters.mock ? "Thi thử theo phần thi. Em có thể quay lại câu trước trong thời gian quy định." : "Luyện từng Part theo nhịp của em.") : theme.instruction}</p>
       {description && <p className="hint">{description}</p>}
       {defaultArcadePractice && <p className="hint">Luyện tập không giới hạn thời gian</p>}
-      {assignment && requireName && <label>Biệt danh<input value={playerName} onChange={event => setNickname(event.target.value)} maxLength={80} required /></label>}
+      {classroom ? <label>Mã tham gia cá nhân<input type="password" value={code} onChange={event => setCode(event.target.value)}
+        maxLength={24} autoComplete="off" autoCapitalize="off" spellCheck={false} required /></label> :
+        assignment && requireName && <label>Biệt danh<input value={playerName} onChange={event => setNickname(event.target.value)} maxLength={80} required /></label>}
       {assignment && <p className="hint">Nếu đã bắt đầu, em có thể tiếp tục sau khi tải lại trong cùng thẻ trình duyệt.</p>}
       <button ref={bindFocus} className="button primary game-start" disabled={!ready || busy}><Play size={20} aria-hidden="true"/>{busy ? "Đang mở…" : "Bắt đầu"}</button>
     </form></div> : mock && (mock.seconds === 0 || submissionPending) ? <div className="starter-sheet">
