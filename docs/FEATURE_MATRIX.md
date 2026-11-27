@@ -157,3 +157,12 @@ Xem [kết quả kiểm thử](TEST_RESULTS.md) và [các phần còn thiếu](L
 | Bản ghi | Cờ mặc định tắt. Khi có quyền, bắt đầu và dừng chủ động, nghe lại, xóa và gửi tệp. Storage riêng tư và URL ký theo phiên hợp lệ hoặc chủ bài. |
 | Duyệt từ vựng | Ghi trạng thái, ngày và nhận xét trong database theo giáo viên. Chỉnh mục trong kho riêng đưa mục về Chưa duyệt. Danh mục mẫu giữ nguồn gốc để sao chép. |
 | Giáo án | Thêm bốn giáo án Speaking và Writing, mỗi cấp một bộ. Mỗi giáo án có năm bước. Giáo án ở trạng thái sẵn sàng mới giao hoạt động được. |
+
+## V1.6A Teaching Tools
+
+| Hạng mục | Phạm vi |
+|---|---|
+| Phiếu bài tập | Quiz, Match Up, Flashcards, Wordsearch, Crossword, Hangman, Anagram, Group Sort, Unjumble, Complete Sentence và các mẫu tương thích, gồm English Practice và Cambridge Starters, Movers, Flyers. Phiếu bản in dùng nội dung hoạt động hoặc snapshot giao bài. |
+| PDF | Xem trước, tải phiếu học sinh, đáp án riêng, giáo án và transcript khi có. Hỗ trợ khổ A4/Letter, màu/xám, tiếng Việt, tiếng Anh, IPA và hình ảnh. |
+| QR | Link theo domain đang mở, sao chép, tải PNG/SVG, bản in tên hoạt động và chế độ trình chiếu. Mã giữ nguyên URL và quy tắc truy cập bài giao. |
+| Excel | Ba sheet Tổng quan, Kết quả và Chi tiết trả lời. Lọc nhiều bài giao, ngày bắt đầu và dữ liệu theo chủ bài. Tách điểm, trạng thái rubric, tỷ lệ nộp, điểm trung bình và câu thường sai. Ô chữ được ghi dưới dạng văn bản. CSV vẫn có trên trang bài giao. |

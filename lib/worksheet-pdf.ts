@@ -124,8 +124,11 @@ export async function renderWorksheet(document: PaperDocument, options: PaperOpt
       y += rowHeight + 11;
     }
   } else {
-    for (const block of document.blocks) {
+    for (const [index, block] of document.blocks.entries()) {
       const size = measure(block, width()).total;
+      const following = document.blocks[index + 1];
+      const sectionHeading = block.heading && !block.text && !block.figures?.length && !block.grid && !block.lines;
+      const keepWithNext = sectionHeading && following ? Math.min(160, measure(following, width()).total) : 0;
       if (size > 610 && block.text) {
         const parts = block.text.match(/[^\n]{1,360}(?:\n|$)|[^\n]{1,360}/gu) ?? [];
         const [first, ...rest] = parts;
@@ -137,7 +140,7 @@ export async function renderWorksheet(document: PaperDocument, options: PaperOpt
           y += height;
         }
       } else {
-        if (y + size > bottom()) newPage(false);
+        if (y + size + keepWithNext > bottom()) newPage(false);
         draw(block, margin, y, width());
         y += size;
       }

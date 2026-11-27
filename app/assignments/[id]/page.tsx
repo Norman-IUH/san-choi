@@ -36,7 +36,9 @@ export default async function Assignment({ params, searchParams }: { params: Pro
         <label>Biệt danh để chấm trực tiếp<input name="nickname" required maxLength={80}/></label>
         <button className="button">Mở rubric chấm trực tiếp</button>
       </form></details>}
-    <section className="panel stack"><div className="section-head"><h2>Bài đã nộp gần đây</h2><a className="button" href={`/results/export?assignment=${id}`}>Tải CSV</a></div>
+    <section className="panel stack"><div className="section-head"><h2>Bài đã nộp gần đây</h2>
+      <div className="inline-actions"><a className="button" href={`/results/export/xlsx?assignment=${id}`}>Tải XLSX</a>
+        <a className="button" href={`/results/export?assignment=${id}`}>Tải CSV</a></div></div>
       {!completed.length ? <p>Chưa có bài nộp.</p> : <div className="table-wrap"><table><thead><tr><th>Biệt danh</th><th>Điểm</th><th>Thời gian</th></tr></thead><tbody>
         {completed.map(attempt => <tr key={attempt.id}><td><Link href={`/results/${attempt.id}`}>{attempt.nickname}</Link></td>
           <td>{attempt.manual_reviews && attempt.score !== null && `${attempt.score}/${attempt.total} tự động · `}

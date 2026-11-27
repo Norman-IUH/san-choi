@@ -35,6 +35,21 @@ export default async function Results({ searchParams }: { searchParams: Promise<
   return <div className="page stack teacher-results"><h1>Kết quả</h1><div className="stats">
     <div className="panel"><strong>{count.count ?? 0}</strong><p>Bài đã giao</p></div>
     <div className="panel"><strong>{complete.count ?? 0}</strong><p>Bài đã nộp</p></div></div>
+    <details className="panel"><summary>Xuất kết quả Excel</summary>
+      <form className="stack" action="/results/export/xlsx" aria-label="Bộ lọc xuất Excel">
+        <div className="form-grid">
+          <label>Từ ngày<input type="date" name="from"/></label>
+          <label>Đến ngày<input type="date" name="to"/></label>
+        </div>
+        {!!assignments.data?.length && <fieldset><legend>Bài giao</legend>
+          <p>Để trống để xuất tất cả. Khoảng ngày lọc theo lúc học sinh bắt đầu làm bài, giờ Việt Nam.</p>
+          <div className="form-grid">{assignments.data.map(row => <label className="check" key={row.id}>
+            <input type="checkbox" name="assignment" value={row.id}/>{row.title}
+          </label>)}</div>
+        </fieldset>}
+        <button className="button">Tải XLSX</button>
+      </form>
+    </details>
     <section className="panel stack" id="manual-reviews"><h2>Chấm Speaking và Writing</h2>
       {query.cleanup && <p role="status">{query.cleanup === "done" ? "Đã dọn bản ghi hết hạn và tệp rời đủ điều kiện." : "Chưa dọn xong. Hãy thử lại."}</p>}
       {(voicePolicy() || query.cleanup) && <form action={cleanExpiredVoice}><button className="button">Dọn bản ghi đã hết hạn</button></form>}

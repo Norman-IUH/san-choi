@@ -90,14 +90,15 @@ export function worksheet(title: string, template: Template, items: Item[], vers
     }
     if (!key) {
       const text = config?.passage ?? practice?.stimulus;
-      if (text && !stimuli.has(text) && !isAudioPractice(practice!.mode)) {
+      if (text && !stimuli.has(text) && (!isAudioPractice(practice!.mode) || practice?.stimulusKind === "instructions")) {
         stimuli.add(text);
         blocks.push({ text });
       }
       const scene = config?.scene ?? practice?.stimulusImage;
+      const pins = config?.targets ?? practice?.regions?.map(({ x, y }, index) => ({ x, y, id: String(index + 1) }));
       if (scene && !stimuli.has(scene)) {
         stimuli.add(scene);
-        blocks.push({ figures: [{ path: scene, pins: config?.targets }] });
+        blocks.push({ figures: [{ path: scene, pins }] });
       }
       const bank = config?.wordBank ?? config?.responses;
       if (bank && !stimuli.has(bank.join("|"))) {
@@ -115,7 +116,9 @@ export function worksheet(title: string, template: Template, items: Item[], vers
         row: Math.floor(i / search.size), column: i % search.size, value, marked: key && search.positions.includes(i),
       })) };
     }
-    if (item.media?.image) figures.push({ path: item.media.image });
+    if (item.media?.image && (key || item.media.image !== (config?.scene ?? practice?.stimulusImage))) {
+      figures.push({ path: item.media.image, pins: practice?.regions?.map(({ x, y }, index) => ({ x, y, id: String(index + 1) })) });
+    }
     if (key) {
       const alternatives = [...item.answers, ...(item.alternatives ?? [])];
       if (alternatives.length) text.push(alternatives.join(template === "unjumble" || template === "word-magnets" ? " " : " / "));
@@ -141,6 +144,7 @@ export function worksheet(title: string, template: Template, items: Item[], vers
       if (config?.letters) text.push([...config.letters].join("   "));
       if (config?.choices) text.push(config.choices.join("   /   "));
       if (config?.level === undefined && config?.paper === "reading" && part === 1) text.push("[ ] Đúng     [ ] Sai");
+      if (practice?.regions) text.push("Vùng số ______");
       if (config?.lead) figures.push({ path: config.lead.image, label: config.lead.value });
       const parts = config?.cards ?? [];
       const bankKey = parts.map(card => card.image + card.value).join("|");

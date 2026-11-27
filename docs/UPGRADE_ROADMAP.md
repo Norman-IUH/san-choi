@@ -12,7 +12,8 @@
 | V1.4C 7 trò arcade | Nhánh review, 34 mẫu tổng cộng | Hai nhóm C1 và C2, đủ bảy vòng chơi. Năm trò tải Phaser theo nhu cầu. Hai trò lượt rời rạc giữ HTML. |
 | Visual Polish cho 34 mẫu | Đề xuất sau V1.4C | So sánh ảnh Start, Playing, Result. Ưu tiên màn chơi lớp học, chữ trên di động, phản hồi, độ tương phản và điều khiển chạm. |
 | V1.5 English Practice và Cambridge YLE | B3 và C1–C3 trên nhánh review | 44/44 Part Paper-based gồm 13 Starters, 15 Movers và 16 Flyers. [Đặc tả và giới hạn mô phỏng](CAMBRIDGE_SPEC.md). |
-| V1.6 Teaching Tools và lớp học | Not Started | Vocabulary Bank, Lesson Library, QR, PDF/đáp án, Excel, AI tùy chọn, roster và tiến độ. Kiểm tra phân quyền và cách ly giữa các lớp. |
+| V1.6A Teaching Tools | Triển khai trên nhánh review | A1 phiếu in và PDF, A2 QR theo môi trường, A3 Excel nhiều bài giao và tích hợp giáo viên. [Hướng dẫn](TEACHING_TOOLS.md). |
+| Quản lý lớp, Realtime và AI | Backlog | Nằm ngoài V1.6A. |
 | V2.0 Production | Not Started | Backup và rollback, audit bảo mật, kiểm thử tải, preview từ mạng di động và triển khai HTTPS với project production riêng. |
 
 ## Khôi phục kết nối Supabase development
@@ -102,11 +103,16 @@ B1 tập trung vào luyện nghe và phonics. B2 thêm Reading, Grammar, giáo �
 - Mở rộng Practice Engine từ C1. Bổ sung phiếu nghe, ghép hai bộ hình, tô màu kèm viết từ, chọn tiêu đề, viết theo tranh, so sánh tranh, kể truyện và chọn hình khác nhóm.
 - Snapshot của bài giao dùng schema QuizStudy hiện có. Reading & Writing Part 6 bổ sung hai câu cần giáo viên chấm; công bố dùng Manual Assessment. Speaking dùng rubric và kịch bản giám khảo riêng cho giáo viên.
 - Tiếp tục review trên draft PR #8. Kiểm tra Vercel Preview, kết quả QuizStudy dùng dữ liệu tổng hợp và hồi quy Starters trước khi xem xét phát hành. [Chi tiết kiểm thử](TEST_RESULTS.md).
-- V1.6 còn trong backlog.
 
 ## V1.5C3 Cambridge A2 Flyers
 
 - Hoàn thành 16 Part Flyers và Dashboard Cambridge cho cả ba cấp độ. Bộ đề có 25 câu Listening, 44 câu Reading & Writing và bốn Part Speaking.
 - Dùng lại schema QuizStudy, Practice Engine và Manual Assessment. Tách điểm tự động và rubric, lưu bản làm trong tab trước khi nộp và nhận lại kết quả của cùng lượt sau khi tải lại.
 - Giữ draft PR #8 để review. Dùng Vercel Preview và tài khoản QA tổng hợp khi nghiệm thu. [Kết quả](TEST_RESULTS.md).
-- V1.6 chưa triển khai.
+
+## V1.6A Teaching Tools
+
+- A1 thêm phiếu bài tập, đáp án, transcript và giáo án PDF. Giáo viên tạo tệp từ hoạt động, bản chụp bài giao, giáo án đã lưu hoặc mẫu Cambridge.
+- A2 tạo mã QR từ domain đang mở. Có sao chép link, tải PNG/SVG, in và trình chiếu toàn màn hình.
+- A3 xuất Excel nhiều bài giao và lọc ngày theo giờ Việt Nam. Báo cáo tách điểm tự động và thủ công, giữ ô trống cho bài chưa có điểm và giữ chức năng CSV.
+- Dùng schema, quyền truy cập và cài đặt QuizStudy hiện có. Nhánh V1.6A phụ thuộc [PR #8](https://github.com/Norman-IUH/san-choi/pull/8). [Kết quả kiểm thử](TEST_RESULTS.md).
