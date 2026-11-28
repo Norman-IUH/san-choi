@@ -8,6 +8,8 @@ export async function LiveRoomForm({action}:{action:(form:FormData)=>Promise<voi
     <label>Nhịp chơi<select name="pace"><option value="teacher">Giáo viên chuyển câu</option><option value="student">Học sinh tự chuyển câu</option></select></label>
     <label>Người tham gia<select name="classroom"><option value="">Ai có mã phòng</option>
       {data?.map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</select></label>
+    <label>Hình thức<select name="competition"><option value="individual">Cá nhân</option><option value="teams">Chia hai đội</option></select></label>
+    <label className="check"><input type="checkbox" name="leaderboard"/> Hiện bảng vinh danh cuối phòng</label>
     <button className="button primary">Mở phòng</button>
   </form></details>;
 }

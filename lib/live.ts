@@ -27,9 +27,35 @@ export function liveQuestion(item: Item, assets: Record<string,string>) {
     }) };
 }
 
+export type RankingEntry={label:string;points:number;best?:number;bonus?:number;rank:number};
+export function topRanks(rows: Omit<RankingEntry,"rank">[]):RankingEntry[] {
+  const ordered=rows.filter(row=>row.points>0).sort((a,b)=>b.points-a.points || a.label.localeCompare(b.label,"vi"));
+  let rank=0;
+  return ordered.slice(0,3).map((row,index)=>{
+    if (index===0 || ordered[index-1].points!==row.points) rank=index+1;
+    return {...row,rank};
+  });
+}
+
+export function livePoints(answers:{question:number;correct:boolean}[]) {
+  let points=0,best=0,streak=0,bonus=0,previous=-1;
+  for(const answer of [...answers].sort((a,b)=>a.question-b.question)) {
+    if(answer.question!==previous+1) streak=0;
+    previous=answer.question;
+    streak=answer.correct ? streak+1 : 0;
+    if(!streak) continue;
+    points++;
+    if(streak%3===0) {points++;bonus++;}
+    best=Math.max(best,streak);
+  }
+  return {points,best,bonus};
+}
+
 export type LiveState = {
   title: string; topic: string; phase: "lobby"|"playing"|"paused"|"ended"; pace: "teacher"|"student";
   index: number; total: number; ready: boolean; answered: boolean; own: number;
   question?: ReturnType<typeof liveQuestion>;
-  stats?: { players: number; ready: number; responses: number; correct: number; options: number[] };
+  rankingEnabled?:boolean; team?:number; ranking?:RankingEntry[]; celebration?:number;
+  stats?: { players:number; ready:number; responses:number; correct:number; options:number[];
+    questions:{responses:number;correct:number}[] };
 };

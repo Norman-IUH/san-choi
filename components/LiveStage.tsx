@@ -4,6 +4,7 @@ import {createClient} from "@supabase/supabase-js";
 import {useEffect,useState,useTransition} from "react";
 import {answerLive,controlLive,joinLive,readyLive,refreshGuest,refreshHost} from "@/app/live/actions";
 import type {LiveCommand,LiveState} from "@/lib/live";
+import {LiveRanking} from "./LiveRanking";
 
 export function LiveStage({host,code,initial}:{host?:string;code?:string;initial:LiveState|null}) {
   const [state,setState]=useState(initial);
@@ -72,6 +73,7 @@ export function LiveStage({host,code,initial}:{host?:string;code?:string;initial
   return <section className="panel stack live-stage">
     <div className="section-head"><h1>{state.title}</h1><small>{connection}</small></div>
     <p role="status">{{lobby:"Đang chờ bắt đầu",playing:"Đang chơi",paused:"Tạm dừng",ended:"Phòng đã kết thúc"}[state.phase]}</p>
+    {!!state.team && <p>Em thuộc {state.team===1 ? "Đội Xanh" : "Đội Cam"}.</p>}
     {error && <p className="notice error" role="alert">{error}</p>}
     {stats && <div className="stats">
       <div><strong>{stats.players}</strong><p>Đã tham gia</p></div><div><strong>{stats.ready}</strong><p>Sẵn sàng</p></div>
@@ -85,6 +87,7 @@ export function LiveStage({host,code,initial}:{host?:string;code?:string;initial
       {state.phase==="playing" && state.pace==="teacher" && state.index+1<state.total &&
         <button disabled={pending} className="button primary" onClick={()=>command("next")}>Chuyển câu</button>}
       {state.phase!=="ended" && <button disabled={pending} className="button" onClick={()=>command("end")}>Kết thúc phòng</button>}
+      <button disabled={pending} className="button" onClick={()=>command("ranking")}>{state.rankingEnabled ? "Tắt bảng vinh danh" : "Bật bảng vinh danh"}</button>
     </div>}
     {code && state.phase==="lobby" && <button className="button primary" disabled={pending || state.ready}
       onClick={()=>execute(()=>readyLive(code))}>{state.ready ? "Đã sẵn sàng" : "Em đã sẵn sàng"}</button>}
@@ -94,6 +97,11 @@ export function LiveStage({host,code,initial}:{host?:string;code?:string;initial
     {state.question && <Question key={state.index} state={state} disabled={!code || state.answered || pending}
       submit={choices=>{if(code) execute(()=>answerLive(code,state.index,choices));}}/>}
     {code && state.phase==="ended" && <p>Em trả lời đúng {state.own}/{state.total} câu trong phòng này.</p>}
+    {code && !!state.celebration && state.celebration>=3 && <p className="notice live-celebrate" role="status">Chúc mừng! Chuỗi tốt nhất của em là {state.celebration} câu đúng.</p>}
+    {host && stats && state.pace==="student" && <details><summary>Thống kê từng câu</summary>
+      <ol>{stats.questions.map((row,i)=><li key={i}>Câu {i+1} · {row.correct}/{row.responses} câu trả lời đúng</li>)}</ol>
+    </details>}
+    {state.ranking && <LiveRanking rows={state.ranking}/>}
     <button className="button" disabled={pending} onClick={()=>execute(async()=>({state:host ? await refreshHost(host) : await refreshGuest(code!)}))}>Đồng bộ lại</button>
   </section>;
 }

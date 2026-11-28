@@ -6,7 +6,7 @@ import { z } from "zod";
 import { account, allowedTeacher, check, privilegedDatabase } from "./supabase";
 import { contentSchema, type Item } from "./game";
 import { mediaUrls } from "./media-server";
-import { liveCompatible, liveQuestion, liveTemplate, type LiveState } from "./live";
+import { liveCompatible, livePoints, liveQuestion, liveTemplate, topRanks, type LiveState } from "./live";
 import { studentCodeHash } from "./student-code";
 
 export type Room = {
@@ -46,8 +46,10 @@ export async function verifyPlayer(room: Room, token?: string) {
 
 export async function roomState(room: Room, player?: LivePlayer): Promise<LiveState> {
   const db = privilegedDatabase();
+  const phase = Date.parse(room.expires_at)<=Date.now() ? "ended" : room.phase;
+  const showRanking=room.leaderboard && phase==="ended";
   let answers = db.from("live_answers").select("player_id,question,correct,choices").eq("room_id",room.id);
-  if (player) answers = answers.eq("player_id",player.id);
+  if (player && !showRanking) answers = answers.eq("player_id",player.id);
   const rows: LiveAnswer[] = [];
   for (let offset=0;;offset+=500) {
     const {data,error} = await answers.order("player_id").order("question").range(offset,offset+499)
@@ -56,22 +58,33 @@ export async function roomState(room: Room, player?: LivePlayer): Promise<LiveSt
     rows.push(...(data ?? []));
     if (!data || data.length<500) break;
   }
-  const phase = Date.parse(room.expires_at)<=Date.now() ? "ended" : room.phase;
-  const index = player && room.pace==="student" ? rows.length : room.question;
+  const own=player ? rows.filter(row=>row.player_id===player.id) : [];
+  const index = player && room.pace==="student" ? own.length : room.question;
   const item = room.items[index];
   const question = item && (phase==="playing" || (!player && phase==="paused"))
     ? liveQuestion(item,await mediaUrls([item],room.owner_id,900)) : undefined;
   const current = rows.filter(row=>row.question===room.question);
   const state: LiveState = {title:room.title, topic:player ? room.guest_topic : room.host_topic,
     phase,pace:room.pace,index,total:room.items.length,ready:player?.ready ?? true,
-    answered:!!player && (room.pace==="teacher" ? current.length>0 : !item), own:player ? rows.filter(row=>row.correct).length : 0,question};
-  if (!player) {
+    answered:!!player && (room.pace==="teacher" ? own.some(answer=>answer.question===room.question) : !item),
+    own:own.filter(row=>row.correct).length,question,rankingEnabled:room.leaderboard,team:player?.team};
+  if(player && phase==="ended") state.celebration=livePoints(own).best;
+  if (!player || showRanking) {
     const {data,error} = await db.from("live_players").select("id,alias,ready,team").eq("room_id",room.id);
     check(error,"live_roster");
-    state.stats = {players:data?.length ?? 0,ready:data?.filter(row=>row.ready).length ?? 0,
+    if(!player) state.stats = {players:data?.length ?? 0,ready:data?.filter(row=>row.ready).length ?? 0,
       responses:room.pace==="student" ? rows.length : current.length,
       correct:(room.pace==="student" ? rows : current).filter(row=>row.correct).length,
-      options:room.pace==="student" ? [] : (room.items[room.question]?.options ?? []).map((_,i)=>current.filter(row=>row.choices.includes(i)).length)};
+      options:room.pace==="student" ? [] : (room.items[room.question]?.options ?? []).map((_,i)=>current.filter(row=>row.choices.includes(i)).length),
+      questions:room.items.map((_,i)=>{
+        const forQuestion=rows.filter(row=>row.question===i);
+        return {responses:forQuestion.length,correct:forQuestion.filter(row=>row.correct).length};
+      })};
+    if(showRanking) {
+      const scores=(data ?? []).map(row=>({label:String(row.alias),team:Number(row.team),...livePoints(rows.filter(answer=>answer.player_id===row.id))}));
+      state.ranking=topRanks(room.teams ? [1,2].map(team=>({label:team===1 ? "Đội Xanh" : "Đội Cam",
+        points:scores.filter(row=>row.team===team).reduce((sum,row)=>sum+row.points,0)})) : scores);
+    }
   }
   return state;
 }
@@ -92,7 +105,7 @@ export async function createLiveSnapshot(source:{title:string;template:string;it
   const {data,error} = await privilegedDatabase().from("live_rooms").insert({
     owner_id:user.id,classroom_id:classroom,activity_id:source.activityId ?? null,lesson_id:source.lessonId ?? null,
     title:source.title,template:valid.data,items:items.data,pace:pace.data,code:randomBytes(6).toString("hex").toUpperCase(),
-    leaderboard:form.has("leaderboard"),teams:form.has("teams"),
+    leaderboard:form.has("leaderboard"),teams:form.get("competition")==="teams",
   }).select("id").single();
   check(error,"create_live_room");
   redirect(`/live/host/${data!.id}`);
