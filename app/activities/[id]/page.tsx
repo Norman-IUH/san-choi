@@ -11,6 +11,9 @@ import { localPlay } from "@/lib/local-play";
 import { account, check, urlFor } from "@/lib/supabase";
 import { mediaUrls } from "@/lib/media-server";
 import { canPrint } from "@/lib/worksheet";
+import { liveCompatible } from "@/lib/live";
+import { hostActivity } from "@/app/live/actions";
+import { LiveRoomForm } from "@/components/LiveRoomForm";
 
 export default async function Activity({ params, searchParams }: {
   params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | undefined>>;
@@ -87,6 +90,7 @@ export default async function Activity({ params, searchParams }: {
       {!activity.draft && activity.visibility !== "private" && <section className="panel stack"><h2>Chia sẻ</h2><label>Link hoạt động<input readOnly value={urlFor(`/resource/${id}`)}/></label></section>}
       {!activity.draft && <section className="panel stack" id="giao-bai"><h2>Giao bài</h2>
         <AssignmentForm action={createAssignment.bind(null, id)}/></section>}
+      {!activity.draft && liveCompatible(template,content) && <LiveRoomForm action={hostActivity.bind(null,id)}/>}
     </div>}
   </div>;
 }

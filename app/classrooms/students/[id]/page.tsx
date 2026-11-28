@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
-import { account, check } from "@/lib/supabase";
+import { account, check, privilegedDatabase } from "@/lib/supabase";
 import { classroomData } from "@/lib/classroom-server";
 import { readProgressFilters } from "@/lib/classroom-progress";
 import { archiveStudent, deleteStudent, moveStudent, removeMembership, saveStudent } from "../../actions";
@@ -20,6 +20,11 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
   ]);
   check(list.error, "student_classes"); check(member.error, "student_memberships");
   const row = data.student!;
+  const live = await privilegedDatabase().from("live_players")
+    .select("id,live_rooms!inner(id,title,created_at,owner_id),live_answers(correct)")
+    .eq("student_id",id).eq("live_rooms.owner_id",user.id).limit(50)
+    .overrideTypes<{id:string;live_rooms:{id:string;title:string;created_at:string};live_answers:{correct:boolean}[]}[],{merge:false}>();
+  check(live.error,"student_live_history");
   const memberships = new Set(member.data?.map(entry => entry.classroom_id));
   const options = list.data?.filter(entry => !entry.archived_at && !memberships.has(entry.id)) ?? [];
   const current = list.data?.filter(entry => memberships.has(entry.id)) ?? [];
@@ -31,6 +36,13 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
     {row.notes && <aside className="panel"><h2>Nhận xét riêng</h2><p className="assessment-response">{row.notes}</p></aside>}
     <ReportControls filters={filters}/>
     <ProgressSummary data={data} individual/>
+    <section className="panel stack"><h2>Lượt chơi trực tiếp</h2>
+      {live.data?.length ? <ul className="assignment-list">{live.data
+        .sort((a,b)=>b.live_rooms.created_at.localeCompare(a.live_rooms.created_at))
+        .map(room=><li key={room.id}><Link href={`/live/host/${room.live_rooms.id}`}>{room.live_rooms.title}</Link>
+          <span>{room.live_answers.filter(answer=>answer.correct).length}/{room.live_answers.length} câu đã trả lời đúng</span></li>)}</ul>
+        : <p>Chưa tham gia phòng trực tiếp theo lớp.</p>}
+    </section>
     <details className="panel"><summary>Chỉnh sửa hồ sơ</summary><form action={saveStudent.bind(null, id)} className="stack">
       <label>Tên học sinh<input name="name" required maxLength={80} defaultValue={row.name}/></label>
       <label>Nhận xét riêng<textarea name="notes" maxLength={2000} rows={4} defaultValue={row.notes}/></label>

@@ -10,6 +10,9 @@ import { localPlay } from "@/lib/local-play";
 import { mediaUrls } from "@/lib/media-server";
 import { check, type database } from "@/lib/supabase";
 import { assignLessonStep, duplicatePlan } from "../plan-actions";
+import { hostLesson } from "@/app/live/actions";
+import { LiveRoomForm } from "@/components/LiveRoomForm";
+import { liveCompatible } from "@/lib/live";
 
 type Database = Awaited<ReturnType<typeof database>>;
 export type LessonQuery = { game?: string; problem?: string; mode?: string; step?: string; sample?: string; saved?: string; omitted?: string };
@@ -85,6 +88,8 @@ export async function PlanView({ db, owner, id, plan, lesson, query }: { db: Dat
       {plan.draft && <p className="notice">Lưu giáo án ở trạng thái sẵn sàng để giao hoạt động.</p>}
       {playable && !plan.draft && !activity.draft && <details className="panel" key={selected.id}><summary>Giao hoạt động này · {activity.title}</summary>
         <AssignmentForm action={assignLessonStep.bind(null, id, selected.id)}/></details>}
+      {playable && !plan.draft && !activity.draft && liveCompatible(activity.template,activity.items) &&
+        <LiveRoomForm action={hostLesson.bind(null,id,selected.id)}/>}
       <section className="panel stack"><h3>Kết quả hoạt động</h3>
         {assignments?.data?.length ? <ul className="bank-lesson-list">
           {assignments.data.map(row => <li key={row.id}>
