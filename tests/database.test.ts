@@ -267,6 +267,10 @@ test("migration provisions accounts, locks teacher rows and allows one authorita
     expect((await db.query("select choices,correct from live_answers where room_id=$1",[live])).rows).toEqual([{choices:[0],correct:true}]);
     await db.query("select control_live_room($1,$2,'pause',0)",[live,owner]);
     expect((await db.query("select submit_live_answer($1,$2,1,array[0::smallint],true) as status",[live,hash])).rows).toEqual([{status:"paused"}]);
+    const capacity=(await db.query<{id:string}>(`insert into live_rooms(owner_id,code,title,template,items,pace)
+      values ($1,'ABCDEF123457','Capacity QA','quiz','[{}]','student') returning id`,[owner])).rows[0].id;
+    for(let i=0;i<30;i++) await db.query("select join_live_room($1,$2,null)",[capacity,i.toString(16).padStart(64,"0")]);
+    expect((await db.query("select join_live_room($1,$2,null) as status",[capacity,hash])).rows).toEqual([{status:"full"}]);
   } finally {
     await db.close();
   }

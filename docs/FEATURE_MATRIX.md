@@ -176,3 +176,13 @@ Xem [kết quả kiểm thử](TEST_RESULTS.md) và [các phần còn thiếu](L
 | Bài giao | Cả lớp hoặc học sinh được chọn từ hoạt động đã lưu, giáo án hoặc Cambridge nhập vào thư viện. Link, QR, thời hạn và số lần làm. Giữ snapshot nội dung và người nhận. |
 | Tiến độ | Phân biệt chưa làm, đang làm, đã nộp, chờ chấm, đã chấm và điểm 0. Biểu đồ theo thời gian, kỹ năng, Part Cambridge, lượt luyện từ và câu cần ôn. |
 | Báo cáo | PDF giáo viên và PDF riêng từng học sinh cho phụ huynh. Excel ba sheet có danh sách, bảng điểm từng lượt và tiến độ. Lọc theo lớp, học sinh, ngày giao và kỹ năng. |
+
+## V1.6C Live Classroom và Smart Teaching Tools
+
+| Hạng mục | Phạm vi |
+|---|---|
+| Phòng trực tiếp | Quiz, Gameshow, True/False, Image Quiz. Hai nhịp chơi, điều khiển giáo viên, mã phòng/link/QR, sẵn sàng, Realtime và đồng bộ lại. |
+| Danh tính và tiến độ | Khách dùng phiên trình duyệt. Phòng theo lớp xác minh mã cá nhân và ghi lịch sử trực tiếp riêng vào hồ sơ. Mỗi người chỉ có một câu trả lời đã lưu cho mỗi mục. |
+| Vinh danh | Mặc định tắt trong phòng. Bí danh, cá nhân hoặc hai đội, chuỗi đúng, điểm thưởng và trình chiếu. Bảng bài giao chỉ có trong khu giáo viên. |
+| Tạo nhanh | Nguồn chủ đề, từ vựng, đoạn văn, giáo án hoặc văn bản. Tạo bản nháp riêng từ quy tắc nội bộ, kiểm tra schema và mở Activity Editor để duyệt. |
+| Nhúng | Mã iframe cho hoạt động công khai đã xuất bản. Bài giao và kết quả riêng giữ URL, quyền, hạn và snapshot riêng. |

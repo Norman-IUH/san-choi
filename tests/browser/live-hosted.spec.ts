@@ -1,4 +1,6 @@
 import {expect,test,type Page} from "@playwright/test";
+import {createServer} from "node:http";
+import type {AddressInfo} from "node:net";
 test.use({trace:"off",actionTimeout:18000});
 const button=(page:Page,name:string)=>page.getByRole("button",{name,exact:true});
 const available=()=>Boolean(process.env.E2E_TEACHER_EMAIL && process.env.E2E_OTHER_EMAIL);
@@ -55,8 +57,11 @@ test("QuizStudy teacher-paced Realtime commands, reconnect and authoritative ran
     await button(page,"Bắt đầu phòng").click();
     await expect(first.getByRole("heading",{name:"Câu 1/3 · mèo"})).toBeVisible({timeout:4500});
     await expect(first.getByText("Đã nhận cập nhật trực tiếp")).toBeVisible({timeout:4500});
+    await first.context().setOffline(true);
     await button(page,"Tạm dừng").click();
     await expect(second.getByRole("status").filter({hasText:"Tạm dừng"})).toBeVisible();
+    await first.context().setOffline(false);
+    await expect(first.getByRole("status").filter({hasText:"Tạm dừng"})).toBeVisible({timeout:20000});
     await button(page,"Tiếp tục").click();
     await button(first,"cat").click();
     await button(first,"Gửi câu trả lời").click();
@@ -94,6 +99,7 @@ test("QuizStudy class-only student pace keeps team play separate from academic r
   await page.getByRole("textbox",{name:"Tên học sinh",exact:true}).fill("Học sinh mẫu Live QA");
   await button(page,"Thêm vào lớp").click();
   await page.getByRole("link",{name:/^Học sinh mẫu Live QA ·/}).click();
+  await expect(page.getByRole("heading",{name:"Học sinh mẫu Live QA",exact:true})).toBeVisible();
   const student=page.url();
   await button(page,"Cấp mã mới").click();
   const personal=await page.getByLabel("Mã cá nhân").inputValue();
@@ -148,10 +154,13 @@ test("QuizStudy draft edit, public embed across origins, and private framing pol
   const origin=new URL(page.url()).origin;
   expect(iframe).toContain(origin+"/embed/"+id);
   const remote=await browser.newPage({viewport:{width:390,height:844}});
+  const site=createServer((_,response)=>{
+    response.setHeader("Content-Type","text/html; charset=utf-8");
+    response.end(iframe);
+  });
   try {
-    const site=origin.replace(/:\d+$/,":43019")+"/iframe-qa";
-    await remote.route(site,route=>route.fulfill({contentType:"text/html; charset=utf-8",body:iframe}));
-    await remote.goto(site);
+    await new Promise<void>((resolve,reject)=>site.once("error",reject).listen(0,"localhost",resolve));
+    await remote.goto(`http://localhost:${(site.address() as AddressInfo).port}/`);
     const frame=remote.frameLocator("iframe");
     await frame.getByRole("button",{name:"Bắt đầu",exact:true}).click();
     await expect(frame.getByRole("heading",{name:"Con mèo",exact:true})).toBeVisible();
@@ -161,7 +170,8 @@ test("QuizStudy draft edit, public embed across origins, and private framing pol
     await page.getByRole("link",{name:"Chỉnh sửa",exact:true}).click();
     await page.getByLabel("Quyền xem").selectOption("unlisted");
     await button(page,"Xuất bản").click();
+    await expect(page).toHaveURL(/\?saved=1$/);
     expect((await page.request.get("/embed/"+id)).status()).toBe(404);
     expect((await page.request.get("/resource/"+id)).status()).toBe(200);
-  } finally {await remote.close();}
+  } finally {await remote.close(); site.close();}
 });

@@ -1,5 +1,17 @@
 # Kết quả kiểm thử ngày 14/11/2026
 
+## V1.6C Live Classroom · 28/11/2026
+
+| Hạng mục | Kết quả |
+|---|---|
+| Mã nguồn và migration | Lint, typecheck, production build và 97 bài Vitest đạt. Audit dependency runtime báo 0 advisory. Migration `20261128011611_live_classroom.sql` đã áp dụng trên QuizStudy. Ba bảng phòng bật RLS, các role trình duyệt không có quyền đọc trực tiếp. |
+| Realtime | Hai học sinh tổng hợp vào cùng phòng, bật sẵn sàng và nhận tín hiệu chuyển trạng thái từ Supabase. Đã kiểm tra tạm dừng, khôi phục kết nối, tải lại sau khi gửi và quyền điều khiển của chủ phòng. PostgreSQL cục bộ xác nhận ràng buộc chống nộp trùng và từ chối khách thứ 31. |
+| Nhịp học sinh và vinh danh | Phòng theo lớp kiểm tra mã cá nhân. Học sinh tự chuyển câu và đội nhận 4 điểm từ 3 câu đúng liên tiếp. Lượt chơi xuất hiện trong hồ sơ riêng, tách khỏi kết quả bài giao. Bảng phòng mặc định tắt và chỉ vinh danh điểm dương khi giáo viên bật. |
+| Tạo hoạt động và nhúng | Tạo bản nháp từ danh sách từ, sửa câu hỏi và xuất bản. Iframe chạy trong trang HTTP ngoài nguồn ở cửa sổ 390 px, kiểm tra chính sách chặn nhúng ở trang lớp và 404 của iframe khi chuyển hoạt động sang Có link. |
+| Hồi quy | 24 lượt Playwright desktop đạt, gồm Lesson Builder, Cambridge Flyers, kết quả Classroom và các công cụ PDF/QR/XLSX. |
+
+Vercel theo dõi bản preview qua [draft PR #11](https://github.com/Norman-IUH/san-choi/pull/11). E2E dùng production build cục bộ kết nối QuizStudy với dữ liệu tổng hợp. Chưa chạy kiểm thử tải Realtime với 30 thiết bị đồng thời. [Hướng dẫn lớp trực tiếp](LIVE_CLASSROOM.md).
+
 ## V1.6B Classroom và Student Progress · 28/11/2026
 
 | Hạng mục | Kết quả |
