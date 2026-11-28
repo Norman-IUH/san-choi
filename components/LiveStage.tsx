@@ -33,7 +33,10 @@ export function LiveStage({host,code,initial}:{host?:string;code?:string;initial
     const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
     const db=url && key ? createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}}) : null;
-    const channel=db?.channel(topic).on("broadcast",{event:"refresh"},refresh).subscribe(status=>{
+    const channel=db?.channel(topic).on("broadcast",{event:"refresh"},()=>{
+      if (!disposed) setConnection("Đã nhận cập nhật trực tiếp");
+      refresh();
+    }).subscribe(status=>{
       if (disposed) return;
       setConnection(status==="SUBSCRIBED" ? "Đã kết nối trực tiếp" : "Đang đồng bộ định kỳ");
       if (status==="SUBSCRIBED") refresh();
@@ -89,12 +92,12 @@ export function LiveStage({host,code,initial}:{host?:string;code?:string;initial
       {state.phase!=="ended" && <button disabled={pending} className="button" onClick={()=>command("end")}>Kết thúc phòng</button>}
       <button disabled={pending} className="button" onClick={()=>command("ranking")}>{state.rankingEnabled ? "Tắt bảng vinh danh" : "Bật bảng vinh danh"}</button>
     </div>}
-    {code && state.phase==="lobby" && <button className="button primary" disabled={pending || state.ready}
+    {code && (state.phase==="lobby" || (state.phase==="playing" && !state.ready)) && <button className="button primary" disabled={pending || state.ready}
       onClick={()=>execute(()=>readyLive(code))}>{state.ready ? "Đã sẵn sàng" : "Em đã sẵn sàng"}</button>}
     {code && state.phase==="playing" && state.answered && <p className="notice" role="status">
       {state.index>=state.total ? "Em đã hoàn thành tất cả câu hỏi." : "Đã lưu câu trả lời. Chờ giáo viên chuyển câu."}
     </p>}
-    {state.question && <Question key={state.index} state={state} disabled={!code || state.answered || pending}
+    {state.question && <Question key={state.index} state={state} disabled={!code || !state.ready || state.answered || pending}
       submit={choices=>{if(code) execute(()=>answerLive(code,state.index,choices));}}/>}
     {code && state.phase==="ended" && <p>Em trả lời đúng {state.own}/{state.total} câu trong phòng này.</p>}
     {code && !!state.celebration && state.celebration>=3 && <p className="notice live-celebrate" role="status">Chúc mừng! Chuỗi tốt nhất của em là {state.celebration} câu đúng.</p>}
@@ -118,7 +121,7 @@ function Question({state,disabled,submit}:{state:LiveState;disabled:boolean;subm
       <button className={`button${chosen.includes(i) ? " primary" : ""}`} disabled={disabled} aria-pressed={chosen.includes(i)} onClick={()=>
         setChosen(old=>question.multi ? old.includes(i) ? old.filter(n=>n!==i) : [...old,i] : [i])}>
         {/* eslint-disable-next-line @next/next/no-img-element -- Private media uses short-lived signed URLs. */}
-        {option.image && <img className="lesson-image" src={option.image} alt=""/>}
+        {option.image && <img className="lesson-image" src={option.image} alt={option.label}/>}
         {option.image ? `Phương án ${i+1}` : option.label}{state.stats?.options[i]!==undefined ? ` · ${state.stats.options[i]} lượt` : ""}
       </button>
       {option.audio && <audio controls src={option.audio} aria-label={`Phát âm phương án ${i+1}`}/>}

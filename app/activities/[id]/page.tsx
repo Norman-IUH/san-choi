@@ -14,6 +14,7 @@ import { canPrint } from "@/lib/worksheet";
 import { liveCompatible } from "@/lib/live";
 import { hostActivity } from "@/app/live/actions";
 import { LiveRoomForm } from "@/components/LiveRoomForm";
+import { EmbedCode } from "@/components/EmbedCode";
 
 export default async function Activity({ params, searchParams }: {
   params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | undefined>>;
@@ -88,6 +89,8 @@ export default async function Activity({ params, searchParams }: {
         <button className="button" disabled={!templateIds.some(id => id !== template && compatible(template, id, content))}>Xem trước mẫu</button></form>
       </section>
       {!activity.draft && activity.visibility !== "private" && <section className="panel stack"><h2>Chia sẻ</h2><label>Link hoạt động<input readOnly value={urlFor(`/resource/${id}`)}/></label></section>}
+      {!activity.draft && activity.visibility==="public" && !content.some(item=>item.practice) &&
+        <EmbedCode path={`/embed/${id}`} fallback={urlFor(`/embed/${id}`)}/>}
       {!activity.draft && <section className="panel stack" id="giao-bai"><h2>Giao bài</h2>
         <AssignmentForm action={createAssignment.bind(null, id)}/></section>}
       {!activity.draft && liveCompatible(template,content) && <LiveRoomForm action={hostActivity.bind(null,id)}/>}

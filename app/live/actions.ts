@@ -83,7 +83,7 @@ export async function refreshGuest(code:string) {
 
 export async function readyLive(code:string) {
   const match=await guestRoom(code);
-  if (!match || match.room.phase!=="lobby" || Date.parse(match.room.expires_at)<=Date.now()) return {error:unavailable};
+  if (!match || match.room.phase==="ended" || Date.parse(match.room.expires_at)<=Date.now()) return {error:unavailable};
   const {error}=await privilegedDatabase().from("live_players").update({ready:true}).eq("room_id",match.room.id)
     .eq("id",match.player.id).eq("token_hash",studentCodeHash(match.token)).eq("ready",false);
   return error ? {error:unavailable} : {state:await refreshGuest(code)};

@@ -14,7 +14,7 @@
 | V1.5 English Practice và Cambridge YLE | B3 và C1–C3 trên nhánh review | 44/44 Part Paper-based gồm 13 Starters, 15 Movers và 16 Flyers. [Đặc tả và giới hạn mô phỏng](CAMBRIDGE_SPEC.md). |
 | V1.6A Teaching Tools | Triển khai trên nhánh review | A1 phiếu in và PDF, A2 QR theo môi trường, A3 Excel nhiều bài giao và tích hợp giáo viên. [Hướng dẫn](TEACHING_TOOLS.md). |
 | V1.6B Lớp học và tiến độ học sinh | Nhánh review | B1 danh sách lớp và mã cá nhân. B2 giao bài theo lớp, lịch sử và tiến độ. B3 dashboard và xuất báo cáo riêng. [Hướng dẫn](CLASSROOMS.md). |
-| Realtime, Leaderboard và AI | Backlog | Nằm ngoài V1.6B. |
+| V1.6C Live Classroom và công cụ tạo bài | Nhánh review | Phòng Realtime, bảng vinh danh tùy chọn, tạo bản nháp từ học liệu và iframe công khai. [Hướng dẫn](LIVE_CLASSROOM.md). |
 | V2.0 Production | Not Started | Backup và rollback, audit bảo mật, kiểm thử tải, preview từ mạng di động và triển khai HTTPS với project production riêng. |
 
 ## Khôi phục kết nối Supabase development
@@ -124,3 +124,11 @@ B1 tập trung vào luyện nghe và phonics. B2 thêm Reading, Grammar, giáo �
 - B2 chụp người nhận cùng nội dung khi giao. Bài cũ quy về luồng ẩn danh và giữ nguyên các lượt làm đã lưu. Bài lớp dùng ID hồ sơ và lưu từng lượt làm, gồm điểm tự động và điểm rubric.
 - B3 thêm dashboard lớp, tiến độ cá nhân và báo cáo riêng PDF/XLSX. Báo cáo cho phụ huynh chỉ chứa dữ liệu của học sinh đã chọn.
 - Hai migration additive đã chạy trên QuizStudy. Nhánh V1.6B dựa trên [PR #9](https://github.com/Norman-IUH/san-choi/pull/9). Kiểm tra cổng bảo mật và phê duyệt trước phát hành.
+
+## V1.6C Live Classroom và Smart Teaching Tools
+
+- C1 mở phòng từ hoạt động hoặc bước giáo án tương thích. Chọn nhịp giáo viên/học sinh và dùng mã, link hoặc QR. Phòng theo lớp yêu cầu mã cá nhân và ghi lượt chơi riêng vào hồ sơ.
+- C2 thêm vinh danh phòng, cá nhân hoặc hai đội, chuỗi đúng và thưởng. Trang bài giao có bảng vinh danh riêng cho giáo viên. Điểm báo cáo học tập vẫn lấy từ lượt giao bài.
+- C3 tạo bản nháp riêng từ kho từ, danh sách từ, đoạn văn, giáo án hoặc văn bản nhập. Nội dung vào Activity Editor để giáo viên duyệt.
+- C4 cấp iframe cho hoạt động công khai đã xuất bản. Trang quản trị, bài giao và kết quả có chính sách chặn nhúng.
+- Nhánh V1.6C dựa trên [PR #10](https://github.com/Norman-IUH/san-choi/pull/10). V2.0 là đợt phát hành riêng.
