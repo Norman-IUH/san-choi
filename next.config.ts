@@ -9,8 +9,12 @@ const config: NextConfig = {
   },
   async headers() {
     return [
-      { source: "/:path*", headers: [{ key: "X-Content-Type-Options", value: "nosniff" }] },
+      { source: "/:path*", headers: [{ key: "X-Content-Type-Options", value: "nosniff" },
+        { key: "Content-Security-Policy", value: "frame-ancestors 'none'" }] },
+      { source: "/embed/:id", headers: [{ key: "Content-Security-Policy", value: "frame-ancestors *" },
+        { key: "Referrer-Policy", value: "no-referrer" }] },
       { source: "/play/:path*", headers: [{ key: "Referrer-Policy", value: "no-referrer" }] },
+      { source: "/live/:path*", headers: [{ key: "Referrer-Policy", value: "no-referrer" }] },
     ];
   },
 };

@@ -18,7 +18,7 @@ import { StartersAudio } from "./games/StartersAudio";
 
 type Props = { title: string; description?: string; backHref?: string; template: Template; initialItems?: PlayItem[]; reveals?: string[];
   localContent?: Item[]; assignment?: string; requireName?: boolean; assets?: Record<string, string>;
-  mediaScope?: { source: "activity" | "resource"; id: string }; voiceEnabled?: boolean; cambridgeDraft?: string;
+  mediaScope?: { source: "activity" | "resource" | "embed"; id: string }; voiceEnabled?: boolean; cambridgeDraft?: string;
   classroom?: boolean; allowReplay?: boolean };
 
 const subscribeToNothing = () => () => {};

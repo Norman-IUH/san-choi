@@ -21,6 +21,7 @@ export default async function ClassroomPage({ params, searchParams }: {
     student.name.toLocaleLowerCase("vi").includes(needle)).sort((a, b) => a.name.localeCompare(b.name, "vi") * (query.sort === "desc" ? -1 : 1));
   return <div className="narrow wide stack">
     <Link className="back" href="/classrooms">← Lớp học</Link><h1>{row.name}</h1>
+    <Link className="button" href={`/live/host?classroom=${id}`}>Phòng trực tiếp của lớp</Link>
     <p>{[row.level, row.course, row.schedule, row.archived_at && "Đã lưu trữ"].filter(Boolean).join(" · ")}</p>
     {query.problem && <p role="alert" className="notice error">{query.problem}</p>}
     {!parsed.success && <p role="alert" className="notice error">Kiểm tra lại bộ lọc ngày giao và kỹ năng.</p>}

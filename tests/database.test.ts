@@ -248,6 +248,29 @@ test("migration provisions accounts, locks teacher rows and allows one authorita
     expect((await db.query("select valid_classroom_attempt($1,$2) as valid", [classAssignment, second])).rows).toEqual([{ valid: false }]);
     await db.query("delete from students where id=$1", [ids[0]]);
     expect((await db.query("select student_id from attempts where assignment_id=$1", [classAssignment])).rows).toHaveLength(0);
+    await db.exec(`reset role; create schema realtime;
+      create function realtime.send(jsonb,text,text,boolean) returns void language plpgsql as $$begin return; end;$$;
+      grant usage on schema realtime to service_role;`);
+    const liveMigration = migrationFiles.find(file => file.endsWith("_live_classroom.sql"));
+    if (!liveMigration) throw Error("Missing live classroom migration");
+    await db.exec(await readFile("supabase/migrations/" + liveMigration, "utf8"));
+    await db.exec("set role service_role");
+    const live = (await db.query<{ id:string }>(`insert into live_rooms(owner_id,code,title,template,items,pace)
+      values ($1,'ABCDEF123456','Synthetic live','quiz','[{},{}]','teacher') returning id`,[owner])).rows[0].id;
+    const hash="a".repeat(64);
+    expect((await db.query("select join_live_room($1,$2,null) as status",[live,hash])).rows).toEqual([{status:"ok"}]);
+    await db.query("update live_players set ready=true where room_id=$1",[live]);
+    expect((await db.query("select control_live_room($1,$2,'start',0) as ok",[live,other])).rows).toEqual([{ok:false}]);
+    await db.query("select control_live_room($1,$2,'start',0)",[live,owner]);
+    await db.query("select submit_live_answer($1,$2,0,array[0::smallint],true)",[live,hash]);
+    await db.query("select submit_live_answer($1,$2,0,array[1::smallint],false)",[live,hash]);
+    expect((await db.query("select choices,correct from live_answers where room_id=$1",[live])).rows).toEqual([{choices:[0],correct:true}]);
+    await db.query("select control_live_room($1,$2,'pause',0)",[live,owner]);
+    expect((await db.query("select submit_live_answer($1,$2,1,array[0::smallint],true) as status",[live,hash])).rows).toEqual([{status:"paused"}]);
+    const capacity=(await db.query<{id:string}>(`insert into live_rooms(owner_id,code,title,template,items,pace)
+      values ($1,'ABCDEF123457','Capacity QA','quiz','[{}]','student') returning id`,[owner])).rows[0].id;
+    for(let i=0;i<30;i++) await db.query("select join_live_room($1,$2,null)",[capacity,i.toString(16).padStart(64,"0")]);
+    expect((await db.query("select join_live_room($1,$2,null) as status",[capacity,hash])).rows).toEqual([{status:"full"}]);
   } finally {
     await db.close();
   }

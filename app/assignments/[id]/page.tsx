@@ -28,6 +28,7 @@ export default async function Assignment({ params, searchParams }: { params: Pro
     <h1>{row.title}</h1>{saved && <p className="notice" role="status">Đã lưu thay đổi.</p>}
     <section className="panel stack"><h2>Link giao bài</h2>
       <AssignmentShare path={`/play/${id}`} fallback={urlFor(`/play/${id}`)} title={row.title}/>
+      <Link className="button" href={`/assignments/${id}/ranking`}>Bảng vinh danh</Link>
       {classData && <p><Link href={`/classrooms/${row.classroom_id}`}>{classData.classroom?.name}</Link> · {row.attempt_cap} lượt làm tối đa. Học sinh dùng mã cá nhân.</p>}
       {printableTemplates.some(template => template === row.template) &&
         <div className="inline-actions"><Link className="button" href={`/teaching/print/assignment/${id}`}>In đề đã giao</Link></div>}

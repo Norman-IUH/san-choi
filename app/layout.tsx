@@ -15,7 +15,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <a className="skip" href="#main">Đến nội dung</a>
     <header className="site-header"><div className="header-inner">
       <Link className="brand" href="/"><span><Blocks size={22}/></span>Sân Chơi</Link>
-      <nav aria-label="Điều hướng chính"><Link href="/activities">Hoạt động</Link><Link href="/samples">Học liệu mẫu</Link><Link href="/classrooms">Lớp học</Link><Link href="/results">Kết quả</Link></nav>
+      <nav aria-label="Điều hướng chính"><Link href="/activities">Hoạt động</Link><Link href="/samples">Học liệu mẫu</Link><Link href="/classrooms">Lớp học</Link><Link href="/live">Trực tiếp</Link><Link href="/results">Kết quả</Link></nav>
       <Link className="header-link" href="/profile">Tài khoản <ArrowUpRight size={15}/></Link>
     </div></header><main id="main">{children}</main>
     <footer className="site-footer"><Link href="/" className="brand"><Blocks size={17}/> Sân Chơi</Link><span>Học liệu tương tác cho lớp học</span></footer>

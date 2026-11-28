@@ -52,6 +52,7 @@ export default async function Create({ searchParams }: { searchParams: Promise<{
       <form action={importDemo}><input type="hidden" name="template" value={template}/><button className="button">Dùng nội dung mẫu</button></form></div>
       <Editor id={null} template={template}/></>
       : <div className="stack"><h1>Chọn mẫu hoạt động</h1>
+        <Link className="button primary" href="/activities/generate">Tạo hoạt động nhanh</Link>
         <section id="english-practice" className="panel stack"><h2>Luyện nghe và ngữ âm</h2>
           <div className="inline-actions">{Object.entries(listeningModes).map(([id, name]) =>
             <Link key={id} className="button" href={`/activities/new?practice=${id}`} lang="en">{name}</Link>)}</div>

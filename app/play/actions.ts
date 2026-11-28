@@ -46,7 +46,7 @@ async function getAssignment(id: string) {
   return { db, data, template: template.data, items: content.data };
 }
 
-export async function refreshLessonMedia(source: "assignment" | "activity" | "resource", id: string) {
+export async function refreshLessonMedia(source: "assignment" | "activity" | "resource" | "embed", id: string) {
   if (!serverConfigured || !z.uuid().safeParse(id).success) return null;
   if (source === "assignment") {
     const token = (await cookies()).get(`attempt-${id}`)?.value;
@@ -63,10 +63,11 @@ export async function refreshLessonMedia(source: "assignment" | "activity" | "re
       .eq("id", token!).is("completed_at", null).maybeSingle();
     return stillOpen && stillInProgress.data && (!data.classroom_id || await validateClassroomAttempt(assignment, token!)) ? fresh : null;
   }
-  if (source !== "activity" && source !== "resource") return null;
+  if (source !== "activity" && source !== "resource" && source !== "embed") return null;
   const db = source === "activity" ? await database() : privilegedDatabase();
   let query = db.from("activities").select("template,content,owner_id").eq("id", id).is("deleted_at", null);
   if (source === "resource") query = query.in("visibility", ["public", "unlisted"]).eq("draft", false);
+  if (source === "embed") query = query.eq("visibility","public").eq("draft",false);
   const { data } = await query.maybeSingle();
   if (!data || !allowedTeacher(data.owner_id)) return null;
   if (source === "activity") {
@@ -75,7 +76,7 @@ export async function refreshLessonMedia(source: "assignment" | "activity" | "re
   }
   const template = templateSchema.safeParse(data.template);
   const items = template.success && contentSchema(template.data, true).safeParse(data.content);
-  if (source === "resource" && items && items.success && items.data.some(item => item.practice)) return null;
+  if (source !== "activity" && items && items.success && items.data.some(item => item.practice)) return null;
   if (!items || !items.success || await attemptLimit(privilegedDatabase(), id, "media")) return null;
   return mediaUrls(items.data, data.owner_id, 900);
 }
